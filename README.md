@@ -1,6 +1,10 @@
 # Java-Chess
 
-A simple Chess game written in Java.
+A simple Chess game written in Java using the Swing graphics library.
+
+
+# Dependencies
+JDK 14 or higher - https://jdk.java.net/
 
 
 # Compiling and Running
