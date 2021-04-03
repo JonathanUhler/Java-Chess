@@ -54,7 +54,7 @@ public class FenUtility {
     // 1: fullmove clock, this is the number of full moves. It starts at 1 and is incremented after black's move -- when splitting a FEN string by spaces, this is in index 5
 
     // Starting position of any chess game
-    public static final String startFen = "RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w KQkq - 0 1"; // Player color black: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+    public static final String startFen = "RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w KQkq - 0 1";
 
     // Add the corresponding characters for each piece type (ignore letter case for now, assume no piece color
     static Hashtable<Character, Integer> pieceTypeFromFen = new Hashtable<Character, Integer>() {{

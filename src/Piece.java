@@ -46,10 +46,7 @@ public class Piece {
     // Returns--
     //
     // The color of the piece
-    public static boolean findColor (int piece, int color) {
-        // Return
-        return (piece & colorAnd) == color;
-    }
+    public static boolean findColor (int piece, int color) { return (piece & colorAnd) == color; }
     // end: public static boolean findColor
 
 

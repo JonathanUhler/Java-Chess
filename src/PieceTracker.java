@@ -14,7 +14,7 @@
 public class PieceTracker {
 
     public int[] tilesWithPieces; // A list of tiles that already have pieces on them
-    public int[] tileMap = new int[64]; // Allows the ability to transition from a tile's index to the index of that tile in the tilesWithPieces array (eg, given tileIndex, where does tileIndex correspond in the tilesWithPieces array?)
+    public int[] tileMap; // Allows the ability to transition from a tile's index to the index of that tile in the tilesWithPieces array (eg, given tileIndex, where does tileIndex correspond in the tilesWithPieces array?)
     int pieceCount; // Number of existing pieces
     int maxPieces; // The maximum number of pieces of this type
 

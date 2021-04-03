@@ -7,10 +7,13 @@
 
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.util.Stack;
 import javax.swing.*;
+import java.awt.event.ActionListener;
+import java.io.File;
+import java.util.HashMap;
+import java.util.Objects;
+import java.util.Stack;
+import java.io.IOException;
 
 
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
@@ -19,6 +22,8 @@ import javax.swing.*;
 // Sets up the application frame and creates the 8x8 chessboard
 //
 public class Board {
+
+    private static final File chessProjectPath = new File("./").getAbsoluteFile().getParentFile().getParentFile(); // Get the path for .../Chess/
 
     public static int w = 720, h = w; // Width and height of the JFrame application window
     public static JFrame appWindow = new JFrame("Chess"); // Create a new application window
@@ -124,7 +129,7 @@ public class Board {
     //
     // Initializes information about the state of the board and the pieces (including PieceTrackers)
     //
-    // Areguments--
+    // Arguments--
     //
     // None
     //
@@ -147,22 +152,20 @@ public class Board {
         bishops = new PieceTracker[]    { new PieceTracker(10), new PieceTracker(10) };
         queens = new PieceTracker[]     { new PieceTracker(9),  new PieceTracker(9)  };
 
-        PieceTracker emptyList =          new PieceTracker(0);
-
         // Every piece on the board
         allPieceTrackers = new PieceTracker[] {
-                // White
-                pawns[whiteIndex],
-                knights[whiteIndex],
-                bishops[whiteIndex],
-                rooks[whiteIndex],
-                queens[whiteIndex],
-                // Black
-                pawns[blackIndex],
-                knights[blackIndex],
-                bishops[blackIndex],
-                rooks[blackIndex],
-                queens[blackIndex],
+            // White
+            pawns[whiteIndex],
+            knights[whiteIndex],
+            bishops[whiteIndex],
+            rooks[whiteIndex],
+            queens[whiteIndex],
+            // Black
+            pawns[blackIndex],
+            knights[blackIndex],
+            bishops[blackIndex],
+            rooks[blackIndex],
+            queens[blackIndex],
         };
     }
     // end: static void initBoard
@@ -193,70 +196,70 @@ public class Board {
         for (int i = 0; i < 64; i++) {
             // White pawns
             if (i < pawns[whiteIndex].pieceCount) {
-                JLabel whitePawn = new JLabel(new ImageIcon("./Pieces/01001.png")); // Add the piece to a label
-                whitePawn.setBounds(pieceStartingX * ((pawns[whiteIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(pawns[whiteIndex].tilesWithPieces[i] / 8)) + 1), pieceW, pieceH); // Position the piece
+                JLabel whitePawn = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/01001.png")); // Add the piece to a label
+                whitePawn.setBounds(pieceStartingX * ((pawns[whiteIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(pawns[whiteIndex].tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Position the piece
                 board.add(whitePawn, 0); // add each piece to the board
             }
             // Black pawns
             if (i < pawns[blackIndex].pieceCount) {
-                JLabel blackPawn = new JLabel(new ImageIcon("./Pieces/10001.png")); // Add the piece to a label
-                blackPawn.setBounds(pieceStartingX * ((pawns[blackIndex].tilesWithPieces[i] % 8) + 1),pieceStartingY * (int) ((Math.floor(pawns[blackIndex].tilesWithPieces[i] / 8)) + 1), pieceW, pieceH); // Position the piece
+                JLabel blackPawn = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/10001.png")); // Add the piece to a label
+                blackPawn.setBounds(pieceStartingX * ((pawns[blackIndex].tilesWithPieces[i] % 8) + 1),pieceStartingY * (int) ((Math.floor(pawns[blackIndex].tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Position the piece
                 board.add(blackPawn, 0); // add each piece to the board
             }
             // White knights
             if (i < knights[whiteIndex].pieceCount) {
-                JLabel whiteKnight = new JLabel(new ImageIcon("./Pieces/01010.png")); // Add the piece to a label
-                whiteKnight.setBounds(pieceStartingX * ((knights[whiteIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(knights[whiteIndex].tilesWithPieces[i] / 8)) + 1), pieceW, pieceH); // Position the piece
+                JLabel whiteKnight = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/01010.png")); // Add the piece to a label
+                whiteKnight.setBounds(pieceStartingX * ((knights[whiteIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(knights[whiteIndex].tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Position the piece
                 board.add(whiteKnight, 0); // add each piece to the board
             }
             // Black knights
             if (i < knights[blackIndex].pieceCount) {
-                JLabel blackKnight = new JLabel(new ImageIcon("./Pieces/10010.png")); // Add the piece to a label
-                blackKnight.setBounds(pieceStartingX * ((knights[blackIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(knights[blackIndex].tilesWithPieces[i] / 8)) + 1), pieceW, pieceH); // Position the piece
+                JLabel blackKnight = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/10010.png")); // Add the piece to a label
+                blackKnight.setBounds(pieceStartingX * ((knights[blackIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(knights[blackIndex].tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Position the piece
                 board.add(blackKnight, 0); // add each piece to the board
             }
             // White bishops
             if (i < bishops[whiteIndex].pieceCount) {
-                JLabel whiteBishop = new JLabel(new ImageIcon("./Pieces/01011.png")); // Add the piece to a label
-                whiteBishop.setBounds(pieceStartingX * ((bishops[whiteIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(bishops[whiteIndex].tilesWithPieces[i] / 8)) + 1), pieceW, pieceH); // Position the piece
+                JLabel whiteBishop = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/01011.png")); // Add the piece to a label
+                whiteBishop.setBounds(pieceStartingX * ((bishops[whiteIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(bishops[whiteIndex].tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Position the piece
                 board.add(whiteBishop, 0); // add each piece to the board
             }
             // Black bishops
             if (i < bishops[blackIndex].pieceCount) {
-                JLabel blackBishop = new JLabel(new ImageIcon("./Pieces/10011.png")); // Add the piece to a label
-                blackBishop.setBounds(pieceStartingX * ((bishops[blackIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(bishops[blackIndex].tilesWithPieces[i] / 8)) + 1), pieceW, pieceH); // Position the piece
+                JLabel blackBishop = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/10011.png")); // Add the piece to a label
+                blackBishop.setBounds(pieceStartingX * ((bishops[blackIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(bishops[blackIndex].tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Position the piece
                 board.add(blackBishop, 0); // add each piece to the board
             }
             // White rooks
             if (i < rooks[whiteIndex].pieceCount) {
-                JLabel whiteRook = new JLabel(new ImageIcon("./Pieces/01100.png")); // Add the piece to a label
-                whiteRook.setBounds(pieceStartingX * ((rooks[whiteIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(rooks[whiteIndex].tilesWithPieces[i] / 8)) + 1), pieceW, pieceH); // Position the piece
+                JLabel whiteRook = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/01100.png")); // Add the piece to a label
+                whiteRook.setBounds(pieceStartingX * ((rooks[whiteIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(rooks[whiteIndex].tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Position the piece
                 board.add(whiteRook, 0); // add each piece to the board
             }
             // Black rooks
             if (i < rooks[blackIndex].pieceCount) {
-                JLabel blackRook = new JLabel(new ImageIcon("./Pieces/10100.png")); // Add the piece to a label
-                blackRook.setBounds(pieceStartingX * ((rooks[blackIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(rooks[blackIndex].tilesWithPieces[i] / 8)) + 1), pieceW, pieceH); // Position the piece
+                JLabel blackRook = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/10100.png")); // Add the piece to a label
+                blackRook.setBounds(pieceStartingX * ((rooks[blackIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(rooks[blackIndex].tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Position the piece
                 board.add(blackRook, 0); // add each piece to the board
             }
             // White queens
             if (i < queens[whiteIndex].pieceCount) {
-                JLabel whiteQueen = new JLabel(new ImageIcon("./Pieces/01110.png")); // Add the piece to a label
-                whiteQueen.setBounds(pieceStartingX * ((queens[whiteIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(queens[whiteIndex].tilesWithPieces[i] / 8)) + 1), pieceW, pieceH); // Position the piece
+                JLabel whiteQueen = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/01110.png")); // Add the piece to a label
+                whiteQueen.setBounds(pieceStartingX * ((queens[whiteIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(queens[whiteIndex].tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Position the piece
                 board.add(whiteQueen, 0); // add each piece to the board
             }
             // Black queens
             if (i < queens[blackIndex].pieceCount) {
-                JLabel blackQueen = new JLabel(new ImageIcon("./Pieces/10110.png")); // Add the piece to a label
-                blackQueen.setBounds(pieceStartingX * ((queens[blackIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(queens[blackIndex].tilesWithPieces[i] / 8)) + 1), pieceW, pieceH); // Position the piece
+                JLabel blackQueen = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/10110.png")); // Add the piece to a label
+                blackQueen.setBounds(pieceStartingX * ((queens[blackIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(queens[blackIndex].tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Position the piece
                 board.add(blackQueen, 0); // add each piece to the board
             }
             // White and Black king
             if (i < kings.length) {
-                JLabel whiteKing = new JLabel(new ImageIcon("./Pieces/01111.png")); // Add the piece to a label
-                whiteKing.setBounds(pieceStartingX * ((kings[whiteIndex] % 8) + 1), pieceStartingY * (int) ((Math.floor(kings[whiteIndex] / 8)) + 1), pieceW, pieceH); // Position the piece
-                JLabel blackKing = new JLabel(new ImageIcon("./Pieces/10111.png")); // Add the piece to a label
-                blackKing.setBounds(pieceStartingX * ((kings[blackIndex] % 8) + 1), pieceStartingY * (int) ((Math.floor(kings[blackIndex] / 8)) + 1), pieceW, pieceH); // Position the piece
+                JLabel whiteKing = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/01111.png")); // Add the piece to a label
+                whiteKing.setBounds(pieceStartingX * ((kings[whiteIndex] % 8) + 1), pieceStartingY * (int) ((Math.floor(kings[whiteIndex] / 8.0)) + 1), pieceW, pieceH); // Position the piece
+                JLabel blackKing = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/10111.png")); // Add the piece to a label
+                blackKing.setBounds(pieceStartingX * ((kings[blackIndex] % 8) + 1), pieceStartingY * (int) ((Math.floor(kings[blackIndex] / 8.0)) + 1), pieceW, pieceH); // Position the piece
                 board.add(whiteKing, 0); // Add the white king to the board
                 board.add(blackKing, 0); // Add the black king to the board
             }
@@ -284,43 +287,32 @@ public class Board {
     public static void drawBoard(String theme) {
 
         // Create variables for the x/y/w/h dimensions of each tile and the color of each tile
-        int w = 72, h = w, x, y;
+        int w = 72, x, y;
         Color c;
         Color lightColor = null, darkColor = null; // Create variables for the light and dark tile color
 
-        JComboBox<String> boardThemesDropdown = new JComboBox<String>(new String[] {"Classic", "Green", "Blue", "Brown"}); // Create a dropdown menu for board color themes
-        // Create an action listener for the theme dropdown menu
-        ActionListener boardThemeChanged  = new ActionListener() {
-            @Override public void actionPerformed(ActionEvent e) {
-                // MARK: here, the new user's theme must be saved in a config file
-                drawBoard((String) boardThemesDropdown.getSelectedItem()); // When the user changes the theme, update the board
-                drawPosition(); // Update the position as well
-            }
-        };
-        boardThemesDropdown.addActionListener(boardThemeChanged); // Add the action listener to the dropdown menu
-        boardThemesDropdown.setBounds(w, 0, w * 2, h); // Set the location of the dropdown menu
-        board.add(boardThemesDropdown); // Add the dropdown menu to the view
-
         // Allow the theme of the board to be changed by changing the colors
-        // Classic theme
-        if (theme == "Classic") {
-            lightColor = new Color(231, 231, 231);
-            darkColor = new Color(54, 54, 54);
-        }
-        // Green theme
-        else if (theme == "Green") {
-            lightColor = new Color(213, 224, 207);
-            darkColor = new Color(82, 137, 67);
-        }
-        // Blue theme
-        else if (theme == "Blue") {
-            lightColor = new Color(207, 215, 224);
-            darkColor = new Color(67, 109, 137);
-        }
-        // Brown theme
-        else if (theme == "Brown") {
-            lightColor = new Color(220, 204, 194);
-            darkColor = new Color(127, 86, 64);
+        switch (theme) {
+            // Classic theme
+            case "Classic":
+                lightColor = new Color(231, 231, 231);
+                darkColor = new Color(66, 66, 66);
+                break;
+            // Green theme
+            case "Green":
+                lightColor = new Color(213, 224, 207);
+                darkColor = new Color(82, 137, 67);
+                break;
+            // Blue theme
+            case "Blue":
+                lightColor = new Color(207, 215, 224);
+                darkColor = new Color(67, 109, 137);
+                break;
+            // Brown theme
+            case "Brown":
+                lightColor = new Color(220, 204, 194);
+                darkColor = new Color(106, 72, 49);
+                break;
         }
 
         // Display the tiles
@@ -338,11 +330,11 @@ public class Board {
 
                 // Update the x/y position of each tile
                 x = (col + 1) * w;
-                y = (row + 1) * h;
+                y = (row + 1) * w;
 
                 JLabel newTile = new JLabel(); // Create a new tile object to add to the layered pane
                 newTile.setBorder(BorderFactory.createLineBorder(c, w / 2)); // Set the color of the tile
-                newTile.setBounds(x, y, w, h); // Set the size and location of the tile
+                newTile.setBounds(x, y, w, w); // Set the size and location of the tile
                 board.add(newTile, 2); // Add the tile below the pieces
             }
         }
@@ -350,13 +342,62 @@ public class Board {
         // Add a black border around the board
         JLabel boardBorder = new JLabel();
         boardBorder.setBorder(BorderFactory.createLineBorder(Color.black, w / 16));
-        boardBorder.setBounds(72, 72, w * 8, h * 8);
+        boardBorder.setBounds(72 - (w / 16), 72 - (w / 16), w * 8 + (w / 16), w * 8 + (w / 16));
         board.add(boardBorder, 1);
 
         appWindow.add(board); // Add the tiles to the board
         SwingUtilities.updateComponentTreeUI(appWindow); // Reload the JFrame to show any changes
     }
     // end: public static void drawBoard
+
+
+    public static void drawSettings() {
+        // User config data
+        String stringifiedConfigData = null; // Get user config data
+        try { stringifiedConfigData = JSON.read(new File("./").getAbsoluteFile().getParentFile().getParentFile() + "/config/config.json");
+        } catch (IOException ioException) { ioException.printStackTrace(); }
+        HashMap<String, String> userConfigData = JSON.stringToDictionary(stringifiedConfigData); // Convert user config data into a hashmap
+
+        // Create dropdown menu for the preferred piece color
+        String[] playerColorChoices = new String[3]; playerColorChoices[0] = userConfigData.get("startingFEN"); playerColorChoices[1] = "White"; playerColorChoices[2] = "Black";
+        JComboBox<String> playerColor = new JComboBox<>(playerColorChoices);
+        // Create an action listener for the preferred piece color
+        ActionListener preferredSideChanged = e -> {
+            if (playerColor.getSelectedItem() == "White") { // If the user selected white, load the white FEN starting position
+                userConfigData.put("startingFEN", "RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w KQkq - 0 1"); // Save the starting FEN
+                loadPosition("RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w KQkq - 0 1");
+            }
+            else { // If the user selected black, load the black FEN starting position
+                userConfigData.put("startingFEN", "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"); // Save the starting FEN
+                loadPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+            }
+
+            JSON.write(chessProjectPath + "/config/config.json", userConfigData.toString()); // Save the new data to the config file
+            drawPosition(); // Update the position
+        };
+
+        playerColor.addActionListener(preferredSideChanged); // Add the action listener to the player color menu
+        playerColor.setBounds((int) (w * 9.5), (int) (w * 0.8), w * 2, w); // Set the position of this menu
+        appWindow.add(playerColor); // Add this menu to the view
+
+        // Create dropdown menu for the board theme
+        String[] boardThemeChoices = new String[5]; boardThemeChoices[0] = userConfigData.get("theme"); boardThemeChoices[1] = "Classic"; boardThemeChoices[2] = "Green"; boardThemeChoices[3] = "Blue"; boardThemeChoices[4] = "Brown";
+        JComboBox<String> boardThemesDropdown = new JComboBox<>(boardThemeChoices);
+        // Create an action listener for the theme dropdown menu
+        ActionListener boardThemeChanged = e -> {
+            userConfigData.put("theme", (String) boardThemesDropdown.getSelectedItem()); // Save the new data
+
+            JSON.write(chessProjectPath + "/config/config.json", userConfigData.toString()); // Save the new data
+            drawBoard((String) Objects.requireNonNull(boardThemesDropdown.getSelectedItem())); // When the user changes the theme, update the board
+            drawPosition(); // Update the position as well
+        };
+
+        boardThemesDropdown.addActionListener(boardThemeChanged); // Add the action listener to the dropdown menu
+        boardThemesDropdown.setBounds((int) (w * 9.5), (int) (w * 1.5), w * 2, w); // Set the location of the dropdown menu
+        appWindow.add(boardThemesDropdown); // Add the dropdown menu to the view
+
+        SwingUtilities.updateComponentTreeUI(appWindow); // Reload the JFrame to show any changes
+    }
 
 
     // ====================================================================================================
@@ -374,7 +415,7 @@ public class Board {
     //
     public static void createApplication() {
         appWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Terminate the frame when the 'x' button of the application window is pressed
-        appWindow.setBounds(30, 30, w, h); // Set the size of the frame
+        appWindow.setBounds(20, 30, (int) (w * 1.2), h); // Set the size of the frame
         appWindow.setResizable(false); // Prevent the JFrame from being resized
         appWindow.setVisible(true); // Show the frame
     }
