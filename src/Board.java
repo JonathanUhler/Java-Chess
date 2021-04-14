@@ -7,13 +7,14 @@
 
 
 import java.awt.*;
+import javax.sound.sampled.*;
 import javax.swing.*;
-import java.awt.event.ActionListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseMotionAdapter;
 import java.io.File;
-import java.util.HashMap;
-import java.util.Objects;
-import java.util.Stack;
 import java.io.IOException;
+import java.util.Stack;
 
 
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
@@ -23,11 +24,12 @@ import java.io.IOException;
 //
 public class Board {
 
-    private static final File chessProjectPath = new File("./").getAbsoluteFile().getParentFile().getParentFile(); // Get the path for .../Chess/
+    public static final File chessProjectPath = new File("./").getAbsoluteFile().getParentFile().getParentFile(); // Get the path for .../Chess/
 
-    public static int w = 720, h = w; // Width and height of the JFrame application window
-    public static JFrame appWindow = new JFrame("Chess"); // Create a new application window
-    public static JLayeredPane board = new JLayeredPane(); // Create the layered pane that holds the board and pieces
+    public static final int w = 720, h = w; // Width and height of the JFrame application window
+    public static final JFrame appWindow = new JFrame("Chess"); // Create a new application window
+    public static final JLayeredPane board = new JLayeredPane(); // Create the layered pane that holds the board and pieces
+    public static final JLayeredPane pieces = new JLayeredPane();
 
     public static final int whiteIndex = 0; // Index for white pieces in arrays (such as PieceTracker arrays below) of white pieces
     public static final int blackIndex = 1; // Index for black pieces in arrays of black pieces
@@ -38,8 +40,12 @@ public class Board {
     public static PieceTracker[] bishops; // 1 PieceTracker for all white bishops, 1 PieceTracker for all black bishops
     public static PieceTracker[] rooks; // 1 PieceTracker for all white rooks, 1 PieceTracker for all black rooks
     public static PieceTracker[] queens; // 1 PieceTracker for all white queens, 1 PieceTracker for all black queens
-    public static int[] kings; // 2 integers. 1 for the tile of the white king, 1 for the tile of the black king
+    public static PieceTracker[] kings; // 2 integers. 1 for the tile of the white king, 1 for the tile of the black king
     public static PieceTracker[] allPieceTrackers; // Every piece for both white and black
+
+    static PieceTracker getPieceTracker(int pieceType, int pieceColor) {
+        return allPieceTrackers[pieceColor * 8 + pieceType]; // Get a specific piece tracker given only the piece type and color
+    }
 
     public static int plies; // Number of halfmoves played this game
     public static int fiftyMoveRule; // Number of moves since the last pawn movement or piece capture
@@ -52,8 +58,11 @@ public class Board {
     // Bits 4-7 store row of en passant tile (starting at 1, so 0 = no en passant row)
     // Bits 8-13 captured piece
     // Bits 14-... fifty mover counter
-    public static Stack<Integer> gameStateHistory;
-    public static int currentGameState;
+    static Stack<Integer> gameStateHistory;
+    static int currentGameState;
+
+    static int x_pressed = 0; // X position of the mouse when its pressed
+    static int y_pressed = 0; // Y position of the mouse when its pressed
 
 
     // ====================================================================================================
@@ -100,14 +109,14 @@ public class Board {
                     pawns[pieceColorIndex].addPieceToTile(tileIndex);
                 }
                 else if (pieceType == Piece.King) {
-                    kings[pieceColorIndex] = tileIndex;
+                    kings[pieceColorIndex].addPieceToTile(tileIndex);
                 }
             }
         }
 
         whitesMove = loadedPosition.whiteToMove; // Figure out if it is white's turn to move
-        colorToMove = (whitesMove) ? Piece.White : Piece.Black; // If it is white's move, then the color to move is white, otherwise it must be black
-        opponentColor = (whitesMove) ? 0 : 1;
+        colorToMove = (whitesMove) ? 0 : 1; // If it is white's move, then the color to move is white, otherwise it must be black
+        opponentColor = (whitesMove) ? 1 : 0;
 
         // Create game state
         // Castling priorities
@@ -140,35 +149,122 @@ public class Board {
     static void initBoard() {
         // Initialize some basic information about the game
         tile = new int[64];
-        kings = new int[2];
         plies = 0;
         fiftyMoveRule = 0;
         gameStateHistory = new Stack<>();
 
-        // Create the lists of each piece  |  Pieces for white                      |  Pieces for black
-        knights = new PieceTracker[]    { new PieceTracker(10), new PieceTracker(10) };
-        pawns = new PieceTracker[]      { new PieceTracker(8),  new PieceTracker(8)  };
-        rooks = new PieceTracker[]      { new PieceTracker(10), new PieceTracker(10) };
-        bishops = new PieceTracker[]    { new PieceTracker(10), new PieceTracker(10) };
-        queens = new PieceTracker[]     { new PieceTracker(9),  new PieceTracker(9)  };
+        // Create the lists of each piece     Pieces for white                                                       Pieces for black
+        knights = new PieceTracker[]    { new PieceTracker(10, 0b01000, 0b00010), new PieceTracker(10, 0b10000, 0b00010) };
+        pawns = new PieceTracker[]      { new PieceTracker(8, 0b01000, 0b00001),  new PieceTracker(8, 0b10000, 0b00001)  };
+        rooks = new PieceTracker[]      { new PieceTracker(10, 0b01000, 0b00100), new PieceTracker(10, 0b10000, 0b00100) };
+        bishops = new PieceTracker[]    { new PieceTracker(10, 0b01000, 0b00011), new PieceTracker(10, 0b10000, 0b00011) };
+        queens = new PieceTracker[]     { new PieceTracker(9, 0b01000, 0b00110),  new PieceTracker(9, 0b10000, 0b00110)  };
+        kings = new PieceTracker[]      { new PieceTracker(1, 0b01000, 0b00111),  new PieceTracker(1, 0b10000, 0b00111)  };
+        PieceTracker spacer = new PieceTracker(0, 0, 0); // Spacers are used because of the bit-values of each piece. Some indices of the allPieceTracker array are impossible to get to
 
         // Every piece on the board
         allPieceTrackers = new PieceTracker[] {
             // White
+            spacer,
             pawns[whiteIndex],
             knights[whiteIndex],
             bishops[whiteIndex],
             rooks[whiteIndex],
+            spacer,
             queens[whiteIndex],
+            kings[whiteIndex],
             // Black
+            spacer,
             pawns[blackIndex],
             knights[blackIndex],
             bishops[blackIndex],
             rooks[blackIndex],
+            spacer,
             queens[blackIndex],
+            kings[blackIndex],
         };
     }
     // end: static void initBoard
+
+
+    // ====================================================================================================
+    // public static void makeMove
+    //
+    // Arguments--
+    //
+    // move:    the move to be made
+    //
+    // Returns--
+    //
+    // None
+    //
+    public static void makeMove(Move move) {
+        String theme = ""; // Read the theme
+        try { theme = JSONUtility.stringToDictionary(JSONUtility.read(chessProjectPath + "/config/config.json")).get("theme");
+        } catch (IOException ioException) { ioException.printStackTrace(); }
+
+        int moveFrom = move.startTile(); // Tile the piece starts on
+        int moveTo = move.endTile(); // Tile the piece goes to
+
+        int movePiece = tile[moveFrom]; // The 5-bit color | type of the piece on the starting tile
+        int movePieceType = Piece.pieceType(movePiece); // The type (single digit integer 0-7) of the piece
+        int capturedPieceType = Piece.pieceType(tile[moveTo]); // The type (single digit integer 0-7) of any pieces captured by the moving piece
+        int pieceGoingToEndTile = movePiece; // The 5-bit color | type of the piece going to the end tile
+
+        // Check to make sure the move is valid in a few ways (this condition does not check the legality of a move)
+        //          Is it the right turn for this color?           |  Did the piece move?
+        if ((Piece.pieceColor(movePiece) / 8) - 1 == opponentColor || moveFrom == moveTo) {
+            drawPosition(); // Redraw the board
+            drawBoard(theme); // Redraw the board
+            return;
+        }
+
+        if (capturedPieceType != 0) {
+            // If a piece is captured, remove it
+            getPieceTracker(capturedPieceType, opponentColor).removePieceFromTile(moveTo); // 0 = white, 1 = black
+            try {
+                BoardManager.playSound(chessProjectPath + "/reference/sounds/capture.wav"); // Play the capture sound
+            } catch (LineUnavailableException | IOException | UnsupportedAudioFileException exception) {
+                exception.printStackTrace(); // Gracefully handle any possible exceptions from the capture sound failing
+            }
+        }
+
+        if (move.endTile() <= 63) {
+            // Move the piece
+            getPieceTracker(movePieceType, colorToMove).movePiece(move.startTile(), move.endTile()); // 0 = white, 1 = black
+            try {
+                BoardManager.playSound(chessProjectPath + "/reference/sounds/move.wav"); // Play the move sound
+            } catch (LineUnavailableException | IOException | UnsupportedAudioFileException exception) {
+                exception.printStackTrace(); // Gracefully handle any possible exceptions from the move sound failing
+            }
+        }
+
+        tile[moveTo] = pieceGoingToEndTile; // Update the tile array with the new piece
+        tile[moveFrom] = 0; // Remove the moved piece from its old location in the tile array
+
+        drawPosition(); // Redraw the board
+        drawBoard(theme); // Redraw the board
+
+        // Update whose turn it is to move
+        // 0 = white, 1 = black
+        if (colorToMove == 0) {
+            whitesMove = false;
+            colorToMove = 1;
+            opponentColor = 0; // MARK: the opponentColor should only be swapped for a 2-player game
+        }
+        // 0 = white, 1 = black
+        else {
+            whitesMove = true;
+            colorToMove = 0;
+            opponentColor = 1;
+        }
+
+        Settings.drawSettings();
+        loadPosition(FenUtility.buildFenFromPosition());
+        drawPosition();
+        try { drawBoard(JSONUtility.stringToDictionary(JSONUtility.read(chessProjectPath + "/config/config.json")).get("theme")); } catch (IOException ioException) { ioException.printStackTrace(); }
+    }
+    // end: public static void makeMove
 
 
     // ====================================================================================================
@@ -186,86 +282,49 @@ public class Board {
     //
     public static void drawPosition() {
 
-        //boardState.setLayout(null); // Set the layout to none
-        board.setLayout(null);
+        pieces.removeAll();
+        pieces.setBounds(0, 0, w, w);
+
         int pieceStartingX = 2 * (w / 20); // Starting x position for a piece
         int pieceStartingY = 2 * (w / 20); // Starting y position for a piece
         int pieceW = (int) (w * 0.1); // Starting width for a piece
         int pieceH = (int) (w * 0.1); // Starting height for a piece
 
-        for (int i = 0; i < 64; i++) {
-            // White pawns
-            if (i < pawns[whiteIndex].pieceCount) {
-                JLabel whitePawn = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/01001.png")); // Add the piece to a label
-                whitePawn.setBounds(pieceStartingX * ((pawns[whiteIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(pawns[whiteIndex].tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Position the piece
-                board.add(whitePawn, 0); // add each piece to the board
-            }
-            // Black pawns
-            if (i < pawns[blackIndex].pieceCount) {
-                JLabel blackPawn = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/10001.png")); // Add the piece to a label
-                blackPawn.setBounds(pieceStartingX * ((pawns[blackIndex].tilesWithPieces[i] % 8) + 1),pieceStartingY * (int) ((Math.floor(pawns[blackIndex].tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Position the piece
-                board.add(blackPawn, 0); // add each piece to the board
-            }
-            // White knights
-            if (i < knights[whiteIndex].pieceCount) {
-                JLabel whiteKnight = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/01010.png")); // Add the piece to a label
-                whiteKnight.setBounds(pieceStartingX * ((knights[whiteIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(knights[whiteIndex].tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Position the piece
-                board.add(whiteKnight, 0); // add each piece to the board
-            }
-            // Black knights
-            if (i < knights[blackIndex].pieceCount) {
-                JLabel blackKnight = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/10010.png")); // Add the piece to a label
-                blackKnight.setBounds(pieceStartingX * ((knights[blackIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(knights[blackIndex].tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Position the piece
-                board.add(blackKnight, 0); // add each piece to the board
-            }
-            // White bishops
-            if (i < bishops[whiteIndex].pieceCount) {
-                JLabel whiteBishop = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/01011.png")); // Add the piece to a label
-                whiteBishop.setBounds(pieceStartingX * ((bishops[whiteIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(bishops[whiteIndex].tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Position the piece
-                board.add(whiteBishop, 0); // add each piece to the board
-            }
-            // Black bishops
-            if (i < bishops[blackIndex].pieceCount) {
-                JLabel blackBishop = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/10011.png")); // Add the piece to a label
-                blackBishop.setBounds(pieceStartingX * ((bishops[blackIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(bishops[blackIndex].tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Position the piece
-                board.add(blackBishop, 0); // add each piece to the board
-            }
-            // White rooks
-            if (i < rooks[whiteIndex].pieceCount) {
-                JLabel whiteRook = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/01100.png")); // Add the piece to a label
-                whiteRook.setBounds(pieceStartingX * ((rooks[whiteIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(rooks[whiteIndex].tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Position the piece
-                board.add(whiteRook, 0); // add each piece to the board
-            }
-            // Black rooks
-            if (i < rooks[blackIndex].pieceCount) {
-                JLabel blackRook = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/10100.png")); // Add the piece to a label
-                blackRook.setBounds(pieceStartingX * ((rooks[blackIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(rooks[blackIndex].tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Position the piece
-                board.add(blackRook, 0); // add each piece to the board
-            }
-            // White queens
-            if (i < queens[whiteIndex].pieceCount) {
-                JLabel whiteQueen = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/01110.png")); // Add the piece to a label
-                whiteQueen.setBounds(pieceStartingX * ((queens[whiteIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(queens[whiteIndex].tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Position the piece
-                board.add(whiteQueen, 0); // add each piece to the board
-            }
-            // Black queens
-            if (i < queens[blackIndex].pieceCount) {
-                JLabel blackQueen = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/10110.png")); // Add the piece to a label
-                blackQueen.setBounds(pieceStartingX * ((queens[blackIndex].tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(queens[blackIndex].tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Position the piece
-                board.add(blackQueen, 0); // add each piece to the board
-            }
-            // White and Black king
-            if (i < kings.length) {
-                JLabel whiteKing = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/01111.png")); // Add the piece to a label
-                whiteKing.setBounds(pieceStartingX * ((kings[whiteIndex] % 8) + 1), pieceStartingY * (int) ((Math.floor(kings[whiteIndex] / 8.0)) + 1), pieceW, pieceH); // Position the piece
-                JLabel blackKing = new JLabel(new ImageIcon(chessProjectPath + "/Pieces/10111.png")); // Add the piece to a label
-                blackKing.setBounds(pieceStartingX * ((kings[blackIndex] % 8) + 1), pieceStartingY * (int) ((Math.floor(kings[blackIndex] / 8.0)) + 1), pieceW, pieceH); // Position the piece
-                board.add(whiteKing, 0); // Add the white king to the board
-                board.add(blackKing, 0); // Add the black king to the board
+        for (PieceTracker pieceTracker : allPieceTrackers) {
+            for (int i = 0; i < pieceTracker.pieceCount; i++) {
+                String pieceBinaryIdentifier = Integer.toBinaryString(pieceTracker.pieceColor | pieceTracker.pieceType); // Define the binary string for the piece (that is the color | the type)
+                JLabel piece = new JLabel(new ImageIcon(chessProjectPath + "/reference/pieces/" + pieceBinaryIdentifier + ".png")); // Create a new label with the correct image
+                piece.setBounds(pieceStartingX * ((pieceTracker.tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(pieceTracker.tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Set the size and position of the piece
+
+                int finalI = i;
+                piece.addMouseListener(new MouseAdapter() {
+                    @Override public void mousePressed(MouseEvent e) {
+                        // Get and store the values of the mouse position when the mouse is pressed
+                        x_pressed = e.getX();
+                        y_pressed = e.getY();
+                    }
+                });
+
+                piece.addMouseMotionListener(new MouseMotionAdapter() {
+                    @Override public void mouseDragged(MouseEvent e) {
+                        // When the mouse is dragged, update the position of the piece image (this doesn't change the location of the piece yet)
+                        piece.setLocation(e.getXOnScreen() - x_pressed, e.getYOnScreen() - y_pressed);
+                    }
+                });
+
+                piece.addMouseListener(new MouseAdapter() {
+                    @Override public void mouseReleased(MouseEvent e) {
+                        // Create a new move and make it on the board
+                        Move move = new Move(pieceTracker.tilesWithPieces[finalI], (int) (Math.round((piece.getLocation().y / 72.0) - 1) * 8 + Math.round((piece.getLocation().x / 72.0) - 1)));
+                        makeMove(move);
+                    }
+                });
+
+                pieces.add(piece, 0); // Add the piece to the pieces layered pane
             }
         }
 
-        appWindow.add(board); // Add the board to the frame
+        appWindow.add(pieces); // Add the board to the frame
         SwingUtilities.updateComponentTreeUI(appWindow); // Reload the JFrame to show any changes
     }
     // end: public static void drawPosition
@@ -286,8 +345,11 @@ public class Board {
     //
     public static void drawBoard(String theme) {
 
+        board.removeAll();
+        board.setBounds(0, 0, w, w);
+
         // Create variables for the x/y/w/h dimensions of each tile and the color of each tile
-        int w = 72, x, y;
+        int tileW = w / 10, tileX, tileY;
         Color c;
         Color lightColor = null, darkColor = null; // Create variables for the light and dark tile color
 
@@ -329,75 +391,27 @@ public class Board {
                 }
 
                 // Update the x/y position of each tile
-                x = (col + 1) * w;
-                y = (row + 1) * w;
+                tileX = (col + 1) * tileW;
+                tileY = (row + 1) * tileW;
 
                 JLabel newTile = new JLabel(); // Create a new tile object to add to the layered pane
                 newTile.setBorder(BorderFactory.createLineBorder(c, w / 2)); // Set the color of the tile
-                newTile.setBounds(x, y, w, w); // Set the size and location of the tile
-                board.add(newTile, 2); // Add the tile below the pieces
+                newTile.setBounds(tileX, tileY, tileW, tileW); // Set the size and location of the tile
+
+                board.add(newTile, 1); // Add the tile below the pieces
             }
         }
 
         // Add a black border around the board
         JLabel boardBorder = new JLabel();
-        boardBorder.setBorder(BorderFactory.createLineBorder(Color.black, w / 16));
-        boardBorder.setBounds(72 - (w / 16), 72 - (w / 16), w * 8 + (w / 16), w * 8 + (w / 16));
-        board.add(boardBorder, 1);
+        boardBorder.setBorder(BorderFactory.createLineBorder(Color.black, tileW / 16));
+        boardBorder.setBounds(72 - (tileW / 16), 72 - (tileW / 16), tileW * 8 + (tileW / 16), tileW * 8 + (tileW / 16));
+        board.add(boardBorder, 0);
 
         appWindow.add(board); // Add the tiles to the board
         SwingUtilities.updateComponentTreeUI(appWindow); // Reload the JFrame to show any changes
     }
     // end: public static void drawBoard
-
-
-    public static void drawSettings() {
-        // User config data
-        String stringifiedConfigData = null; // Get user config data
-        try { stringifiedConfigData = JSON.read(new File("./").getAbsoluteFile().getParentFile().getParentFile() + "/config/config.json");
-        } catch (IOException ioException) { ioException.printStackTrace(); }
-        HashMap<String, String> userConfigData = JSON.stringToDictionary(stringifiedConfigData); // Convert user config data into a hashmap
-
-        // Create dropdown menu for the preferred piece color
-        String[] playerColorChoices = new String[3]; playerColorChoices[0] = userConfigData.get("startingFEN"); playerColorChoices[1] = "White"; playerColorChoices[2] = "Black";
-        JComboBox<String> playerColor = new JComboBox<>(playerColorChoices);
-        // Create an action listener for the preferred piece color
-        ActionListener preferredSideChanged = e -> {
-            if (playerColor.getSelectedItem() == "White") { // If the user selected white, load the white FEN starting position
-                userConfigData.put("startingFEN", "RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w KQkq - 0 1"); // Save the starting FEN
-                loadPosition("RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w KQkq - 0 1");
-            }
-            else { // If the user selected black, load the black FEN starting position
-                userConfigData.put("startingFEN", "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"); // Save the starting FEN
-                loadPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-            }
-
-            JSON.write(chessProjectPath + "/config/config.json", userConfigData.toString()); // Save the new data to the config file
-            drawPosition(); // Update the position
-        };
-
-        playerColor.addActionListener(preferredSideChanged); // Add the action listener to the player color menu
-        playerColor.setBounds((int) (w * 9.5), (int) (w * 0.8), w * 2, w); // Set the position of this menu
-        appWindow.add(playerColor); // Add this menu to the view
-
-        // Create dropdown menu for the board theme
-        String[] boardThemeChoices = new String[5]; boardThemeChoices[0] = userConfigData.get("theme"); boardThemeChoices[1] = "Classic"; boardThemeChoices[2] = "Green"; boardThemeChoices[3] = "Blue"; boardThemeChoices[4] = "Brown";
-        JComboBox<String> boardThemesDropdown = new JComboBox<>(boardThemeChoices);
-        // Create an action listener for the theme dropdown menu
-        ActionListener boardThemeChanged = e -> {
-            userConfigData.put("theme", (String) boardThemesDropdown.getSelectedItem()); // Save the new data
-
-            JSON.write(chessProjectPath + "/config/config.json", userConfigData.toString()); // Save the new data
-            drawBoard((String) Objects.requireNonNull(boardThemesDropdown.getSelectedItem())); // When the user changes the theme, update the board
-            drawPosition(); // Update the position as well
-        };
-
-        boardThemesDropdown.addActionListener(boardThemeChanged); // Add the action listener to the dropdown menu
-        boardThemesDropdown.setBounds((int) (w * 9.5), (int) (w * 1.5), w * 2, w); // Set the location of the dropdown menu
-        appWindow.add(boardThemesDropdown); // Add the dropdown menu to the view
-
-        SwingUtilities.updateComponentTreeUI(appWindow); // Reload the JFrame to show any changes
-    }
 
 
     // ====================================================================================================
@@ -415,7 +429,8 @@ public class Board {
     //
     public static void createApplication() {
         appWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Terminate the frame when the 'x' button of the application window is pressed
-        appWindow.setBounds(20, 30, (int) (w * 1.2), h); // Set the size of the frame
+        appWindow.setBounds(20, 30, w, h); // Set the size of the frame
+        appWindow.setLayout(null);
         appWindow.setResizable(false); // Prevent the JFrame from being resized
         appWindow.setVisible(true); // Show the frame
     }

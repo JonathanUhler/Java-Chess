@@ -46,8 +46,30 @@ public class Piece {
     // Returns--
     //
     // The color of the piece
-    public static boolean findColor (int piece, int color) { return (piece & colorAnd) == color; }
+    //
+    public static boolean findColor(int piece, int color) {
+        return (piece & colorAnd) == color;
+    }
     // end: public static boolean findColor
+
+
+    // ====================================================================================================
+    // public static int pieceColor
+    //
+    // Finds the color of piece
+    //
+    // Arguments--
+    //
+    // piece:   the piece to find the color of
+    //
+    // Returns--
+    //
+    // The color of the piece
+    //
+    public static int pieceColor(int piece) {
+        return piece & colorAnd;
+    }
+    // end: public static int pieceColor
 
 
     // ====================================================================================================
@@ -62,19 +84,11 @@ public class Piece {
     // Returns--
     //
     // The type of the piece
-    public static int pieceType (int piece) {
+    //
+    public static int pieceType(int piece) {
         return piece & typeAnd;
     }
     // end: public static int pieceType
-
-
-    public static boolean isRookQueen (int piece) {
-        return (piece & 0b110) == 0b110;
-    }
-
-    public static boolean isBishopQueen (int piece) {
-        return (piece & 0b101) == 0b101;
-    }
 
 }
 // end: public class Piece

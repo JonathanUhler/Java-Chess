@@ -17,9 +17,11 @@ public class PieceTracker {
     public int[] tileMap; // Allows the ability to transition from a tile's index to the index of that tile in the tilesWithPieces array (eg, given tileIndex, where does tileIndex correspond in the tilesWithPieces array?)
     int pieceCount; // Number of existing pieces
     int maxPieces; // The maximum number of pieces of this type
+    int pieceColor;
+    int pieceType;
 
 
-    // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
+    // ----------------------------------------------------------------------------------------------------
     // public PieceTracker
     //
     // Facilitates the creation of a new PieceTracker for a give type of piece
@@ -28,11 +30,13 @@ public class PieceTracker {
     //
     // maxCountPerPieceType:    the maximum amount of a given type of piece possible in a game
     //
-    public PieceTracker (int maxCountPerPieceType) {
+    public PieceTracker (int maxCountPerPieceType, int color, int type) {
         maxPieces = maxCountPerPieceType;
         tilesWithPieces = new int[maxCountPerPieceType];
         tileMap = new int[64];
         pieceCount = 0;
+        pieceColor = color;
+        pieceType = type;
     }
     // end: public PieceTracker
 
@@ -95,10 +99,14 @@ public class PieceTracker {
     //
     // None
     //
-    public void movePiece(int startingTile, int endingTile) {
+    public void movePiece(int startingTile, long endingTile) {
+        if (endingTile == -1) {
+            return;
+        }
+
         int pieceIndex = tileMap[startingTile]; // Fetch the index in tilesWithPieces from the tileMap using the starting tile
-        tilesWithPieces[pieceIndex] = endingTile; // Move the piece
-        tileMap[endingTile] = pieceIndex; // Update the tileMap
+        tilesWithPieces[pieceIndex] = (int) endingTile; // Move the piece
+        tileMap[(int) endingTile] = pieceIndex; // Update the tileMap
     }
     // end: public void movePiece
 

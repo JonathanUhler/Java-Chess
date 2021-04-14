@@ -16,7 +16,7 @@ import java.util.List;
 //
 // A custom JSON handler
 //
-public class JSON {
+public class JSONUtility {
 
     // ====================================================================================================
     // public static HashMap stringToDictionary
@@ -114,7 +114,7 @@ public class JSON {
     // Returns--
     //
     // front + back:    the new string
-    public static String removeCharAt(String str, Integer n) {
+    private static String removeCharAt(String str, Integer n) {
         String front = str.substring(0, n);
         String back = str.substring(n + 1, str.length());
         return front + back;

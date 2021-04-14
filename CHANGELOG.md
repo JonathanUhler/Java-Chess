@@ -13,6 +13,11 @@ PRE-RELEASES--
 									-Pieces display on the board from any FEN string
 									-Method of displaying the board completely reworked
 									-Board theme can be changed (although this setting cannot yet be saved)
+									
+	pre-1.2.0	4/14/21			Changes in this version:
+									-Pices can be dragged and moved
+									-Pieces can capture other pieces
+									-Piece datastructure refined
 
 
 FULL-RELEASES--
