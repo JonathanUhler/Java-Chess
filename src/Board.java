@@ -208,18 +208,20 @@ public class Board {
 
         int movePiece = tile[moveFrom]; // The 5-bit color | type of the piece on the starting tile
         int movePieceType = Piece.pieceType(movePiece); // The type (single digit integer 0-7) of the piece
-        int capturedPieceType = Piece.pieceType(tile[moveTo]); // The type (single digit integer 0-7) of any pieces captured by the moving piece
+        int capturedPiece = tile[moveTo];
+        int capturedPieceType = Piece.pieceType(capturedPiece); // The type (single digit integer 0-7) of any pieces captured by the moving piece
         int pieceGoingToEndTile = movePiece; // The 5-bit color | type of the piece going to the end tile
 
         // Check to make sure the move is valid in a few ways (this condition does not check the legality of a move)
-        //          Is it the right turn for this color?           |  Did the piece move?
-        if ((Piece.pieceColor(movePiece) / 8) - 1 == opponentColor || moveFrom == moveTo) {
+        //          Is it the right turn for this color?           |  Did the piece move? |                                Are you trying to capture a friendly piece?
+        if ((Piece.pieceColor(movePiece) / 8) - 1 == opponentColor || moveFrom == moveTo || ((Piece.pieceColor(capturedPiece) / 8) - 1 != -1 && (Piece.pieceColor(capturedPiece) / 8) - 1 != opponentColor)) {
             drawPosition(); // Redraw the board
             drawBoard(theme); // Redraw the board
             return;
         }
 
         if (capturedPieceType != 0) {
+
             // If a piece is captured, remove it
             getPieceTracker(capturedPieceType, opponentColor).removePieceFromTile(moveTo); // 0 = white, 1 = black
             try {

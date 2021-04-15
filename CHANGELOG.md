@@ -22,6 +22,9 @@ PRE-RELEASES--
 	pre-1.2.1	4/14/21			Changes in this version:
 									-Fixed the bug outlined in issue #2
 									-Partially fixed the bug outlined in issue #1
+									
+	pre-1.2.2	4/14/21			Changes in this version:
+									-Prevent friendly pieces from being captured
 
 
 FULL-RELEASES--
