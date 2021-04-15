@@ -7,6 +7,8 @@
 
 
 import javax.sound.sampled.*;
+import javax.swing.*;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 
@@ -37,6 +39,30 @@ public class BoardManager {
         clip.start();
     }
     // end: public static void playSound
+
+
+    // ====================================================================================================
+    // public static Point frameRelativeMousePosition
+    //
+    // Arguments--
+    //
+    // frame:                   the JFrame the position should be based on
+    //
+    // screenRelativeMousePos:  the mouse position relative to the entire screen
+    //
+    // Returns--
+    //
+    // frameRelativeMousePos:   the mouse position relative to the JFrame frame
+    //
+    public static Point frameRelativeMousePosition(JFrame frame, Point screenRelativeMousePos) {
+        Point frameRelativeMousePos = new Point();
+
+        frameRelativeMousePos.x = screenRelativeMousePos.x - frame.getLocationOnScreen().x;
+        frameRelativeMousePos.y = screenRelativeMousePos.y - frame.getLocationOnScreen().y;
+
+        return frameRelativeMousePos;
+    }
+    // end: public static void frameRelativeMousePosition
 
 }
 // end: public class BoardManager

@@ -18,6 +18,10 @@ PRE-RELEASES--
 									-Pices can be dragged and moved
 									-Pieces can capture other pieces
 									-Piece datastructure refined
+									
+	pre-1.2.1	4/14/21			Changes in this version:
+									-Fixed the bug outlined in issue #2
+									-Partially fixed the bug outlined in issue #1
 
 
 FULL-RELEASES--

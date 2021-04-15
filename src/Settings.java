@@ -66,19 +66,21 @@ public class Settings {
     public static JComboBox<String> playerColor() {
         // Create dropdown menu for the preferred piece color
         JComboBox<String> playerColor = new JComboBox<>(new String[]{"White", "Black"});
+
         // Create an action listener for the preferred piece color
         ActionListener preferredSideChanged = e -> {
-            String stringifiedConfigData = null; // Get user config data
-            try { stringifiedConfigData = JSONUtility.read(new File("./").getAbsoluteFile().getParentFile().getParentFile() + "/config/config.json"); } catch (IOException ioException) { ioException.printStackTrace(); }
-            assert stringifiedConfigData != null;
-            HashMap<String, String> userConfigData = JSONUtility.stringToDictionary(stringifiedConfigData); // Convert user config data into a hashmap
+            HashMap<String, String> userConfigData = null; // Convert user config data into a hashmap
+            try { userConfigData = JSONUtility.stringToDictionary(JSONUtility.read(Board.chessProjectPath + "/config/config.json"));
+            } catch (IOException ioException) { ioException.printStackTrace(); }
 
             if (playerColor.getSelectedItem() == "White") { // If the user selected white, load the white FEN starting position
+                assert userConfigData != null;
                 userConfigData.put("startingFEN", "RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w KQkq - 0 1"); // Save the starting FEN
                 Board.loadPosition("RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w KQkq - 0 1");
                 Board.whitesMove = true;
             }
             else { // If the user selected black, load the black FEN starting position
+                assert userConfigData != null;
                 userConfigData.put("startingFEN", "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"); // Save the starting FEN
                 Board.loadPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
                 Board.whitesMove = false;
@@ -95,6 +97,7 @@ public class Settings {
 
         return playerColor;
     }
+    // end: public static JComboBox playerColor
 
 
     // ====================================================================================================
@@ -111,15 +114,21 @@ public class Settings {
     // boardThemesDropdown:  the JComboBox for the board theme
     //
     public static JComboBox<String> boardTheme() {
+        String currentTheme = ""; // Read the theme
+        try { currentTheme = JSONUtility.stringToDictionary(JSONUtility.read(Board.chessProjectPath + "/config/config.json")).get("theme");
+        } catch (IOException ioException) { ioException.printStackTrace(); }
+
         // Create dropdown menu for the board theme
-        JComboBox<String> boardThemesDropdown = new JComboBox<>(new String[]{"Classic", "Green", "Blue", "Brown"});
+        JComboBox<String> boardThemesDropdown = new JComboBox<>(new String[]{"Gray", "Green", "Blue", "Brown"});
+        boardThemesDropdown.setSelectedItem(currentTheme);
+
         // Create an action listener for the theme dropdown menu
         ActionListener boardThemeChanged = e -> {
-            String stringifiedConfigData = null; // Get user config data
-            try { stringifiedConfigData = JSONUtility.read(new File("./").getAbsoluteFile().getParentFile().getParentFile() + "/config/config.json"); } catch (IOException ioException) { ioException.printStackTrace(); }
-            assert stringifiedConfigData != null;
-            HashMap<String, String> userConfigData = JSONUtility.stringToDictionary(stringifiedConfigData); // Convert user config data into a hashmap
+            HashMap<String, String> userConfigData = null; // Convert user config data into a hashmap
+            try { userConfigData = JSONUtility.stringToDictionary(JSONUtility.read(Board.chessProjectPath + "/config/config.json"));
+            } catch (IOException ioException) { ioException.printStackTrace(); }
 
+            assert userConfigData != null;
             userConfigData.put("theme", (String) boardThemesDropdown.getSelectedItem()); // Save the new data
 
             JSONUtility.write(Board.chessProjectPath + "/config/config.json", userConfigData.toString()); // Save the new data

@@ -34,9 +34,9 @@ public class Chess {
             startingFEN = userConfigData.get("startingFEN"); // Get the theme and preference for starting color
         }
         catch (IndexOutOfBoundsException indexException) {
-            theme = "Classic";
+            theme = "Gray";
             startingFEN = "RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w KQkq - 0 1";
-            JSONUtility.write(new File("./").getAbsoluteFile().getParentFile().getParentFile() + "/config/config.json", "{theme=Blue, startingFEN=RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w KQkq - 0 1}");
+            JSONUtility.write(new File("./").getAbsoluteFile().getParentFile().getParentFile() + "/config/config.json", "{theme=" + theme + ", startingFEN=" + startingFEN + "}");
         }
 
         // Initialize the board and starting position of the pieces

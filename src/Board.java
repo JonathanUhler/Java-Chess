@@ -232,10 +232,13 @@ public class Board {
         if (move.endTile() <= 63) {
             // Move the piece
             getPieceTracker(movePieceType, colorToMove).movePiece(move.startTile(), move.endTile()); // 0 = white, 1 = black
-            try {
-                BoardManager.playSound(chessProjectPath + "/reference/sounds/move.wav"); // Play the move sound
-            } catch (LineUnavailableException | IOException | UnsupportedAudioFileException exception) {
-                exception.printStackTrace(); // Gracefully handle any possible exceptions from the move sound failing
+
+            if (capturedPieceType == 0) {
+                try {
+                    BoardManager.playSound(chessProjectPath + "/reference/sounds/move.wav"); // Play the move sound
+                } catch (LineUnavailableException | IOException | UnsupportedAudioFileException exception) {
+                    exception.printStackTrace(); // Gracefully handle any possible exceptions from the move sound failing
+                }
             }
         }
 
@@ -308,7 +311,8 @@ public class Board {
                 piece.addMouseMotionListener(new MouseMotionAdapter() {
                     @Override public void mouseDragged(MouseEvent e) {
                         // When the mouse is dragged, update the position of the piece image (this doesn't change the location of the piece yet)
-                        piece.setLocation(e.getXOnScreen() - x_pressed, e.getYOnScreen() - y_pressed);
+                        Point frameRelativeMousePos = BoardManager.frameRelativeMousePosition(appWindow, new Point(e.getXOnScreen(), e.getYOnScreen()));
+                        piece.setLocation(frameRelativeMousePos.x - x_pressed, frameRelativeMousePos.y - y_pressed);
                     }
                 });
 
@@ -356,24 +360,24 @@ public class Board {
         // Allow the theme of the board to be changed by changing the colors
         switch (theme) {
             // Classic theme
-            case "Classic":
+            case "Gray":
                 lightColor = new Color(231, 231, 231);
-                darkColor = new Color(66, 66, 66);
+                darkColor = new Color(88, 88, 88);
                 break;
             // Green theme
             case "Green":
-                lightColor = new Color(213, 224, 207);
-                darkColor = new Color(82, 137, 67);
+                lightColor = new Color(238, 237, 213);
+                darkColor = new Color(124, 148, 93);
                 break;
             // Blue theme
             case "Blue":
                 lightColor = new Color(207, 215, 224);
-                darkColor = new Color(67, 109, 137);
+                darkColor = new Color(110, 143, 167);
                 break;
             // Brown theme
             case "Brown":
-                lightColor = new Color(220, 204, 194);
-                darkColor = new Color(106, 72, 49);
+                lightColor = new Color(236, 217, 185);
+                darkColor = new Color(175, 137, 104);
                 break;
         }
 
