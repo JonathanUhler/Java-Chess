@@ -14,7 +14,10 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.io.File;
 import java.io.IOException;
-import java.util.Stack;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
 
 
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
@@ -47,18 +50,25 @@ public class Board {
         return allPieceTrackers[pieceColor * 8 + pieceType]; // Get a specific piece tracker given only the piece type and color
     }
 
-    public static int plies; // Number of halfmoves played this game
-    public static int fiftyMoveRule; // Number of moves since the last pawn movement or piece capture
+    public static int halfmoves; // Number of halfmoves played this game
+    public static int fullmoves; // Number of fullmoves played this game
+    public static int fiftyMoveRule; // Number of fullmoves since the last pawn movement or piece capture
+
+    public static String currentFenPosition; // Current arrangement of pieces on the board in fen notation
+    public static HashMap<String, Integer> threeFoldRepetition = new HashMap<>(); // List of positions and how many times they have appeared in the game
 
     public static boolean whitesMove; // Is white to move?
     public static int colorToMove; // Which color is to move
     public static int opponentColor; // What is the opposing color
+    public static int friendlyColor; // What is the safe color
+    public static boolean whiteOnBottom = true; // Did the white player start with pieces on the bottom of the board?
+
+    public static boolean showLegalMoves = true; // Should legal moves be highlighted?
 
     // Bits 0-3 store white and black kingside/queenside castling legality. 1 = castling allowed, 0 = no castling allowed
     // Bits 4-7 store row of en passant tile (starting at 1, so 0 = no en passant row)
     // Bits 8-13 captured piece
     // Bits 14-... fifty mover counter
-    static Stack<Integer> gameStateHistory;
     static int currentGameState;
 
     static int x_pressed = 0; // X position of the mouse when its pressed
@@ -79,7 +89,10 @@ public class Board {
     // None
     //
     public static void loadPosition(String fen) {
-        initBoard();
+        currentFenPosition = fen.split(" ")[0]; // Save the current fen position
+
+        initBoard(); // Initialize the board
+
         // Get the FEN info for the position being loaded
         FenInfo loadedPosition = FenUtility.loadPositionFromFen(fen);
 
@@ -91,7 +104,7 @@ public class Board {
             // Make sure the current tile has a piece
             if (piece != Piece.None) {
                 int pieceType = Piece.pieceType(piece);
-                int pieceColorIndex = (Piece.findColor(piece, Piece.White)) ? whiteIndex : blackIndex;
+                int pieceColorIndex = (Piece.checkColor(piece, Piece.White, false)) ? whiteIndex : blackIndex;
 
                 if (pieceType == Piece.Queen) {
                     queens[pieceColorIndex].addPieceToTile(tileIndex);
@@ -117,6 +130,7 @@ public class Board {
         whitesMove = loadedPosition.whiteToMove; // Figure out if it is white's turn to move
         colorToMove = (whitesMove) ? 0 : 1; // If it is white's move, then the color to move is white, otherwise it must be black
         opponentColor = (whitesMove) ? 1 : 0;
+        friendlyColor = (opponentColor == 0) ? 1 : 0;
 
         // Create game state
         // Castling priorities
@@ -125,10 +139,9 @@ public class Board {
         // En passant availability
         int epState = loadedPosition.enPassantRow << 4;
         // Current game state
-        short initialGameState = (short) (whiteCastle | blackCastle | epState);
-        gameStateHistory.push((int) initialGameState); // Add the game state to an archive for threefold repetition
-        currentGameState = initialGameState; // Update the current game state
-        plies = loadedPosition.plies; // Update the number of plies
+        currentGameState = (short) (whiteCastle | blackCastle | epState); // Update the current game state
+        halfmoves = loadedPosition.halfmoves; // Update the number of halfmoves
+        fullmoves = loadedPosition.fullmoves; // Update the number of fullmoves
     }
     // end: public void loadPosition
 
@@ -149,9 +162,6 @@ public class Board {
     static void initBoard() {
         // Initialize some basic information about the game
         tile = new int[64];
-        plies = 0;
-        fiftyMoveRule = 0;
-        gameStateHistory = new Stack<>();
 
         // Create the lists of each piece     Pieces for white                                                       Pieces for black
         knights = new PieceTracker[]    { new PieceTracker(10, 0b01000, 0b00010), new PieceTracker(10, 0b10000, 0b00010) };
@@ -190,6 +200,8 @@ public class Board {
     // ====================================================================================================
     // public static void makeMove
     //
+    // Makes a move on the board
+    //
     // Arguments--
     //
     // move:    the move to be made
@@ -199,10 +211,6 @@ public class Board {
     // None
     //
     public static void makeMove(Move move) {
-        String theme = ""; // Read the theme
-        try { theme = JSONUtility.stringToDictionary(JSONUtility.read(chessProjectPath + "/config/config.json")).get("theme");
-        } catch (IOException ioException) { ioException.printStackTrace(); }
-
         int moveFrom = move.startTile(); // Tile the piece starts on
         int moveTo = move.endTile(); // Tile the piece goes to
 
@@ -212,15 +220,23 @@ public class Board {
         int capturedPieceType = Piece.pieceType(capturedPiece); // The type (single digit integer 0-7) of any pieces captured by the moving piece
         int pieceGoingToEndTile = movePiece; // The 5-bit color | type of the piece going to the end tile
 
-        // Check to make sure the move is valid in a few ways (this condition does not check the legality of a move)
-        //          Is it the right turn for this color?           |  Did the piece move? |                                Are you trying to capture a friendly piece?
-        if ((Piece.pieceColor(movePiece) / 8) - 1 == opponentColor || moveFrom == moveTo || ((Piece.pieceColor(capturedPiece) / 8) - 1 != -1 && (Piece.pieceColor(capturedPiece) / 8) - 1 != opponentColor)) {
+        int moveFlag = move.MoveFlag();
+        boolean isPromotion = move.isPromotion();
+        boolean isEnPassant = moveFlag == Move.Flag.enPassantCapture;
+
+        // Generate legal moves
+        MoveUtility checkMoves = new MoveUtility();
+        List<Short> legalMoves = checkMoves.generateMoves();
+
+        // If the move being played was not found, it is illegal
+        if (!legalMoves.contains(move.moveValue)) {
             drawPosition(); // Redraw the board
-            drawBoard(theme); // Redraw the board
+            drawBoard(null); // Redraw the board
             return;
         }
 
         if (capturedPieceType != 0) {
+            fiftyMoveRule = 0; // Reset the 50 move rule counter
 
             // If a piece is captured, remove it
             getPieceTracker(capturedPieceType, opponentColor).removePieceFromTile(moveTo); // 0 = white, 1 = black
@@ -244,30 +260,72 @@ public class Board {
             }
         }
 
+        // Handle promotion
+        if (isPromotion) {
+            int promoteType = 0;
+            switch (moveFlag) {
+                case Move.Flag.promoteToQueen:
+                    promoteType = Piece.Queen;
+                    queens[colorToMove].addPieceToTile(moveTo);
+                    break;
+                case Move.Flag.promoteToRook:
+                    promoteType = Piece.Rook;
+                    rooks[colorToMove].addPieceToTile(moveTo);
+                    break;
+                case Move.Flag.promoteToBishop:
+                    promoteType = Piece.Bishop;
+                    bishops[colorToMove].addPieceToTile(moveTo);
+                    break;
+                case Move.Flag.promoteToKnight:
+                    promoteType = Piece.Knight;
+                    knights[colorToMove].addPieceToTile(moveTo);
+                    break;
+
+            }
+            pieceGoingToEndTile = promoteType | colorToMove;
+            pawns[colorToMove].removePieceFromTile(moveTo);
+        }
+
         tile[moveTo] = pieceGoingToEndTile; // Update the tile array with the new piece
         tile[moveFrom] = 0; // Remove the moved piece from its old location in the tile array
-
-        drawPosition(); // Redraw the board
-        drawBoard(theme); // Redraw the board
 
         // Update whose turn it is to move
         // 0 = white, 1 = black
         if (colorToMove == 0) {
             whitesMove = false;
             colorToMove = 1;
-            opponentColor = 0; // MARK: the opponentColor should only be swapped for a 2-player game
+            opponentColor = 0;
+            friendlyColor = 1;
         }
         // 0 = white, 1 = black
         else {
             whitesMove = true;
             colorToMove = 0;
             opponentColor = 1;
+            friendlyColor = 0;
+        }
+        whiteOnBottom = !whiteOnBottom;
+
+        // Update halfmoves and fullmoves
+        halfmoves++;
+        if (!whitesMove) { fullmoves++; fiftyMoveRule++; }
+
+        // If a pawn was moved or a piece was captured, reset the 50 move counter
+        if (Piece.pieceType(movePiece) == Piece.Pawn) {
+            fiftyMoveRule = 0;
         }
 
-        Settings.drawSettings();
-        loadPosition(FenUtility.buildFenFromPosition());
-        drawPosition();
-        try { drawBoard(JSONUtility.stringToDictionary(JSONUtility.read(chessProjectPath + "/config/config.json")).get("theme")); } catch (IOException ioException) { ioException.printStackTrace(); }
+        if (threeFoldRepetition.containsKey(currentFenPosition)) { // If the current position has already happened, update the number of times it has appeared
+            threeFoldRepetition.put(currentFenPosition, threeFoldRepetition.get(currentFenPosition) + 1);
+        }
+        else { // Otherwise, add it
+            threeFoldRepetition.put(currentFenPosition, 1);
+        }
+
+        Settings.drawSettings(); // Update the fen string in the text field
+        loadPosition(FenUtility.buildFenFromPosition()); // Load the new position
+        drawPosition(); // Draw the position
+        drawBoard(null);
     }
     // end: public static void makeMove
 
@@ -286,7 +344,6 @@ public class Board {
     // None
     //
     public static void drawPosition() {
-
         pieces.removeAll();
         pieces.setBounds(0, 0, w, w);
 
@@ -307,6 +364,20 @@ public class Board {
                         // Get and store the values of the mouse position when the mouse is pressed
                         x_pressed = e.getX();
                         y_pressed = e.getY();
+
+                        MoveUtility checkMoves = new MoveUtility();
+                        List<Short> legalMoves = checkMoves.generateMoves();
+                        ArrayList<Integer> legalMoveTiles = new ArrayList<>(); // List of legal ending moves
+
+                        for (Short legalMove : legalMoves) {
+                            int legalStartTile = (legalMove & 0b0000000000111111);
+                            int legalEndTile = (legalMove & 0b0000111111000000) >> 6;
+                            if (legalStartTile == (int) (Math.round((piece.getLocation().y / 72.0) - 1) * 8 + Math.round((piece.getLocation().x / 72.0) - 1))) {
+                                legalMoveTiles.add(legalEndTile);
+                            }
+                        }
+
+                        drawBoard(legalMoveTiles);
                     }
                 });
 
@@ -349,7 +420,14 @@ public class Board {
     //
     // None
     //
-    public static void drawBoard(String theme) {
+    public static void drawBoard(ArrayList<Integer> highlightTiles) {
+        if (highlightTiles == null) {
+            highlightTiles = new ArrayList<>(); // Handle calls to drawBoard that don't specify legal move tiles to be highlighted
+        }
+
+        String currentTheme = ""; // Read the theme
+        try { currentTheme = JSONUtility.stringToDictionary(JSONUtility.read(Board.chessProjectPath + "/config/config.json")).get("theme");
+        } catch (IOException ioException) { ioException.printStackTrace(); }
 
         board.removeAll();
         board.setBounds(0, 0, w, w);
@@ -360,7 +438,7 @@ public class Board {
         Color lightColor = null, darkColor = null; // Create variables for the light and dark tile color
 
         // Allow the theme of the board to be changed by changing the colors
-        switch (theme) {
+        switch (currentTheme) {
             // Classic theme
             case "Gray":
                 lightColor = new Color(231, 231, 231);
@@ -389,11 +467,11 @@ public class Board {
 
                 // If the row plus the column is divisible by 2, then set it to one color
                 if ((row + col) % 2 == 1) {
-                    c = darkColor;
+                    c = (highlightTiles.contains(((row * 8) + col)) && showLegalMoves) ? new Color(161, 86, 86) : darkColor;
                 }
                 // Otherwise, set it to the other color
                 else {
-                    c = lightColor;
+                    c = (highlightTiles.contains(((row * 8) + col)) && showLegalMoves) ? new Color(238, 156, 156) : lightColor;
                 }
 
                 // Update the x/y position of each tile

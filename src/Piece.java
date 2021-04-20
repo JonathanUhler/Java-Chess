@@ -43,12 +43,14 @@ public class Piece {
     // color:   this is usually Piece.White. The purpose of this function is to compare color against colorAnd
     //          and return the result
     //
+    // colorOnlyShifted: whether or not the color should be shifted to return a value of (0 or 1) or (8 or 16)
+    //
     // Returns--
     //
     // The color of the piece
     //
-    public static boolean findColor(int piece, int color) {
-        return (piece & colorAnd) == color;
+    public static boolean checkColor(int piece, int color, boolean colorOnlyShifted) {
+        return (colorOnlyShifted) ? ((piece & colorAnd) / 8 - 1) == color : (piece & colorAnd) == color;
     }
     // end: public static boolean findColor
 
@@ -89,6 +91,25 @@ public class Piece {
         return piece & typeAnd;
     }
     // end: public static int pieceType
+
+
+    // ====================================================================================================
+    // public static boolean checkSliding
+    //
+    // Figures out if a piece is a sliding piece or not
+    //
+    // Arguments--
+    //
+    // piece:   the piece to find the behaviour of
+    //
+    // Returns--
+    //
+    // Whether or not the piece is sliding
+    //
+    public static boolean checkSliding(int piece) {
+        return Piece.pieceType(piece) == Queen || Piece.pieceType(piece) == Rook || Piece.pieceType(piece) == Bishop;
+    }
+    // end: public static boolean checkSliding
 
 }
 // end: public class Piece

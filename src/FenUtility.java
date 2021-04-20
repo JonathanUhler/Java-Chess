@@ -16,12 +16,16 @@ import java.util.*;
 //
 class FenInfo {
     public int[] tiles; // Internal memory for every tile that makes up the chessboard
+
     public boolean whiteCastleKingside;
     public boolean whiteCastleQueenside;
     public boolean blackCastleKingside;
     public boolean blackCastleQueenside;
+
     public int enPassantRow; // Which row is open for en passant
-    public int plies; // Number of plies this game
+    public int halfmoves; // Number of halfmoves this game
+    public int fullmoves; // Number of fullmoves this game
+
     public boolean whiteToMove; // Is it white's turn. If not, then it must be black's turn
 
 
@@ -88,13 +92,13 @@ public class FenUtility {
         FenInfo fenInfo = new FenInfo(); // Create a new instance of the FenInfo class
         String[] fenSplit = fen.split(" "); // Split the fen string given by spaces
 
-        int row = 7; // Start on the bottom row
+        int row = 0; // Start on the bottom row
         int col = 0; // Start in the left-most column
 
         // Loop through each character of the board setup. Set the board setup info to a char array in order for the foreach x in y to work
         for (char fenChar : fenSplit[0].toCharArray()) {
             if (fenChar == '/') {
-                row--; // Decrease the current row towards the top of the board
+                row++; // Decrease the current row towards the top of the board
                 col = 0; // Reset the column
             }
             else {
@@ -122,7 +126,13 @@ public class FenUtility {
         fenInfo.blackCastleKingside = rightToCastle.contains("k");
         fenInfo.blackCastleQueenside = rightToCastle.contains("q");
 
-        // MARK: en passant row and halfmove clock both need to be implemented here
+        // MARK: en passant row needs to be implemented here
+
+        // Number of halfmoves
+        fenInfo.halfmoves = Integer.parseInt(fenSplit[4]);
+
+        // Number of fullmoves (for 50 move rule)
+        fenInfo.fullmoves = Integer.parseInt(fenSplit[5]);
 
         // Return the fenInfo object
         return fenInfo;
@@ -161,7 +171,7 @@ public class FenUtility {
                         numEmptyCols = 0; // Then reset the number of empty tiles
                     }
 
-                    boolean whitePiece = Piece.findColor(piece, Piece.White); // Figure out the color of the piece
+                    boolean whitePiece = Piece.checkColor(piece, Piece.White, false); // Figure out the color of the piece
                     int pieceType = Piece.pieceType(piece); // Figure out what type of piece it is
                     char pieceChar = ' ';
 
@@ -229,23 +239,62 @@ public class FenUtility {
             fen.append('-');
         }
         else { // If the row doesn't = 0, get the en passant coordinates
-            String fileName = colNames[enPassantRow - 1].toString();
+            String fileName = colNames[enPassantRow - 1];
             int enPassantCol = (Board.whitesMove) ? 6 : 3;
             fen.append(fileName).append(enPassantCol);
         }
 
-        // Half move clock (for 50 move rule)
+        // Half move clock
         fen.append(' '); // Add a space
-        fen.append(Board.fiftyMoveRule);
+        fen.append(Board.halfmoves);
 
-        // Full move clock
+        // Full move clock (for 50 move rule)
         fen.append(' '); // Add a space
-        fen.append((Board.plies / 2) + 1); // Figure out the number of full moves
+        fen.append(Board.fullmoves); // Figure out the number of full moves
 
         // Return the position
-        return fen.toString();
+        return changePlayerPerspective(fen.toString());
     }
     // end: public static String buildFenFromPosition
+
+
+    // ====================================================================================================
+    // public static String changePlayerPerspective
+    //
+    // Properly reverses a fen string to show the perspective of the game from the other player
+    //
+    // Arguments--
+    //
+    // fen:             the fen to reverse
+    //
+    // Returns--
+    //
+    // fenReversed:     the reversed fen
+    //
+    public static String changePlayerPerspective(String fen) {
+        StringBuilder fenReversed = new StringBuilder(); // Create an empty string builder to add to
+
+        String[] fenSplit = fen.split(" "); // Split the fen string into its components
+        String fenDetails = " " + fenSplit[1] + " " + fenSplit[2] + " " + fenSplit[3] + " " + fenSplit[4] + " " + fenSplit[5]; // Recompile the details of the fen string without the piece position
+
+        String[] positionSplit = fenSplit[0].split("/"); // Split the piece position by the / delimiter
+        List<String> reversedPositionsSplit = new ArrayList<>(); // Create an empty list to hold the parts of the piece position
+
+        for (String positionSection : positionSplit) { // For each section of the piece position
+            StringBuilder temp = new StringBuilder(positionSection); // Reverse that section
+            temp.reverse();
+            reversedPositionsSplit.add(temp.toString()); // Add the reversed section to a list of sections
+        }
+
+        Collections.reverse(reversedPositionsSplit); // Reverse the list of reversed sections to finally change perspective
+        String positionReversed = String.join("/", reversedPositionsSplit); // Rebuild the piece position
+
+        fenReversed.append(positionReversed); // Rebuild the fen string
+        fenReversed.append(fenDetails);
+
+        return fenReversed.toString(); // Return the reversed string
+    }
+    // end: public static String changePlayerPerspective
 
 }
 // end: public class FenUtilty

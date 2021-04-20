@@ -30,12 +30,11 @@ public class Chess {
         try {
             String stringifiedConfigData = JSONUtility.read(new File("./").getAbsoluteFile().getParentFile().getParentFile() + "/config/config.json"); // Get user config data
             HashMap<String, String> userConfigData = JSONUtility.stringToDictionary(stringifiedConfigData); // Convert user config data into a hashmap
-            theme = userConfigData.get("theme");
             startingFEN = userConfigData.get("startingFEN"); // Get the theme and preference for starting color
         }
         catch (IndexOutOfBoundsException indexException) {
             theme = "Gray";
-            startingFEN = "RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w KQkq - 0 1";
+            startingFEN = "pppppppp/rnbqkbnr/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 1 0";
             JSONUtility.write(new File("./").getAbsoluteFile().getParentFile().getParentFile() + "/config/config.json", "{theme=" + theme + ", startingFEN=" + startingFEN + "}");
         }
 
@@ -45,11 +44,10 @@ public class Chess {
         Board.loadPosition(startingFEN); // Load the starting position
 
         JPanel settings = Settings.drawSettings(); // Display options
-        settings.setBounds(0, 0, Board.w, 60);
 
         Board.drawPosition(); // Display all the pieces of the current position onto the frame
 
-        Board.drawBoard(theme); // Display the tiles that make up the board
+        Board.drawBoard(null); // Display the tiles that make up the board
 
         Board.appWindow.add(settings);
     }

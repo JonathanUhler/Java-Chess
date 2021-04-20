@@ -18,19 +18,19 @@ public class Move {
     //
     // Different flags a move can have
     //
-    public static final class MoveFlag {
-        public final int none = 0;
-        public final int enPassantCapture = 1;
-        public final int castled = 2;
-        public final int promoteToQueen = 3;
-        public final int promoteToKnight = 4;
-        public final int promoteToRook = 5;
-        public final int promoteToBishop = 6;
-        public final int pawnTwoForward = 7;
+    public static final class Flag {
+        public static final int none = 0;
+        public static final int enPassantCapture = 1;
+        public static final int castled = 2;
+        public static final int promoteToQueen = 3;
+        public static final int promoteToKnight = 4;
+        public static final int promoteToRook = 5;
+        public static final int promoteToBishop = 6;
+        public static final int pawnTwoForward = 7;
     }
     // end: public static final class MoveFlag
 
-    final short moveValue;
+    short moveValue = 0;
 
     // Bits 0-5 store starting tile
     // Bits 6-11 store ending tile
@@ -96,8 +96,20 @@ public class Move {
         return moveValue & startTileMasker;
     }
 
+
     public int endTile() {
         return (moveValue & endTileMasker) >> 6;
+    }
+
+
+    public boolean isPromotion() {
+        int flag = MoveFlag();
+        return flag == Flag.promoteToQueen || flag == Flag.promoteToRook || flag == Flag.promoteToKnight || flag == Flag.promoteToBishop;
+    }
+
+
+    public int MoveFlag() {
+        return moveValue >> 12;
     }
 
 }

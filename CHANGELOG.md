@@ -25,6 +25,13 @@ PRE-RELEASES--
 									
 	pre-1.2.2	4/14/21			Changes in this version:
 									-Prevent friendly pieces from being captured
+									
+	pre-1.3.0	4/19/21			Changes in this version:
+									-Prevent pieces from making illegal movements
+									-Added pseudo-legal move generation
+									-Added move highlighting with a enable/disable button
+									-Added new game button
+									-Fixed issues with the FEN string displayed in the JTextField
 
 
 FULL-RELEASES--
