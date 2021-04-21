@@ -32,6 +32,9 @@ PRE-RELEASES--
 									-Added move highlighting with a enable/disable button
 									-Added new game button
 									-Fixed issues with the FEN string displayed in the JTextField
+									
+	pre-1.3.1	4/21/21			Changes in this version:
+									-Fixed the bug outlined in issue #3
 
 
 FULL-RELEASES--

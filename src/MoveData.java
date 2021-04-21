@@ -60,7 +60,7 @@ public class MoveData {
                 };
 
 
-                // Knight moves
+                // Knight moves (prevent wrap around)
                 List<Byte> legalKnightMoves = new ArrayList<>();
 
                 // For each value in the options for knight move offsets
@@ -73,7 +73,7 @@ public class MoveData {
                         // Ensure knight has moved max of 2 squares on x/y axis (to reject indices that have wrapped around side of board)
                         int maxCoordMoveDst = Math.max(Math.abs(col - knightTileCol), Math.abs(row - knightTileRow));
 
-                        if (maxCoordMoveDst == 2) { // If the knight moved the correct amount (didn't go off the board east or west) the move it legal
+                        if (maxCoordMoveDst == 2) { // If the knight moved the correct amount (didn't go off the board east or west) the move is legal
                             legalKnightMoves.add((byte) knightMoveTile);
                         }
                     }

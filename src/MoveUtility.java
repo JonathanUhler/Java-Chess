@@ -189,14 +189,12 @@ public class MoveUtility {
     int pawnDirectionMultiplier = -1;
     //
     void generatePawnMoves(int startTile) {
-        // ISSUES:
-        // 1. Pawns can wrap around the board to capture when on the edge of the board
-
         pawnOffsets = new ArrayList<>();
         pawnOffsets.add(8 * pawnDirectionMultiplier);
 
         List<Integer> pawnPromotionTiles = (pawnDirectionMultiplier == -1) ? Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7) : Arrays.asList(56, 57, 58, 59, 60, 61, 62, 63); // Tiles pawns can promote on
         List<Integer> pawnStartingTiles = (pawnDirectionMultiplier == -1) ? Arrays.asList(48, 49, 50, 51, 52, 53, 54, 55) : Arrays.asList(8, 9, 10, 11, 12, 13, 14, 15); // Tiles pawns start on
+        List<Integer> edgeTilesLeft = Arrays.asList(0, 8, 16, 24, 32, 40, 48, 56); List<Integer> edgeTilesRight = Arrays.asList(7, 15, 23, 31, 39, 47, 55, 63); // Check to make sure a pawn isn't capturing by wrapping around the board
 
         if (pawnStartingTiles.contains(startTile)) { // Double pawn push
             pawnOffsets.add(16  * pawnDirectionMultiplier);
@@ -219,10 +217,10 @@ public class MoveUtility {
             }
 
             if (Piece.checkColor(capturablePieceOne, Board.opponentColor, true) || Piece.checkColor(capturablePieceTwo, Board.opponentColor, true)) {
-                if (Piece.checkColor(capturablePieceOne, Board.opponentColor, true)) {
+                if (Piece.checkColor(capturablePieceOne, Board.opponentColor, true) && !edgeTilesLeft.contains(endTile)) {
                     pawnOffsets.add(9 * pawnDirectionMultiplier);
                 }
-                if (Piece.checkColor(capturablePieceTwo, Board.opponentColor, true)) {
+                if (Piece.checkColor(capturablePieceTwo, Board.opponentColor, true) && !edgeTilesRight.contains(endTile)) {
                     pawnOffsets.add(7 * pawnDirectionMultiplier);
                 }
 
