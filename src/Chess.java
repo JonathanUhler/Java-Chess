@@ -34,7 +34,7 @@ public class Chess {
         }
         catch (IndexOutOfBoundsException indexException) {
             theme = "Gray";
-            startingFEN = "pppppppp/rnbqkbnr/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 1 0";
+            startingFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0";
             JSONUtility.write(new File("./").getAbsoluteFile().getParentFile().getParentFile() + "/config/config.json", "{theme=" + theme + ", startingFEN=" + startingFEN + "}");
         }
 

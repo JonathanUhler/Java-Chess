@@ -246,14 +246,14 @@ public class FenUtility {
 
         // Half move clock
         fen.append(' '); // Add a space
-        fen.append(Board.halfmoves);
+        fen.append(Board.fiftyMoveRule);
 
         // Full move clock (for 50 move rule)
         fen.append(' '); // Add a space
         fen.append(Board.fullmoves); // Figure out the number of full moves
 
         // Return the position
-        return changePlayerPerspective(fen.toString());
+        return fen.toString();
     }
     // end: public static String buildFenFromPosition
 

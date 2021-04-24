@@ -30,14 +30,14 @@ public class Move {
     }
     // end: public static final class MoveFlag
 
-    short moveValue = 0;
+
+    short moveValue;
 
     // Bits 0-5 store starting tile
     // Bits 6-11 store ending tile
     // Bits 12-15 store flag for the move
     final short startTileMasker = 0b0000000000111111;
     final short endTileMasker = 0b0000111111000000;
-    final short flagMasker = (short) 0b1111000000000000;
 
 
     // ----------------------------------------------------------------------------------------------------

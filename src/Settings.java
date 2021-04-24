@@ -165,7 +165,7 @@ public class Settings {
     // customFenBox:    the JTextField for the custom fen position
     //
     private static JTextField customFenPosition() {
-        String fenToDisplay = (FenUtility.loadPositionFromFen(FenUtility.buildFenFromPosition()).halfmoves == 0) ? FenUtility.changePlayerPerspective(FenUtility.buildFenFromPosition()) : FenUtility.buildFenFromPosition();
+        String fenToDisplay = FenUtility.changePlayerPerspective(FenUtility.buildFenFromPosition());
 
         JTextField customFenBox = new JTextField(fenToDisplay);
 
@@ -206,7 +206,7 @@ public class Settings {
             public void actionPerformed(ActionEvent e) {
                 perspectiveChanged = true;
                 Board.whiteOnBottom = !Board.whiteOnBottom;
-                Board.loadPosition(FenUtility.buildFenFromPosition());
+                Board.loadPosition(FenUtility.changePlayerPerspective(FenUtility.buildFenFromPosition()));
                 Board.drawPosition();
                 Board.drawBoard(null);
                 drawSettings();

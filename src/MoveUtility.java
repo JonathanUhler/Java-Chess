@@ -19,7 +19,7 @@ public class MoveUtility {
     List<Short> moves; // List of move values for legal moves
     MoveData precomputedMoveData; // Basic move data/information
 
-    int moveFlag = 0;
+    int moveFlag = Move.Flag.none;
 
 
     // ====================================================================================================
@@ -94,7 +94,7 @@ public class MoveUtility {
         for (int direction = startDirection; direction < endDirection; direction++) {
             for (int i = 0; i < precomputedMoveData.tilesToEdge[startTile][direction]; i++) {
 
-                int endTile = startTile + precomputedMoveData.moveOffsets[direction] * (i + 1); // Get the legal ending tile for the piece. Multiply by (i + 1) because sliding pieces can move an infinite distance in each of their directions
+                int endTile = startTile + precomputedMoveData.slidingOffsets[direction] * (i + 1); // Get the legal ending tile for the piece. Multiply by (i + 1) because sliding pieces can move an infinite distance in each of their directions
                 int pieceOnEndTile = Board.tile[endTile]; // Figure out if there is a piece on the ending tile
 
                 // If the piece on the ending tile is of the same color, the move is illegal
@@ -130,7 +130,7 @@ public class MoveUtility {
             // Make sure there are available tiles in this direction
             if (precomputedMoveData.tilesToEdge[startTile][direction] == 0) { continue; }
 
-            int endTile = startTile + precomputedMoveData.moveOffsets[direction]; // Get the legal ending tile for the piece. Multiply by (i + 1) because sliding pieces can move an infinite distance in each of their directions
+            int endTile = startTile + precomputedMoveData.slidingOffsets[direction]; // Get the legal ending tile for the piece. Multiply by (i + 1) because sliding pieces can move an infinite distance in each of their directions
             int pieceOnEndTile = Board.tile[endTile]; // Figure out if there is a piece on the ending tile
 
             // If the piece on the ending tile is of the same color, the move is illegal
@@ -185,18 +185,15 @@ public class MoveUtility {
     //
     // None
     //
-    ArrayList<Integer> pawnOffsets;
     int pawnDirectionMultiplier = -1;
+    ArrayList<Integer> pawnOffsets;
     //
     void generatePawnMoves(int startTile) {
         pawnOffsets = new ArrayList<>();
         pawnOffsets.add(8 * pawnDirectionMultiplier);
+        List<Integer> edgeTilesLeft = Arrays.asList(0, 8, 16, 24, 32, 40, 48, 56), edgeTilesRight = Arrays.asList(7, 15, 23, 31, 39, 47, 55, 63); // Check to make sure a pawn isn't capturing by wrapping around the board
 
-        List<Integer> pawnPromotionTiles = (pawnDirectionMultiplier == -1) ? Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7) : Arrays.asList(56, 57, 58, 59, 60, 61, 62, 63); // Tiles pawns can promote on
-        List<Integer> pawnStartingTiles = (pawnDirectionMultiplier == -1) ? Arrays.asList(48, 49, 50, 51, 52, 53, 54, 55) : Arrays.asList(8, 9, 10, 11, 12, 13, 14, 15); // Tiles pawns start on
-        List<Integer> edgeTilesLeft = Arrays.asList(0, 8, 16, 24, 32, 40, 48, 56); List<Integer> edgeTilesRight = Arrays.asList(7, 15, 23, 31, 39, 47, 55, 63); // Check to make sure a pawn isn't capturing by wrapping around the board
-
-        if (pawnStartingTiles.contains(startTile)) { // Double pawn push
+        if (precomputedMoveData.pawnStartingTiles.contains(startTile)) { // Double pawn push
             pawnOffsets.add(16  * pawnDirectionMultiplier);
         }
 
@@ -216,6 +213,7 @@ public class MoveUtility {
                 if (!(Piece.checkColor(capturablePieceOne, Board.opponentColor, true)) && !(Piece.checkColor(capturablePieceTwo, Board.opponentColor, true))) { continue; } // Make sure pawns don't capture the piece directly in front of them
             }
 
+            // If there is an enemy piece on an adjacent tile, it can be captured
             if (Piece.checkColor(capturablePieceOne, Board.opponentColor, true) || Piece.checkColor(capturablePieceTwo, Board.opponentColor, true)) {
                 if (Piece.checkColor(capturablePieceOne, Board.opponentColor, true) && !edgeTilesLeft.contains(endTile)) {
                     pawnOffsets.add(9 * pawnDirectionMultiplier);
@@ -226,6 +224,15 @@ public class MoveUtility {
 
                 generatePawnCaptures(startTile);
                 continue;
+            }
+
+            moveFlag = Move.Flag.none;
+            if (MoveData.pawnPromotionTiles.contains(endTile)) {
+                moveFlag = Move.Flag.promoteToQueen; moves.add(new Move(startTile, endTile, moveFlag).moveValue);
+                moveFlag = Move.Flag.promoteToRook; moves.add(new Move(startTile, endTile, moveFlag).moveValue);
+                moveFlag = Move.Flag.promoteToKnight; moves.add(new Move(startTile, endTile, moveFlag).moveValue);
+                moveFlag = Move.Flag.promoteToBishop; moves.add(new Move(startTile, endTile, moveFlag).moveValue);
+                break;
             }
 
             // Add the move to the list of legal moves
@@ -253,8 +260,16 @@ public class MoveUtility {
             int endTile = startTile + pawnOffset; // Get the legal ending tile for the piece. Multiply by (i + 1) because sliding pieces can move an infinite distance in each of their directions
             if (endTile < 0 || endTile > 63) { continue; }
 
+            if (MoveData.pawnPromotionTiles.contains(endTile)) {
+                moveFlag = Move.Flag.promoteToQueen; moves.add(new Move(startTile, endTile, moveFlag).moveValue);
+                moveFlag = Move.Flag.promoteToRook; moves.add(new Move(startTile, endTile, moveFlag).moveValue);
+                moveFlag = Move.Flag.promoteToKnight; moves.add(new Move(startTile, endTile, moveFlag).moveValue);
+                moveFlag = Move.Flag.promoteToBishop; moves.add(new Move(startTile, endTile, moveFlag).moveValue);
+                break;
+            }
+
             // Add the move to the list of legal moves
-            moves.add(new Move(startTile, endTile).moveValue);
+            moves.add(new Move(startTile, endTile, moveFlag).moveValue);
         }
 
         pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(9 * pawnDirectionMultiplier)));

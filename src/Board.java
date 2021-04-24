@@ -50,7 +50,6 @@ public class Board {
         return allPieceTrackers[pieceColor * 8 + pieceType]; // Get a specific piece tracker given only the piece type and color
     }
 
-    public static int halfmoves; // Number of halfmoves played this game
     public static int fullmoves; // Number of fullmoves played this game
     public static int fiftyMoveRule; // Number of fullmoves since the last pawn movement or piece capture
 
@@ -140,7 +139,7 @@ public class Board {
         int epState = loadedPosition.enPassantRow << 4;
         // Current game state
         currentGameState = (short) (whiteCastle | blackCastle | epState); // Update the current game state
-        halfmoves = loadedPosition.halfmoves; // Update the number of halfmoves
+        fiftyMoveRule = loadedPosition.halfmoves; // Update the number of halfmoves
         fullmoves = loadedPosition.fullmoves; // Update the number of fullmoves
     }
     // end: public void loadPosition
@@ -210,7 +209,7 @@ public class Board {
     //
     // None
     //
-    public static void makeMove(Move move) {
+    public static boolean makeMove(Move move) {
         int moveFrom = move.startTile(); // Tile the piece starts on
         int moveTo = move.endTile(); // Tile the piece goes to
 
@@ -228,13 +227,23 @@ public class Board {
         MoveUtility checkMoves = new MoveUtility();
         List<Short> legalMoves = checkMoves.generateMoves();
 
+        // Make sure the end tile is on the board
+        if (moveFrom > 63 || moveTo > 63) {
+            return false;
+        }
+
         // If the move being played was not found, it is illegal
         if (!legalMoves.contains(move.moveValue)) {
             drawPosition(); // Redraw the board
             drawBoard(null); // Redraw the board
-            return;
+            return false;
         }
 
+        // Update halfmoves and fullmoves
+        fiftyMoveRule++;
+        if (!whitesMove) { fullmoves++; }
+
+        // Handle captures
         if (capturedPieceType != 0) {
             fiftyMoveRule = 0; // Reset the 50 move rule counter
 
@@ -247,22 +256,21 @@ public class Board {
             }
         }
 
-        if (move.endTile() <= 63) {
-            // Move the piece
-            getPieceTracker(movePieceType, colorToMove).movePiece(move.startTile(), move.endTile()); // 0 = white, 1 = black
+        // Handle movement
+        getPieceTracker(movePieceType, colorToMove).movePiece(move.startTile(), move.endTile()); // 0 = white, 1 = black
 
-            if (capturedPieceType == 0) {
-                try {
-                    BoardManager.playSound(chessProjectPath + "/reference/sounds/move.wav"); // Play the move sound
-                } catch (LineUnavailableException | IOException | UnsupportedAudioFileException exception) {
-                    exception.printStackTrace(); // Gracefully handle any possible exceptions from the move sound failing
-                }
+        if (capturedPieceType == 0 && !isPromotion) {
+            try {
+                BoardManager.playSound(chessProjectPath + "/reference/sounds/move.wav"); // Play the move sound
+            } catch (LineUnavailableException | IOException | UnsupportedAudioFileException exception) {
+                exception.printStackTrace(); // Gracefully handle any possible exceptions from the move sound failing
             }
         }
 
         // Handle promotion
         if (isPromotion) {
             int promoteType = 0;
+
             switch (moveFlag) {
                 case Move.Flag.promoteToQueen:
                     promoteType = Piece.Queen;
@@ -282,8 +290,8 @@ public class Board {
                     break;
 
             }
-            pieceGoingToEndTile = promoteType | colorToMove;
-            pawns[colorToMove].removePieceFromTile(moveTo);
+            pieceGoingToEndTile = ((colorToMove + 1) * 8) | promoteType; // Update the piece being moved
+            pawns[colorToMove].removePieceFromTile(moveTo); // Remove the pawn to later replace it with the promoted piece
         }
 
         tile[moveTo] = pieceGoingToEndTile; // Update the tile array with the new piece
@@ -291,29 +299,14 @@ public class Board {
 
         // Update whose turn it is to move
         // 0 = white, 1 = black
-        if (colorToMove == 0) {
-            whitesMove = false;
-            colorToMove = 1;
-            opponentColor = 0;
-            friendlyColor = 1;
-        }
-        // 0 = white, 1 = black
-        else {
-            whitesMove = true;
-            colorToMove = 0;
-            opponentColor = 1;
-            friendlyColor = 0;
-        }
+        whitesMove = !whitesMove;
+        colorToMove ^= 1;
+        opponentColor ^= 1;
+        friendlyColor ^= 1;
         whiteOnBottom = !whiteOnBottom;
 
-        // Update halfmoves and fullmoves
-        halfmoves++;
-        if (!whitesMove) { fullmoves++; fiftyMoveRule++; }
-
         // If a pawn was moved or a piece was captured, reset the 50 move counter
-        if (Piece.pieceType(movePiece) == Piece.Pawn) {
-            fiftyMoveRule = 0;
-        }
+        if (Piece.pieceType(movePiece) == Piece.Pawn) { fiftyMoveRule = 0; }
 
         if (threeFoldRepetition.containsKey(currentFenPosition)) { // If the current position has already happened, update the number of times it has appeared
             threeFoldRepetition.put(currentFenPosition, threeFoldRepetition.get(currentFenPosition) + 1);
@@ -322,10 +315,8 @@ public class Board {
             threeFoldRepetition.put(currentFenPosition, 1);
         }
 
-        Settings.drawSettings(); // Update the fen string in the text field
-        loadPosition(FenUtility.buildFenFromPosition()); // Load the new position
-        drawPosition(); // Draw the position
-        drawBoard(null);
+        // The move was made
+        return true;
     }
     // end: public static void makeMove
 
@@ -351,6 +342,7 @@ public class Board {
         int pieceStartingY = 2 * (w / 20); // Starting y position for a piece
         int pieceW = (int) (w * 0.1); // Starting width for a piece
         int pieceH = (int) (w * 0.1); // Starting height for a piece
+        ArrayList<Integer> legalMoveTiles = new ArrayList<>(); // List of legal ending moves
 
         for (PieceTracker pieceTracker : allPieceTrackers) {
             for (int i = 0; i < pieceTracker.pieceCount; i++) {
@@ -359,6 +351,7 @@ public class Board {
                 piece.setBounds(pieceStartingX * ((pieceTracker.tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(pieceTracker.tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Set the size and position of the piece
 
                 int finalI = i;
+                // Piece picked up
                 piece.addMouseListener(new MouseAdapter() {
                     @Override public void mousePressed(MouseEvent e) {
                         // Get and store the values of the mouse position when the mouse is pressed
@@ -367,11 +360,11 @@ public class Board {
 
                         MoveUtility checkMoves = new MoveUtility();
                         List<Short> legalMoves = checkMoves.generateMoves();
-                        ArrayList<Integer> legalMoveTiles = new ArrayList<>(); // List of legal ending moves
 
                         for (Short legalMove : legalMoves) {
                             int legalStartTile = (legalMove & 0b0000000000111111);
                             int legalEndTile = (legalMove & 0b0000111111000000) >> 6;
+
                             if (legalStartTile == (int) (Math.round((piece.getLocation().y / 72.0) - 1) * 8 + Math.round((piece.getLocation().x / 72.0) - 1))) {
                                 legalMoveTiles.add(legalEndTile);
                             }
@@ -381,6 +374,7 @@ public class Board {
                     }
                 });
 
+                // Piece dragged around
                 piece.addMouseMotionListener(new MouseMotionAdapter() {
                     @Override public void mouseDragged(MouseEvent e) {
                         // When the mouse is dragged, update the position of the piece image (this doesn't change the location of the piece yet)
@@ -389,11 +383,29 @@ public class Board {
                     }
                 });
 
+                // Piece placed down
                 piece.addMouseListener(new MouseAdapter() {
                     @Override public void mouseReleased(MouseEvent e) {
+                        int moveFlag = Move.Flag.none;
+                        // If a pawn is on a promotion tile
+                        if (Piece.pieceType(tile[pieceTracker.tilesWithPieces[finalI]]) == Piece.Pawn && MoveData.pawnPromotionTiles.contains((int) (Math.round((piece.getLocation().y / 72.0) - 1) * 8 + Math.round((piece.getLocation().x / 72.0) - 1)))) {
+                            PromotionUtility promotion = new PromotionUtility();
+                            promotion.createPromotionWindow(); // Show a dialog box for promotion
+
+                            moveFlag = promotion.getPromotionPiece(); // Set the promotion flag
+                        }
+
                         // Create a new move and make it on the board
-                        Move move = new Move(pieceTracker.tilesWithPieces[finalI], (int) (Math.round((piece.getLocation().y / 72.0) - 1) * 8 + Math.round((piece.getLocation().x / 72.0) - 1)));
-                        makeMove(move);
+                        Move move = new Move(pieceTracker.tilesWithPieces[finalI], (int) (Math.round((piece.getLocation().y / 72.0) - 1) * 8 + Math.round((piece.getLocation().x / 72.0) - 1)), moveFlag);
+                        boolean moveMade = makeMove(move);
+
+                        // Update the board and position
+                        if (moveMade) {
+                            Settings.drawSettings(); // Update the fen string in the text field
+                            loadPosition(FenUtility.changePlayerPerspective(FenUtility.buildFenFromPosition())); // Load the new position
+                            drawPosition(); // Draw the position
+                            drawBoard(null);
+                        }
                     }
                 });
 
@@ -519,5 +531,6 @@ public class Board {
         appWindow.setVisible(true); // Show the frame
     }
     // end: public static void createApplication
+
 }
 // end: public class Board

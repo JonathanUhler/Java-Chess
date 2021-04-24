@@ -35,6 +35,10 @@ PRE-RELEASES--
 									
 	pre-1.3.1	4/21/21			Changes in this version:
 									-Fixed the bug outlined in issue #3
+									
+	pre-1.4.0	4/24/21			Changes in this version:
+									-Fixed issue with halfmove and fullmove counters
+									-Added pawn promotion
 
 
 FULL-RELEASES--
