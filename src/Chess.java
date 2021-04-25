@@ -19,6 +19,11 @@ import java.util.HashMap;
 //
 public class Chess {
 
+    // Create classes
+    public static Graphics graphics;
+    public static Board board;
+
+
     // ====================================================================================================
     // public static void main
     //
@@ -38,18 +43,17 @@ public class Chess {
             JSONUtility.write(new File("./").getAbsoluteFile().getParentFile().getParentFile() + "/config/config.json", "{theme=" + theme + ", startingFEN=" + startingFEN + "}");
         }
 
+        // Initialize classes
+        graphics = new Graphics();
+        board = new Board();
+
         // Initialize the board and starting position of the pieces
-        Board.createApplication(); // Create the JFrame window
-
-        Board.loadPosition(startingFEN); // Load the starting position
-
+        graphics.createApplication(); // Create the JFrame window
+        board.loadPosition(startingFEN); // Load the starting position
         JPanel settings = Settings.drawSettings(); // Display options
-
-        Board.drawPosition(); // Display all the pieces of the current position onto the frame
-
-        Board.drawBoard(null); // Display the tiles that make up the board
-
-        Board.appWindow.add(settings);
+        graphics.drawPosition(); // Display all the pieces of the current position onto the frame
+        graphics.drawBoard(null); // Display the tiles that make up the board
+        graphics.appWindow.add(settings);
     }
     // end: public static void main
 }

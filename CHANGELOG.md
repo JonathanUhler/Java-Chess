@@ -39,6 +39,10 @@ PRE-RELEASES--
 	pre-1.4.0	4/24/21			Changes in this version:
 									-Fixed issue with halfmove and fullmove counters
 									-Added pawn promotion
+									
+	pre-1.4.1	4/25/21			Changes in this version:
+									-Code cleanup
+									-Added Graphics class, removed graphics methods from Board class
 
 
 FULL-RELEASES--

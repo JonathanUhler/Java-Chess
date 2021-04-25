@@ -163,7 +163,7 @@ public class FenUtility {
             for (int col = 0; col < 8; col++) {
 
                 int tile = row * 8 + col; // Store the current tile being looked at
-                int piece = Board.tile[tile]; // Find the piece (if any) on the current tile
+                int piece = Chess.board.tile[tile]; // Find the piece (if any) on the current tile
 
                 if (piece != 0) { // Make sure a piece exists on the current tile
                     if (numEmptyCols != 0) {
@@ -216,23 +216,23 @@ public class FenUtility {
 
         // Player to move
         fen.append(' '); // Add a space
-        fen.append((Board.whitesMove) ? 'w' : 'b'); // Add whose turn it is to move
+        fen.append((Chess.board.whitesMove) ? 'w' : 'b'); // Add whose turn it is to move
 
         // Castling legality
-        boolean whiteKingside = (Board.currentGameState & 1) == 1;
-        boolean whiteQueenside = (Board.currentGameState >> 1 & 1) == 1;
-        boolean blackKingside = (Board.currentGameState >> 2 & 1) == 1;
-        boolean blackQueenside = (Board.currentGameState >> 3 & 1) == 1;
+        boolean whiteKingside = (Chess.board.currentGameState & 1) == 1;
+        boolean whiteQueenside = (Chess.board.currentGameState >> 1 & 1) == 1;
+        boolean blackKingside = (Chess.board.currentGameState >> 2 & 1) == 1;
+        boolean blackQueenside = (Chess.board.currentGameState >> 3 & 1) == 1;
         fen.append(' ');
         fen.append((whiteKingside) ? "K" : "");
         fen.append((whiteQueenside) ? "Q" : "");
         fen.append((blackKingside) ? "k" : "");
         fen.append((blackQueenside) ? "q" : "");
-        fen.append(((Board.currentGameState & 15) == 0) ? "-" : "");
+        fen.append(((Chess.board.currentGameState & 15) == 0) ? "-" : "");
 
         // En passant legality
         fen.append(' '); // Add a space
-        int enPassantRow = (Board.currentGameState >> 4) & 15; // Get the en passant row
+        int enPassantRow = (Chess.board.currentGameState >> 4) & 15; // Get the en passant row
         String[] colNames = {"a", "b", "c", "d", "e", "f", "g", "h"};
 
         if (enPassantRow == 0) { // If the row = 0, no en passant is available
@@ -240,17 +240,17 @@ public class FenUtility {
         }
         else { // If the row doesn't = 0, get the en passant coordinates
             String fileName = colNames[enPassantRow - 1];
-            int enPassantCol = (Board.whitesMove) ? 6 : 3;
+            int enPassantCol = (Chess.board.whitesMove) ? 6 : 3;
             fen.append(fileName).append(enPassantCol);
         }
 
         // Half move clock
         fen.append(' '); // Add a space
-        fen.append(Board.fiftyMoveRule);
+        fen.append(Chess.board.fiftyMoveRule);
 
         // Full move clock (for 50 move rule)
         fen.append(' '); // Add a space
-        fen.append(Board.fullmoves); // Figure out the number of full moves
+        fen.append(Chess.board.fullmoves); // Figure out the number of full moves
 
         // Return the position
         return fen.toString();

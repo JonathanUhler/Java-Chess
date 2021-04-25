@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 //
 public class Settings {
 
-    private static final int w = Board.w;
+    private static final int w = Chess.graphics.w;
     private static final JPanel settingsPanel = new JPanel();
 
     private static boolean perspectiveChanged;
@@ -43,7 +43,7 @@ public class Settings {
     public static JPanel drawSettings() {
 
         settingsPanel.removeAll();
-        settingsPanel.setBounds(0, 0, Board.w, 60);
+        settingsPanel.setBounds(0, 0, w, 60);
 
 //        settingsPanel.add(playerColor()); // Add this menu to the view
         settingsPanel.add(newGame()); // Add the button to start a new game
@@ -76,26 +76,26 @@ public class Settings {
         // Create an action listener for the preferred piece color
         ActionListener preferredSideChanged = e -> {
             HashMap<String, String> userConfigData = null; // Convert user config data into a hashmap
-            try { userConfigData = JSONUtility.stringToDictionary(JSONUtility.read(Board.chessProjectPath + "/config/config.json"));
+            try { userConfigData = JSONUtility.stringToDictionary(JSONUtility.read(Chess.board.chessProjectPath + "/config/config.json"));
             } catch (IOException ioException) { ioException.printStackTrace(); }
 
             if (playerColor.getSelectedItem() == "White") { // If the user selected white, load the white FEN starting position
                 assert userConfigData != null;
                 userConfigData.put("startingFEN", "RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w KQkq - 0 1"); // Save the starting FEN
-                Board.loadPosition("RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w KQkq - 0 1");
-                Board.whitesMove = true;
+                Chess.board.loadPosition("RNBQKBNR/PPPPPPPP/8/8/8/8/pppppppp/rnbqkbnr w KQkq - 0 1");
+                Chess.board.whitesMove = true;
             }
             else { // If the user selected black, load the black FEN starting position
                 assert userConfigData != null;
                 userConfigData.put("startingFEN", "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"); // Save the starting FEN
-                Board.loadPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-                Board.whitesMove = false;
+                Chess.board.loadPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
+                Chess.board.whitesMove = false;
             }
 
-            JSONUtility.write(Board.chessProjectPath + "/config/config.json", userConfigData.toString()); // Save the new data to the config file
+            JSONUtility.write(Chess.board.chessProjectPath + "/config/config.json", userConfigData.toString()); // Save the new data to the config file
             drawSettings();
-            Board.drawPosition(); // Update the position
-            Board.drawBoard(null);
+            Chess.graphics.drawPosition(); // Update the position
+            Chess.graphics.drawBoard(null);
         };
 
         playerColor.addActionListener(preferredSideChanged); // Add the action listener to the player color menu
@@ -121,7 +121,7 @@ public class Settings {
     //
     public static JComboBox<String> boardTheme() {
         String currentTheme = ""; // Read the theme
-        try { currentTheme = JSONUtility.stringToDictionary(JSONUtility.read(Board.chessProjectPath + "/config/config.json")).get("theme");
+        try { currentTheme = JSONUtility.stringToDictionary(JSONUtility.read(Chess.board.chessProjectPath + "/config/config.json")).get("theme");
         } catch (IOException ioException) { ioException.printStackTrace(); }
 
         // Create dropdown menu for the board theme
@@ -131,16 +131,16 @@ public class Settings {
         // Create an action listener for the theme dropdown menu
         ActionListener boardThemeChanged = e -> {
             HashMap<String, String> userConfigData = null; // Convert user config data into a hashmap
-            try { userConfigData = JSONUtility.stringToDictionary(JSONUtility.read(Board.chessProjectPath + "/config/config.json"));
+            try { userConfigData = JSONUtility.stringToDictionary(JSONUtility.read(Chess.board.chessProjectPath + "/config/config.json"));
             } catch (IOException ioException) { ioException.printStackTrace(); }
 
             assert userConfigData != null;
             userConfigData.put("theme", (String) boardThemesDropdown.getSelectedItem()); // Save the new data
 
-            JSONUtility.write(Board.chessProjectPath + "/config/config.json", userConfigData.toString()); // Save the new data
+            JSONUtility.write(Chess.board.chessProjectPath + "/config/config.json", userConfigData.toString()); // Save the new data
             drawSettings();
-            Board.drawPosition(); // Update the position as well
-            Board.drawBoard(null); // When the user changes the theme, update the board
+            Chess.graphics.drawPosition(); // Update the position as well
+            Chess.graphics.drawBoard(null); // When the user changes the theme, update the board
         };
 
         boardThemesDropdown.addActionListener(boardThemeChanged); // Add the action listener to the dropdown menu
@@ -171,9 +171,9 @@ public class Settings {
 
         // Create an action listener for the fen text field
         ActionListener fenPositionChanged = e -> {
-            Board.loadPosition(customFenBox.getText());
-            Board.drawPosition();
-            Board.drawBoard(null);
+            Chess.board.loadPosition(customFenBox.getText());
+            Chess.graphics.drawPosition();
+            Chess.graphics.drawBoard(null);
         };
 
         customFenBox.addActionListener(fenPositionChanged); // Add the action listener to the text field
@@ -205,10 +205,10 @@ public class Settings {
             @Override
             public void actionPerformed(ActionEvent e) {
                 perspectiveChanged = true;
-                Board.whiteOnBottom = !Board.whiteOnBottom;
-                Board.loadPosition(FenUtility.changePlayerPerspective(FenUtility.buildFenFromPosition()));
-                Board.drawPosition();
-                Board.drawBoard(null);
+                Chess.board.whiteOnBottom = !Chess.board.whiteOnBottom;
+                Chess.board.loadPosition(FenUtility.changePlayerPerspective(FenUtility.buildFenFromPosition()));
+                Chess.graphics.drawPosition();
+                Chess.graphics.drawBoard(null);
                 drawSettings();
             }
         });
@@ -236,7 +236,7 @@ public class Settings {
         JButton toggleLegalMoves = new JButton("Toggle Legal Moves");
 
         // Create an action listener for the button
-        ActionListener legalMovesChanged = e -> Board.showLegalMoves = !Board.showLegalMoves;
+        ActionListener legalMovesChanged = e -> Chess.board.showLegalMoves = !Chess.board.showLegalMoves;
 
         toggleLegalMoves.addActionListener(legalMovesChanged); // Add the action listener to the button
         toggleLegalMoves.setBounds((int) (w * 9.5), w * 3, w * 3, w); // Set the location of the button
@@ -264,9 +264,9 @@ public class Settings {
 
         // Create an action listener for the button
         ActionListener newGameRequested = e -> {
-            Board.loadPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0");
-            Board.drawPosition();
-            Board.drawBoard(null);
+            Chess.board.loadPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0");
+            Chess.graphics.drawPosition();
+            Chess.graphics.drawBoard(null);
             drawSettings();
         };
 

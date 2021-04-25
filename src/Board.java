@@ -6,16 +6,9 @@
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
 
 
-import java.awt.*;
 import javax.sound.sampled.*;
-import javax.swing.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionAdapter;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -27,51 +20,43 @@ import java.util.List;
 //
 public class Board {
 
-    public static final File chessProjectPath = new File("./").getAbsoluteFile().getParentFile().getParentFile(); // Get the path for .../Chess/
+    public final File chessProjectPath = new File("./").getAbsoluteFile().getParentFile().getParentFile(); // Get the path for .../Chess/
 
-    public static final int w = 720, h = w; // Width and height of the JFrame application window
-    public static final JFrame appWindow = new JFrame("Chess"); // Create a new application window
-    public static final JLayeredPane board = new JLayeredPane(); // Create the layered pane that holds the board and pieces
-    public static final JLayeredPane pieces = new JLayeredPane();
+    public final int whiteIndex = 0; // Index for white pieces in arrays (such as PieceTracker arrays below) of white pieces
+    public final int blackIndex = 1; // Index for black pieces in arrays of black pieces
+    public int[] tile = new int[64]; // Every tile on the board
 
-    public static final int whiteIndex = 0; // Index for white pieces in arrays (such as PieceTracker arrays below) of white pieces
-    public static final int blackIndex = 1; // Index for black pieces in arrays of black pieces
-    public static int[] tile = new int[64]; // Every tile on the board
+    public PieceTracker[] pawns; // 1 PieceTracker for all white pawns, 1 PieceTracker for all black pawns
+    public PieceTracker[] knights; // 1 PieceTracker for all white knights, 1 PieceTracker for all black knights
+    public PieceTracker[] bishops; // 1 PieceTracker for all white bishops, 1 PieceTracker for all black bishops
+    public PieceTracker[] rooks; // 1 PieceTracker for all white rooks, 1 PieceTracker for all black rooks
+    public PieceTracker[] queens; // 1 PieceTracker for all white queens, 1 PieceTracker for all black queens
+    public PieceTracker[] kings; // 2 integers. 1 for the tile of the white king, 1 for the tile of the black king
+    public PieceTracker[] allPieceTrackers; // Every piece for both white and black
 
-    public static PieceTracker[] pawns; // 1 PieceTracker for all white pawns, 1 PieceTracker for all black pawns
-    public static PieceTracker[] knights; // 1 PieceTracker for all white knights, 1 PieceTracker for all black knights
-    public static PieceTracker[] bishops; // 1 PieceTracker for all white bishops, 1 PieceTracker for all black bishops
-    public static PieceTracker[] rooks; // 1 PieceTracker for all white rooks, 1 PieceTracker for all black rooks
-    public static PieceTracker[] queens; // 1 PieceTracker for all white queens, 1 PieceTracker for all black queens
-    public static PieceTracker[] kings; // 2 integers. 1 for the tile of the white king, 1 for the tile of the black king
-    public static PieceTracker[] allPieceTrackers; // Every piece for both white and black
-
-    static PieceTracker getPieceTracker(int pieceType, int pieceColor) {
+    PieceTracker getPieceTracker(int pieceType, int pieceColor) {
         return allPieceTrackers[pieceColor * 8 + pieceType]; // Get a specific piece tracker given only the piece type and color
     }
 
-    public static int fullmoves; // Number of fullmoves played this game
-    public static int fiftyMoveRule; // Number of fullmoves since the last pawn movement or piece capture
+    public int fullmoves; // Number of fullmoves played this game
+    public int fiftyMoveRule; // Number of fullmoves since the last pawn movement or piece capture
 
-    public static String currentFenPosition; // Current arrangement of pieces on the board in fen notation
-    public static HashMap<String, Integer> threeFoldRepetition = new HashMap<>(); // List of positions and how many times they have appeared in the game
+    public String currentFenPosition; // Current arrangement of pieces on the board in fen notation
+    public HashMap<String, Integer> threeFoldRepetition = new HashMap<>(); // List of positions and how many times they have appeared in the game
 
-    public static boolean whitesMove; // Is white to move?
-    public static int colorToMove; // Which color is to move
-    public static int opponentColor; // What is the opposing color
-    public static int friendlyColor; // What is the safe color
-    public static boolean whiteOnBottom = true; // Did the white player start with pieces on the bottom of the board?
+    public boolean whitesMove; // Is white to move?
+    public int colorToMove; // Which color is to move
+    public int opponentColor; // What is the opposing color
+    public int friendlyColor; // What is the safe color
+    public boolean whiteOnBottom = true; // Did the white player start with pieces on the bottom of the board?
 
-    public static boolean showLegalMoves = true; // Should legal moves be highlighted?
+    public boolean showLegalMoves = true; // Should legal moves be highlighted?
 
     // Bits 0-3 store white and black kingside/queenside castling legality. 1 = castling allowed, 0 = no castling allowed
     // Bits 4-7 store row of en passant tile (starting at 1, so 0 = no en passant row)
     // Bits 8-13 captured piece
     // Bits 14-... fifty mover counter
-    static int currentGameState;
-
-    static int x_pressed = 0; // X position of the mouse when its pressed
-    static int y_pressed = 0; // Y position of the mouse when its pressed
+    int currentGameState;
 
 
     // ====================================================================================================
@@ -87,7 +72,7 @@ public class Board {
     //
     // None
     //
-    public static void loadPosition(String fen) {
+    public void loadPosition(String fen) {
         currentFenPosition = fen.split(" ")[0]; // Save the current fen position
 
         initBoard(); // Initialize the board
@@ -146,7 +131,7 @@ public class Board {
 
 
     // ====================================================================================================
-    // static void initBoard
+    // void initBoard
     //
     // Initializes information about the state of the board and the pieces (including PieceTrackers)
     //
@@ -158,7 +143,7 @@ public class Board {
     //
     // None
     //
-    static void initBoard() {
+    void initBoard() {
         // Initialize some basic information about the game
         tile = new int[64];
 
@@ -193,11 +178,11 @@ public class Board {
             kings[blackIndex],
         };
     }
-    // end: static void initBoard
+    // end: void initBoard
 
 
     // ====================================================================================================
-    // public static void makeMove
+    // public void makeMove
     //
     // Makes a move on the board
     //
@@ -205,11 +190,13 @@ public class Board {
     //
     // move:    the move to be made
     //
+    // isGhost: should the move be played on the board, or is this move just for check(mate) search
+    //
     // Returns--
     //
     // None
     //
-    public static boolean makeMove(Move move) {
+    public boolean makeMove(Move move, boolean isGhost) {
         int moveFrom = move.startTile(); // Tile the piece starts on
         int moveTo = move.endTile(); // Tile the piece goes to
 
@@ -234,8 +221,8 @@ public class Board {
 
         // If the move being played was not found, it is illegal
         if (!legalMoves.contains(move.moveValue)) {
-            drawPosition(); // Redraw the board
-            drawBoard(null); // Redraw the board
+            Chess.graphics.drawPosition(); // Redraw the board
+            Chess.graphics.drawBoard(null); // Redraw the board
             return false;
         }
 
@@ -315,222 +302,10 @@ public class Board {
             threeFoldRepetition.put(currentFenPosition, 1);
         }
 
-        // The move was made
-        return true;
+        // The move was made and should be played on the board visually
+        return !isGhost;
     }
-    // end: public static void makeMove
-
-
-    // ====================================================================================================
-    // public static void drawPosition
-    //
-    // Draws the pieces onto the board
-    //
-    // Arguments--
-    //
-    // None
-    //
-    // Returns--
-    //
-    // None
-    //
-    public static void drawPosition() {
-        pieces.removeAll();
-        pieces.setBounds(0, 0, w, w);
-
-        int pieceStartingX = 2 * (w / 20); // Starting x position for a piece
-        int pieceStartingY = 2 * (w / 20); // Starting y position for a piece
-        int pieceW = (int) (w * 0.1); // Starting width for a piece
-        int pieceH = (int) (w * 0.1); // Starting height for a piece
-        ArrayList<Integer> legalMoveTiles = new ArrayList<>(); // List of legal ending moves
-
-        for (PieceTracker pieceTracker : allPieceTrackers) {
-            for (int i = 0; i < pieceTracker.pieceCount; i++) {
-                String pieceBinaryIdentifier = Integer.toBinaryString(pieceTracker.pieceColor | pieceTracker.pieceType); // Define the binary string for the piece (that is the color | the type)
-                JLabel piece = new JLabel(new ImageIcon(chessProjectPath + "/reference/pieces/" + pieceBinaryIdentifier + ".png")); // Create a new label with the correct image
-                piece.setBounds(pieceStartingX * ((pieceTracker.tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(pieceTracker.tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Set the size and position of the piece
-
-                int finalI = i;
-                // Piece picked up
-                piece.addMouseListener(new MouseAdapter() {
-                    @Override public void mousePressed(MouseEvent e) {
-                        // Get and store the values of the mouse position when the mouse is pressed
-                        x_pressed = e.getX();
-                        y_pressed = e.getY();
-
-                        MoveUtility checkMoves = new MoveUtility();
-                        List<Short> legalMoves = checkMoves.generateMoves();
-
-                        for (Short legalMove : legalMoves) {
-                            int legalStartTile = (legalMove & 0b0000000000111111);
-                            int legalEndTile = (legalMove & 0b0000111111000000) >> 6;
-
-                            if (legalStartTile == (int) (Math.round((piece.getLocation().y / 72.0) - 1) * 8 + Math.round((piece.getLocation().x / 72.0) - 1))) {
-                                legalMoveTiles.add(legalEndTile);
-                            }
-                        }
-
-                        drawBoard(legalMoveTiles);
-                    }
-                });
-
-                // Piece dragged around
-                piece.addMouseMotionListener(new MouseMotionAdapter() {
-                    @Override public void mouseDragged(MouseEvent e) {
-                        // When the mouse is dragged, update the position of the piece image (this doesn't change the location of the piece yet)
-                        Point frameRelativeMousePos = BoardManager.frameRelativeMousePosition(appWindow, new Point(e.getXOnScreen(), e.getYOnScreen()));
-                        piece.setLocation(frameRelativeMousePos.x - x_pressed, frameRelativeMousePos.y - y_pressed);
-                    }
-                });
-
-                // Piece placed down
-                piece.addMouseListener(new MouseAdapter() {
-                    @Override public void mouseReleased(MouseEvent e) {
-                        int moveFlag = Move.Flag.none;
-                        // If a pawn is on a promotion tile
-                        if (Piece.pieceType(tile[pieceTracker.tilesWithPieces[finalI]]) == Piece.Pawn && MoveData.pawnPromotionTiles.contains((int) (Math.round((piece.getLocation().y / 72.0) - 1) * 8 + Math.round((piece.getLocation().x / 72.0) - 1)))) {
-                            PromotionUtility promotion = new PromotionUtility();
-                            promotion.createPromotionWindow(); // Show a dialog box for promotion
-
-                            moveFlag = promotion.getPromotionPiece(); // Set the promotion flag
-                        }
-
-                        // Create a new move and make it on the board
-                        Move move = new Move(pieceTracker.tilesWithPieces[finalI], (int) (Math.round((piece.getLocation().y / 72.0) - 1) * 8 + Math.round((piece.getLocation().x / 72.0) - 1)), moveFlag);
-                        boolean moveMade = makeMove(move);
-
-                        // Update the board and position
-                        if (moveMade) {
-                            Settings.drawSettings(); // Update the fen string in the text field
-                            loadPosition(FenUtility.changePlayerPerspective(FenUtility.buildFenFromPosition())); // Load the new position
-                            drawPosition(); // Draw the position
-                            drawBoard(null);
-                        }
-                    }
-                });
-
-                pieces.add(piece, 0); // Add the piece to the pieces layered pane
-            }
-        }
-
-        appWindow.add(pieces); // Add the board to the frame
-        SwingUtilities.updateComponentTreeUI(appWindow); // Reload the JFrame to show any changes
-    }
-    // end: public static void drawPosition
-
-
-    // ====================================================================================================
-    // public static void drawBoard
-    //
-    // Draws the board
-    //
-    // Arguments--
-    //
-    // None
-    //
-    // Returns--
-    //
-    // None
-    //
-    public static void drawBoard(ArrayList<Integer> highlightTiles) {
-        if (highlightTiles == null) {
-            highlightTiles = new ArrayList<>(); // Handle calls to drawBoard that don't specify legal move tiles to be highlighted
-        }
-
-        String currentTheme = ""; // Read the theme
-        try { currentTheme = JSONUtility.stringToDictionary(JSONUtility.read(Board.chessProjectPath + "/config/config.json")).get("theme");
-        } catch (IOException ioException) { ioException.printStackTrace(); }
-
-        board.removeAll();
-        board.setBounds(0, 0, w, w);
-
-        // Create variables for the x/y/w/h dimensions of each tile and the color of each tile
-        int tileW = w / 10, tileX, tileY;
-        Color c;
-        Color lightColor = null, darkColor = null; // Create variables for the light and dark tile color
-
-        // Allow the theme of the board to be changed by changing the colors
-        switch (currentTheme) {
-            // Classic theme
-            case "Gray":
-                lightColor = new Color(231, 231, 231);
-                darkColor = new Color(88, 88, 88);
-                break;
-            // Green theme
-            case "Green":
-                lightColor = new Color(238, 237, 213);
-                darkColor = new Color(124, 148, 93);
-                break;
-            // Blue theme
-            case "Blue":
-                lightColor = new Color(207, 215, 224);
-                darkColor = new Color(110, 143, 167);
-                break;
-            // Brown theme
-            case "Brown":
-                lightColor = new Color(236, 217, 185);
-                darkColor = new Color(175, 137, 104);
-                break;
-        }
-
-        // Display the tiles
-        for (int row = 0; row < 8; row++) {
-            for (int col = 0; col < 8; col++) {
-
-                // If the row plus the column is divisible by 2, then set it to one color
-                if ((row + col) % 2 == 1) {
-                    c = (highlightTiles.contains(((row * 8) + col)) && showLegalMoves) ? new Color(161, 86, 86) : darkColor;
-                }
-                // Otherwise, set it to the other color
-                else {
-                    c = (highlightTiles.contains(((row * 8) + col)) && showLegalMoves) ? new Color(238, 156, 156) : lightColor;
-                }
-
-                // Update the x/y position of each tile
-                tileX = (col + 1) * tileW;
-                tileY = (row + 1) * tileW;
-
-                JLabel newTile = new JLabel(); // Create a new tile object to add to the layered pane
-                newTile.setBorder(BorderFactory.createLineBorder(c, w / 2)); // Set the color of the tile
-                newTile.setBounds(tileX, tileY, tileW, tileW); // Set the size and location of the tile
-
-                board.add(newTile, 1); // Add the tile below the pieces
-            }
-        }
-
-        // Add a black border around the board
-        JLabel boardBorder = new JLabel();
-        boardBorder.setBorder(BorderFactory.createLineBorder(Color.black, tileW / 16));
-        boardBorder.setBounds(72 - (tileW / 16), 72 - (tileW / 16), tileW * 8 + (tileW / 16), tileW * 8 + (tileW / 16));
-        board.add(boardBorder, 0);
-
-        appWindow.add(board); // Add the tiles to the board
-        SwingUtilities.updateComponentTreeUI(appWindow); // Reload the JFrame to show any changes
-    }
-    // end: public static void drawBoard
-
-
-    // ====================================================================================================
-    // public static void createApplication
-    //
-    // Creates the JFrame
-    //
-    // Arguments--
-    //
-    // None
-    //
-    // Returns--
-    //
-    // None
-    //
-    public static void createApplication() {
-        appWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Terminate the frame when the 'x' button of the application window is pressed
-        appWindow.setBounds(20, 30, w, h); // Set the size of the frame
-        appWindow.setLayout(null);
-        appWindow.setResizable(false); // Prevent the JFrame from being resized
-        appWindow.setVisible(true); // Show the frame
-    }
-    // end: public static void createApplication
+    // end: public void makeMove
 
 }
 // end: public class Board

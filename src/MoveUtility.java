@@ -46,10 +46,10 @@ public class MoveUtility {
 
         for (int startTile = 0; startTile < 64; startTile++) {
 
-            int piece = Board.tile[startTile];
+            int piece = Chess.board.tile[startTile];
 
             if (piece != 0) { // Make sure there is an actual piece on the tile
-                if (Piece.checkColor(piece, Board.colorToMove, true)) { // Only check for peices of the color whose turn it is to move
+                if (Piece.checkColor(piece, Chess.board.colorToMove, true)) { // Only check for peices of the color whose turn it is to move
                     if (Piece.checkSliding(piece)) { // Check sliding pieces
                         generateSlidingMoves(startTile, piece);
                     }
@@ -95,16 +95,16 @@ public class MoveUtility {
             for (int i = 0; i < precomputedMoveData.tilesToEdge[startTile][direction]; i++) {
 
                 int endTile = startTile + precomputedMoveData.slidingOffsets[direction] * (i + 1); // Get the legal ending tile for the piece. Multiply by (i + 1) because sliding pieces can move an infinite distance in each of their directions
-                int pieceOnEndTile = Board.tile[endTile]; // Figure out if there is a piece on the ending tile
+                int pieceOnEndTile = Chess.board.tile[endTile]; // Figure out if there is a piece on the ending tile
 
                 // If the piece on the ending tile is of the same color, the move is illegal
-                if (Piece.checkColor(pieceOnEndTile, Board.friendlyColor, true)) { break; }
+                if (Piece.checkColor(pieceOnEndTile, Chess.board.friendlyColor, true)) { break; }
 
                 // Add the move to the list of legal moves
                 moves.add(new Move(startTile, endTile).moveValue);
 
                 // If the piece on the ending tile is of the opposing color, you can capture, but not go past it
-                if (Piece.checkColor(pieceOnEndTile, Board.opponentColor, true)) { break; }
+                if (Piece.checkColor(pieceOnEndTile, Chess.board.opponentColor, true)) { break; }
 
             }
         }
@@ -131,10 +131,10 @@ public class MoveUtility {
             if (precomputedMoveData.tilesToEdge[startTile][direction] == 0) { continue; }
 
             int endTile = startTile + precomputedMoveData.slidingOffsets[direction]; // Get the legal ending tile for the piece. Multiply by (i + 1) because sliding pieces can move an infinite distance in each of their directions
-            int pieceOnEndTile = Board.tile[endTile]; // Figure out if there is a piece on the ending tile
+            int pieceOnEndTile = Chess.board.tile[endTile]; // Figure out if there is a piece on the ending tile
 
             // If the piece on the ending tile is of the same color, the move is illegal
-            if (Piece.checkColor(pieceOnEndTile, Board.friendlyColor, true)) { continue; }
+            if (Piece.checkColor(pieceOnEndTile, Chess.board.friendlyColor, true)) { continue; }
 
             // Add the move to the list of legal moves
             moves.add(new Move(startTile, endTile).moveValue);
@@ -160,10 +160,10 @@ public class MoveUtility {
         List<Byte> knightOffsets = precomputedMoveData.knightOffsets.get(startTile);
 
         for (int endTile : knightOffsets) {
-            int pieceOnEndTile = Board.tile[endTile]; // Figure out if there is a piece on the ending tile
+            int pieceOnEndTile = Chess.board.tile[endTile]; // Figure out if there is a piece on the ending tile
 
             // If the piece on the ending tile is of the same color, the move is illegal
-            if (Piece.checkColor(pieceOnEndTile, Board.friendlyColor, true)) { continue; }
+            if (Piece.checkColor(pieceOnEndTile, Chess.board.friendlyColor, true)) { continue; }
 
             // Add the move to the list of legal moves
             moves.add(new Move(startTile, endTile).moveValue);
@@ -201,24 +201,24 @@ public class MoveUtility {
             int endTile = startTile + pawnOffsets.get(direction); // Get the legal ending tile for the piece. Multiply by (i + 1) because sliding pieces can move an infinite distance in each of their directions
             if (endTile < 0 || endTile > 63) { continue; }
 
-            int pieceOnEndTile = Board.tile[endTile]; // Figure out if there is a piece on the ending tile
-            int capturablePieceOne = (pawnOffsets.get(direction) == (8 * pawnDirectionMultiplier)) ? (((endTile - 1) >= 0 && (endTile + 1) < 64) ? ((pawnDirectionMultiplier == -1) ? Board.tile[endTile - 1] : Board.tile[endTile + 1]) : 0) : 0;
-            int capturablePieceTwo = (pawnOffsets.get(direction) == (8 * pawnDirectionMultiplier)) ? (((endTile - 1) >= 0 && (endTile + 1) < 64) ? ((pawnDirectionMultiplier == -1) ? Board.tile[endTile + 1] : Board.tile[endTile - 1]) : 0) : 0;
+            int pieceOnEndTile = Chess.board.tile[endTile]; // Figure out if there is a piece on the ending tile
+            int capturablePieceOne = (pawnOffsets.get(direction) == (8 * pawnDirectionMultiplier)) ? (((endTile - 1) >= 0 && (endTile + 1) < 64) ? ((pawnDirectionMultiplier == -1) ? Chess.board.tile[endTile - 1] : Chess.board.tile[endTile + 1]) : 0) : 0;
+            int capturablePieceTwo = (pawnOffsets.get(direction) == (8 * pawnDirectionMultiplier)) ? (((endTile - 1) >= 0 && (endTile + 1) < 64) ? ((pawnDirectionMultiplier == -1) ? Chess.board.tile[endTile + 1] : Chess.board.tile[endTile - 1]) : 0) : 0;
 
             // If there is a piece on the ending tile, the pawn cannot move there (friendly or not)
             if (pieceOnEndTile != 0) {
                 pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(16 * pawnDirectionMultiplier))); // Remove the option to move two squares and jump over the piece in front
                 pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(8 * pawnDirectionMultiplier))); // Remove the option to move one square forward
 
-                if (!(Piece.checkColor(capturablePieceOne, Board.opponentColor, true)) && !(Piece.checkColor(capturablePieceTwo, Board.opponentColor, true))) { continue; } // Make sure pawns don't capture the piece directly in front of them
+                if (!(Piece.checkColor(capturablePieceOne, Chess.board.opponentColor, true)) && !(Piece.checkColor(capturablePieceTwo, Chess.board.opponentColor, true))) { continue; } // Make sure pawns don't capture the piece directly in front of them
             }
 
             // If there is an enemy piece on an adjacent tile, it can be captured
-            if (Piece.checkColor(capturablePieceOne, Board.opponentColor, true) || Piece.checkColor(capturablePieceTwo, Board.opponentColor, true)) {
-                if (Piece.checkColor(capturablePieceOne, Board.opponentColor, true) && !edgeTilesLeft.contains(endTile)) {
+            if (Piece.checkColor(capturablePieceOne, Chess.board.opponentColor, true) || Piece.checkColor(capturablePieceTwo, Chess.board.opponentColor, true)) {
+                if (Piece.checkColor(capturablePieceOne, Chess.board.opponentColor, true) && !edgeTilesLeft.contains(endTile)) {
                     pawnOffsets.add(9 * pawnDirectionMultiplier);
                 }
-                if (Piece.checkColor(capturablePieceTwo, Board.opponentColor, true) && !edgeTilesRight.contains(endTile)) {
+                if (Piece.checkColor(capturablePieceTwo, Chess.board.opponentColor, true) && !edgeTilesRight.contains(endTile)) {
                     pawnOffsets.add(7 * pawnDirectionMultiplier);
                 }
 
