@@ -103,12 +103,12 @@ public class Move {
 
 
     public boolean isPromotion() {
-        int flag = MoveFlag();
+        int flag = moveFlag();
         return flag == Flag.promoteToQueen || flag == Flag.promoteToRook || flag == Flag.promoteToKnight || flag == Flag.promoteToBishop;
     }
 
 
-    public int MoveFlag() {
+    public int moveFlag() {
         return moveValue >> 12;
     }
 

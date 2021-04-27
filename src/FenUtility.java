@@ -22,7 +22,8 @@ class FenInfo {
     public boolean blackCastleKingside;
     public boolean blackCastleQueenside;
 
-    public int enPassantRow; // Which row is open for en passant
+    public String enPassantTile; // Which tile is open for en passant
+    public int enPassantCol; // Which column is open for en passant
     public int halfmoves; // Number of halfmoves this game
     public int fullmoves; // Number of fullmoves this game
 
@@ -126,7 +127,25 @@ public class FenUtility {
         fenInfo.blackCastleKingside = rightToCastle.contains("k");
         fenInfo.blackCastleQueenside = rightToCastle.contains("q");
 
-        // MARK: en passant row needs to be implemented here
+        // En passant col
+        if (fenSplit[3].equals("-")) {
+            fenInfo.enPassantCol = -1;
+        }
+        else {
+            HashMap<Character, Integer> colNames = new HashMap<>();
+            colNames.put('a', 0);
+            colNames.put('b', 1);
+            colNames.put('c', 2);
+            colNames.put('d', 3);
+            colNames.put('e', 4);
+            colNames.put('f', 5);
+            colNames.put('g', 6);
+            colNames.put('h', 7);
+
+            fenInfo.enPassantCol = colNames.get(fenSplit[3].charAt(0));
+        }
+        // En passant tile
+        fenInfo.enPassantTile = fenSplit[3];
 
         // Number of halfmoves
         fenInfo.halfmoves = Integer.parseInt(fenSplit[4]);
@@ -219,29 +238,27 @@ public class FenUtility {
         fen.append((Chess.board.whitesMove) ? 'w' : 'b'); // Add whose turn it is to move
 
         // Castling legality
-        boolean whiteKingside = (Chess.board.currentGameState & 1) == 1;
-        boolean whiteQueenside = (Chess.board.currentGameState >> 1 & 1) == 1;
-        boolean blackKingside = (Chess.board.currentGameState >> 2 & 1) == 1;
-        boolean blackQueenside = (Chess.board.currentGameState >> 3 & 1) == 1;
+        boolean whiteKingside = Chess.board.castleK;
+        boolean whiteQueenside = Chess.board.castleQ;
+        boolean blackKingside = Chess.board.castlek;
+        boolean blackQueenside = Chess.board.castleq;
+        // Add castling characters
         fen.append(' ');
         fen.append((whiteKingside) ? "K" : "");
         fen.append((whiteQueenside) ? "Q" : "");
         fen.append((blackKingside) ? "k" : "");
         fen.append((blackQueenside) ? "q" : "");
-        fen.append(((Chess.board.currentGameState & 15) == 0) ? "-" : "");
+        fen.append((!whiteKingside && !whiteQueenside && !blackKingside && !blackQueenside) ? "-" : ""); // No legal castles can be made
 
         // En passant legality
         fen.append(' '); // Add a space
-        int enPassantRow = (Chess.board.currentGameState >> 4) & 15; // Get the en passant row
-        String[] colNames = {"a", "b", "c", "d", "e", "f", "g", "h"};
+        String enPassantTile = Chess.board.enPassantTile; // Get the en passant col
 
-        if (enPassantRow == 0) { // If the row = 0, no en passant is available
+        if (enPassantTile.equals("-")) {
             fen.append('-');
         }
-        else { // If the row doesn't = 0, get the en passant coordinates
-            String fileName = colNames[enPassantRow - 1];
-            int enPassantCol = (Chess.board.whitesMove) ? 6 : 3;
-            fen.append(fileName).append(enPassantCol);
+        else {
+            fen.append(enPassantTile);
         }
 
         // Half move clock

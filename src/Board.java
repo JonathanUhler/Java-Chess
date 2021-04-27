@@ -40,6 +40,12 @@ public class Board {
 
     public int fullmoves; // Number of fullmoves played this game
     public int fiftyMoveRule; // Number of fullmoves since the last pawn movement or piece capture
+    public String enPassantTile = "-"; // Tile for en passant
+    public int enPassantCol = -1; // Column for en passant
+    public boolean castleK; // White castle kingside
+    public boolean castleQ; // White castle queenside
+    public boolean castlek; // Black castle kingside
+    public boolean castleq; // Black castle queenside
 
     public String currentFenPosition; // Current arrangement of pieces on the board in fen notation
     public HashMap<String, Integer> threeFoldRepetition = new HashMap<>(); // List of positions and how many times they have appeared in the game
@@ -51,12 +57,6 @@ public class Board {
     public boolean whiteOnBottom = true; // Did the white player start with pieces on the bottom of the board?
 
     public boolean showLegalMoves = true; // Should legal moves be highlighted?
-
-    // Bits 0-3 store white and black kingside/queenside castling legality. 1 = castling allowed, 0 = no castling allowed
-    // Bits 4-7 store row of en passant tile (starting at 1, so 0 = no en passant row)
-    // Bits 8-13 captured piece
-    // Bits 14-... fifty mover counter
-    int currentGameState;
 
 
     // ====================================================================================================
@@ -116,14 +116,17 @@ public class Board {
         opponentColor = (whitesMove) ? 1 : 0;
         friendlyColor = (opponentColor == 0) ? 1 : 0;
 
-        // Create game state
-        // Castling priorities
-        int whiteCastle = ((loadedPosition.whiteCastleKingside) ? 1 << 0 : 0) | ((loadedPosition.whiteCastleQueenside) ? 1 << 1 : 0);
-        int blackCastle = ((loadedPosition.blackCastleKingside) ? 1 << 2 : 0) | ((loadedPosition.blackCastleQueenside) ? 1 << 3 : 0);
-        // En passant availability
-        int epState = loadedPosition.enPassantRow << 4;
-        // Current game state
-        currentGameState = (short) (whiteCastle | blackCastle | epState); // Update the current game state
+        // Castling legality
+        castleK = loadedPosition.whiteCastleKingside;
+        castleQ = loadedPosition.whiteCastleQueenside;
+        castlek = loadedPosition.blackCastleKingside;
+        castleq = loadedPosition.blackCastleQueenside;
+
+        // En passant tile
+        enPassantTile = loadedPosition.enPassantTile;
+        enPassantCol = loadedPosition.enPassantCol;
+
+        // Update fifty move rule and fullmoves count
         fiftyMoveRule = loadedPosition.halfmoves; // Update the number of halfmoves
         fullmoves = loadedPosition.fullmoves; // Update the number of fullmoves
     }
@@ -204,11 +207,13 @@ public class Board {
         int movePieceType = Piece.pieceType(movePiece); // The type (single digit integer 0-7) of the piece
         int capturedPiece = tile[moveTo];
         int capturedPieceType = Piece.pieceType(capturedPiece); // The type (single digit integer 0-7) of any pieces captured by the moving piece
+        int enPassantCapturedPiece = (moveTo + 8 < 64) ? tile[moveTo + 8] : 0;
+        int enPassantCapturedType = Piece.pieceType(enPassantCapturedPiece);
         int pieceGoingToEndTile = movePiece; // The 5-bit color | type of the piece going to the end tile
 
-        int moveFlag = move.MoveFlag();
+        int moveFlag = move.moveFlag();
         boolean isPromotion = move.isPromotion();
-        boolean isEnPassant = moveFlag == Move.Flag.enPassantCapture;
+        boolean isEnPassant = (moveFlag == Move.Flag.enPassantCapture);
 
         // Generate legal moves
         MoveUtility checkMoves = new MoveUtility();
@@ -230,12 +235,28 @@ public class Board {
         fiftyMoveRule++;
         if (!whitesMove) { fullmoves++; }
 
-        // Handle captures
+        // Handle regular captures
         if (capturedPieceType != 0) {
             fiftyMoveRule = 0; // Reset the 50 move rule counter
 
             // If a piece is captured, remove it
             getPieceTracker(capturedPieceType, opponentColor).removePieceFromTile(moveTo); // 0 = white, 1 = black
+
+            try {
+                BoardManager.playSound(chessProjectPath + "/reference/sounds/capture.wav"); // Play the capture sound
+            } catch (LineUnavailableException | IOException | UnsupportedAudioFileException exception) {
+                exception.printStackTrace(); // Gracefully handle any possible exceptions from the capture sound failing
+            }
+        }
+
+        // Handle en passant pawn capture
+        if (moveFlag == Move.Flag.enPassantCapture) {
+            fiftyMoveRule = 0; // Reset the 50 move rule counter
+
+            // If a piece is captured, remove it
+            getPieceTracker(enPassantCapturedType, opponentColor).removePieceFromTile(moveTo + 8); // 0 = white, 1 = black
+            tile[moveTo + 8] = 0;
+
             try {
                 BoardManager.playSound(chessProjectPath + "/reference/sounds/capture.wav"); // Play the capture sound
             } catch (LineUnavailableException | IOException | UnsupportedAudioFileException exception) {
@@ -244,9 +265,9 @@ public class Board {
         }
 
         // Handle movement
-        getPieceTracker(movePieceType, colorToMove).movePiece(move.startTile(), move.endTile()); // 0 = white, 1 = black
+        getPieceTracker(movePieceType, colorToMove).movePiece(moveFrom, moveTo); // 0 = white, 1 = black
 
-        if (capturedPieceType == 0 && !isPromotion) {
+        if (capturedPieceType == 0 && !isPromotion && !isEnPassant) {
             try {
                 BoardManager.playSound(chessProjectPath + "/reference/sounds/move.wav"); // Play the move sound
             } catch (LineUnavailableException | IOException | UnsupportedAudioFileException exception) {
@@ -281,8 +302,22 @@ public class Board {
             pawns[colorToMove].removePieceFromTile(moveTo); // Remove the pawn to later replace it with the promoted piece
         }
 
+        // Update board representation
         tile[moveTo] = pieceGoingToEndTile; // Update the tile array with the new piece
         tile[moveFrom] = 0; // Remove the moved piece from its old location in the tile array
+
+        enPassantTile = "-"; // Reset en passant tile
+        enPassantCol = -1; // Reset en passant column
+
+        // Handle pawn moving two forward
+        if (moveFlag == Move.Flag.pawnTwoForward) {
+            String[] colNames = {"a", "b", "c", "d", "e", "f", "g", "h"};
+            enPassantTile = "";
+            enPassantTile += colNames[7 - (moveTo % 8)]; // Flag the column of the pawn that moved 2 forward (-7 to make it from the other player's perspective)
+            enPassantTile += 7 - (moveTo / 8); // Flag the row of the pawn that moved 2 forward (-7 to make it from the other player's perspective)
+
+            enPassantCol = 7 - (moveTo % 8);
+        }
 
         // Update whose turn it is to move
         // 0 = white, 1 = black

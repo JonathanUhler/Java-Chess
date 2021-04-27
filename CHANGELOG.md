@@ -43,6 +43,10 @@ PRE-RELEASES--
 	pre-1.4.1	4/25/21			Changes in this version:
 									-Code cleanup
 									-Added Graphics class, removed graphics methods from Board class
+									
+	pre-1.5.0	4/27/21			Changes in this version:
+									-Added en passant
+									-Fixed a minor issue with normal pawn captures
 
 
 FULL-RELEASES--

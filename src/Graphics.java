@@ -13,6 +13,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
@@ -59,6 +60,7 @@ public class Graphics {
                 String pieceBinaryIdentifier = Integer.toBinaryString(pieceTracker.pieceColor | pieceTracker.pieceType); // Define the binary string for the piece (that is the color | the type)
                 JLabel piece = new JLabel(new ImageIcon(Chess.board.chessProjectPath + "/reference/pieces/" + pieceBinaryIdentifier + ".png")); // Create a new label with the correct image
                 piece.setBounds(pieceStartingX * ((pieceTracker.tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(pieceTracker.tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Set the size and position of the piece
+                System.out.println(Arrays.toString(pieceTracker.tilesWithPieces));
 
                 int finalI = i;
                 // Piece picked up
@@ -97,12 +99,29 @@ public class Graphics {
                 piece.addMouseListener(new MouseAdapter() {
                     @Override public void mouseReleased(MouseEvent e) {
                         int moveFlag = Move.Flag.none;
-                        // If a pawn is on a promotion tile
-                        if (Piece.pieceType(Chess.board.tile[pieceTracker.tilesWithPieces[finalI]]) == Piece.Pawn && MoveData.pawnPromotionTiles.contains((int) (Math.round((piece.getLocation().y / 72.0) - 1) * 8 + Math.round((piece.getLocation().x / 72.0) - 1)))) {
-                            PromotionUtility promotion = new PromotionUtility();
-                            promotion.createPromotionWindow(); // Show a dialog box for promotion
 
-                            moveFlag = promotion.getPromotionPiece(); // Set the promotion flag
+                        // Figure out move flag
+                        // En passant and promotion
+                        if (Piece.pieceType(Chess.board.tile[pieceTracker.tilesWithPieces[finalI]]) == Piece.Pawn) {
+                            // Promotion
+                            if (MoveData.pawnPromotionTiles.contains((int) (Math.round((piece.getLocation().y / 72.0) - 1) * 8 + Math.round((piece.getLocation().x / 72.0) - 1)))) {
+                                PromotionUtility promotion = new PromotionUtility();
+                                promotion.createPromotionWindow(); // Show a dialog box for promotion
+
+                                moveFlag = promotion.getPromotionPiece(); // Set the promotion flag
+                            }
+
+                            // Pawn pushed two
+                            if (((int) (Math.round((piece.getLocation().y / 72.0) - 1) * 8 + Math.round((piece.getLocation().x / 72.0) - 1)) + 16) == pieceTracker.tilesWithPieces[finalI]) {
+                                moveFlag = Move.Flag.pawnTwoForward;
+                            }
+
+                            // En passant
+                            int enPassantCol = FenUtility.loadPositionFromFen(FenUtility.buildFenFromPosition()).enPassantCol;
+                            int enPassantTile = (enPassantCol != -1) ? (2 * 8) + enPassantCol : -1; // Tile behind pawn that moved 2
+                            if ((int) (Math.round((piece.getLocation().y / 72.0) - 1) * 8 + Math.round((piece.getLocation().x / 72.0) - 1)) == enPassantTile) {
+                                moveFlag = Move.Flag.enPassantCapture;
+                            }
                         }
 
                         // Create a new move and make it on the board

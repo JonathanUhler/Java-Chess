@@ -185,16 +185,21 @@ public class MoveUtility {
     //
     // None
     //
-    int pawnDirectionMultiplier = -1;
+    int enPassantTile;
     ArrayList<Integer> pawnOffsets;
     //
     void generatePawnMoves(int startTile) {
+        // Calculate en passant tile
+        int enPassantCol = FenUtility.loadPositionFromFen(FenUtility.buildFenFromPosition()).enPassantCol;
+        enPassantTile = (enPassantCol != -1) ? (2 * 8) + enPassantCol : -1; // Tile behind pawn that moved 2
+
+        // Initialize pawn movement
         pawnOffsets = new ArrayList<>();
-        pawnOffsets.add(8 * pawnDirectionMultiplier);
+        pawnOffsets.add(-8);
         List<Integer> edgeTilesLeft = Arrays.asList(0, 8, 16, 24, 32, 40, 48, 56), edgeTilesRight = Arrays.asList(7, 15, 23, 31, 39, 47, 55, 63); // Check to make sure a pawn isn't capturing by wrapping around the board
 
         if (precomputedMoveData.pawnStartingTiles.contains(startTile)) { // Double pawn push
-            pawnOffsets.add(16  * pawnDirectionMultiplier);
+            pawnOffsets.add(-16);
         }
 
         for (int direction = 0; direction < pawnOffsets.size(); direction++) {
@@ -202,37 +207,56 @@ public class MoveUtility {
             if (endTile < 0 || endTile > 63) { continue; }
 
             int pieceOnEndTile = Chess.board.tile[endTile]; // Figure out if there is a piece on the ending tile
-            int capturablePieceOne = (pawnOffsets.get(direction) == (8 * pawnDirectionMultiplier)) ? (((endTile - 1) >= 0 && (endTile + 1) < 64) ? ((pawnDirectionMultiplier == -1) ? Chess.board.tile[endTile - 1] : Chess.board.tile[endTile + 1]) : 0) : 0;
-            int capturablePieceTwo = (pawnOffsets.get(direction) == (8 * pawnDirectionMultiplier)) ? (((endTile - 1) >= 0 && (endTile + 1) < 64) ? ((pawnDirectionMultiplier == -1) ? Chess.board.tile[endTile + 1] : Chess.board.tile[endTile - 1]) : 0) : 0;
+            //                       Is the current direction being checked a movement of 8?   |  Is the capture on the board?               |  Is the direction going up
+            int capturablePieceOne = (pawnOffsets.get(direction) == -8) ? (((endTile - 1) >= 0 && (endTile + 1) < 64) ? (Chess.board.tile[endTile - 1]) : 0) : 0;
+            int capturablePieceTwo = (pawnOffsets.get(direction) == -8) ? (((endTile - 1) >= 0 && (endTile + 1) < 64) ? (Chess.board.tile[endTile + 1]) : 0) : 0;
+            int enPassantPiece = (enPassantTile != -1) ? Chess.board.tile[enPassantTile + 8] : 0;
 
             // If there is a piece on the ending tile, the pawn cannot move there (friendly or not)
             if (pieceOnEndTile != 0) {
-                pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(16 * pawnDirectionMultiplier))); // Remove the option to move two squares and jump over the piece in front
-                pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(8 * pawnDirectionMultiplier))); // Remove the option to move one square forward
+                pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(-16))); // Remove the option to move two squares and jump over the piece in front
+                pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(-8))); // Remove the option to move one square forward
 
                 if (!(Piece.checkColor(capturablePieceOne, Chess.board.opponentColor, true)) && !(Piece.checkColor(capturablePieceTwo, Chess.board.opponentColor, true))) { continue; } // Make sure pawns don't capture the piece directly in front of them
             }
 
-            // If there is an enemy piece on an adjacent tile, it can be captured
+            if (enPassantPiece != 0) {
+                if (enPassantTile == (startTile - 9) && !edgeTilesRight.contains((startTile - 9))) {
+                    pawnOffsets.add(-9);
+                }
+                if (enPassantTile == (startTile - 7) && !edgeTilesLeft.contains((startTile - 7))) {
+                    pawnOffsets.add(-7);
+                }
+
+                generateEnPassantCaptures(startTile);
+            }
+
+            // Regular captures
             if (Piece.checkColor(capturablePieceOne, Chess.board.opponentColor, true) || Piece.checkColor(capturablePieceTwo, Chess.board.opponentColor, true)) {
                 if (Piece.checkColor(capturablePieceOne, Chess.board.opponentColor, true) && !edgeTilesLeft.contains(endTile)) {
-                    pawnOffsets.add(9 * pawnDirectionMultiplier);
+                    pawnOffsets.add(-9);
                 }
                 if (Piece.checkColor(capturablePieceTwo, Chess.board.opponentColor, true) && !edgeTilesRight.contains(endTile)) {
-                    pawnOffsets.add(7 * pawnDirectionMultiplier);
+                    pawnOffsets.add(-7);
                 }
 
                 generatePawnCaptures(startTile);
                 continue;
             }
 
+            // Pawn promoted
             moveFlag = Move.Flag.none;
             if (MoveData.pawnPromotionTiles.contains(endTile)) {
                 moveFlag = Move.Flag.promoteToQueen; moves.add(new Move(startTile, endTile, moveFlag).moveValue);
                 moveFlag = Move.Flag.promoteToRook; moves.add(new Move(startTile, endTile, moveFlag).moveValue);
                 moveFlag = Move.Flag.promoteToKnight; moves.add(new Move(startTile, endTile, moveFlag).moveValue);
                 moveFlag = Move.Flag.promoteToBishop; moves.add(new Move(startTile, endTile, moveFlag).moveValue);
-                break;
+                continue;
+            }
+
+            // Pawn moved two forward
+            if (pawnOffsets.get(direction) == -16) {
+                moveFlag = Move.Flag.pawnTwoForward;
             }
 
             // Add the move to the list of legal moves
@@ -260,21 +284,56 @@ public class MoveUtility {
             int endTile = startTile + pawnOffset; // Get the legal ending tile for the piece. Multiply by (i + 1) because sliding pieces can move an infinite distance in each of their directions
             if (endTile < 0 || endTile > 63) { continue; }
 
+            moveFlag = Move.Flag.none;
+            // The pawn can promote after capturing
             if (MoveData.pawnPromotionTiles.contains(endTile)) {
                 moveFlag = Move.Flag.promoteToQueen; moves.add(new Move(startTile, endTile, moveFlag).moveValue);
                 moveFlag = Move.Flag.promoteToRook; moves.add(new Move(startTile, endTile, moveFlag).moveValue);
                 moveFlag = Move.Flag.promoteToKnight; moves.add(new Move(startTile, endTile, moveFlag).moveValue);
                 moveFlag = Move.Flag.promoteToBishop; moves.add(new Move(startTile, endTile, moveFlag).moveValue);
-                break;
+                continue;
             }
 
             // Add the move to the list of legal moves
             moves.add(new Move(startTile, endTile, moveFlag).moveValue);
         }
 
-        pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(9 * pawnDirectionMultiplier)));
-        pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(7 * pawnDirectionMultiplier)));
+        pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(-9)));
+        pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(-9)));
     }
     // end: void generatePawnCaptures
+
+
+    // ====================================================================================================
+    // void generateEnPassantCaptures
+    //
+    // Generates legal en passant captures for pawns
+    //
+    // Arguments--
+    //
+    // startTile:   the starting tile for the piece being checked
+    //
+    // Returns--
+    //
+    // None
+    //
+    void generateEnPassantCaptures(int startTile) {
+        for (int pawnOffset : pawnOffsets) {
+            int endTile = startTile + pawnOffset; // Find the end tile
+            int enPassantPiece = (enPassantTile != -1) ? Chess.board.tile[enPassantTile + 8] : 0; // Find the piece being targeted by the en passant move
+
+            moveFlag = Move.Flag.none;
+            // End tile is the en passant tile and the piece is another pawn
+            if (endTile == enPassantTile && Piece.pieceType(enPassantPiece) == Piece.Pawn) {
+                moveFlag = Move.Flag.enPassantCapture; // Mark with EP flag
+            }
+
+            moves.add(new Move(startTile, endTile, moveFlag).moveValue); // Save the move
+        }
+
+        pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(-9)));
+        pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(-7)));
+    }
+    // end: void generateEnPassantCaptures
 
 }

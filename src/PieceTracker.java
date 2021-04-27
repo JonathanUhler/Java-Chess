@@ -6,6 +6,8 @@
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
 
 
+import java.util.Arrays;
+
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
 // public class PieceTracker
 //
@@ -42,7 +44,7 @@ public class PieceTracker {
 
 
     // ====================================================================================================
-    // public void addPieceToTile
+    // void addPieceToTile
     //
     // Adds a new piece to a given tile
     //
@@ -54,16 +56,16 @@ public class PieceTracker {
     //
     // None
     //
-    public void addPieceToTile(int tile) {
+    void addPieceToTile(int tile) {
         tilesWithPieces[pieceCount] = tile; // At the last element of tilesWithPieces, add in the new tile as a tile now occupied by a piece
         tileMap[tile] = pieceCount; // Used later to remove or move pieces. The tile given to this function is now related to its index (pieceCount) in the tilesWithPieces array
         pieceCount++; // Increase the total number of pieces
     }
-    // end: public void addPieceToTile
+    // end: void addPieceToTile
 
 
     // ====================================================================================================
-    // public void removePieceFromTile
+    // void removePieceFromTile
     //
     // Removes an existing piece form a given tile
     //
@@ -75,17 +77,18 @@ public class PieceTracker {
     //
     // None
     //
-    public void removePieceFromTile(int tile) {
+    void removePieceFromTile(int tile) {
         int pieceIndex = tileMap[tile]; // Fetch the index in tilesWithPieces from the tileMap
         tilesWithPieces[pieceIndex] = tilesWithPieces[pieceCount - 1]; // Change the index of the piece being removed to the last element of the array to fill in gaps
         tileMap[tilesWithPieces[pieceIndex]] = pieceIndex; // After the gap has been filled, make sure to update the location of the piece that filled said gap in the tileMap
         pieceCount--; // Decrease the total number of pieces
+        System.out.println("remove: " + Arrays.toString(tilesWithPieces) + ", tile: " + tile);
     }
-    // end: public void removePieceFromTile
+    // end: void removePieceFromTile
 
 
     // ====================================================================================================
-    // public void movePiece
+    // void movePiece
     //
     // Moves a piece from a starting tile to an ending tile
     //
@@ -99,7 +102,7 @@ public class PieceTracker {
     //
     // None
     //
-    public void movePiece(int startingTile, long endingTile) {
+    void movePiece(int startingTile, long endingTile) {
         if (endingTile == -1) {
             return;
         }
@@ -107,8 +110,9 @@ public class PieceTracker {
         int pieceIndex = tileMap[startingTile]; // Fetch the index in tilesWithPieces from the tileMap using the starting tile
         tilesWithPieces[pieceIndex] = (int) endingTile; // Move the piece
         tileMap[(int) endingTile] = pieceIndex; // Update the tileMap
+        System.out.println("move: " + Arrays.toString(tilesWithPieces));
     }
-    // end: public void movePiece
+    // end: void movePiece
 
 }
 // end: public class PieceTracker
