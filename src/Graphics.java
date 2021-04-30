@@ -13,7 +13,6 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
@@ -60,7 +59,6 @@ public class Graphics {
                 String pieceBinaryIdentifier = Integer.toBinaryString(pieceTracker.pieceColor | pieceTracker.pieceType); // Define the binary string for the piece (that is the color | the type)
                 JLabel piece = new JLabel(new ImageIcon(Chess.board.chessProjectPath + "/reference/pieces/" + pieceBinaryIdentifier + ".png")); // Create a new label with the correct image
                 piece.setBounds(pieceStartingX * ((pieceTracker.tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(pieceTracker.tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Set the size and position of the piece
-                System.out.println(Arrays.toString(pieceTracker.tilesWithPieces));
 
                 int finalI = i;
                 // Piece picked up
@@ -70,12 +68,47 @@ public class Graphics {
                         x_pressed = e.getX();
                         y_pressed = e.getY();
 
-                        MoveUtility checkMoves = new MoveUtility();
-                        List<Short> legalMoves = checkMoves.generateMoves();
+                        List<Move> legalMoves = new ArrayList<>();
 
-                        for (Short legalMove : legalMoves) {
-                            int legalStartTile = (legalMove & 0b0000000000111111);
-                            int legalEndTile = (legalMove & 0b0000111111000000) >> 6;
+                        // Generate pseudo-legal moves
+                        MoveUtility checkMyMoves = new MoveUtility();
+                        List<Move> pseudoLegalMoves = checkMyMoves.generateMoves(Chess.board);
+
+                        // For each of my possible moves...
+                        for (Move moveToVerify : pseudoLegalMoves) {
+                            // Make my move on the ghost board deep copy
+                            // Deep copy the real board
+                            Board ghostBoard = new Board();
+                            try {
+                                ghostBoard = (Board) Chess.board.clone();
+                            } catch (CloneNotSupportedException cloneNotSupportedException) {
+                                cloneNotSupportedException.printStackTrace();
+                            }
+
+                            ghostBoard.makeMove(moveToVerify);
+
+                            // Generate all of the opponent's responses to my single move
+                            MoveUtility checkTheirMoves = new MoveUtility();
+                            List<Move> opponentResponses = checkTheirMoves.generateMoves(ghostBoard);
+                            // Create a list of the tiles my opponent is attacking
+                            List<Integer> opponentAttackedTiles = new ArrayList<>();
+                            for (Move opponentResponse : opponentResponses) {
+                                opponentAttackedTiles.add(opponentResponse.endTile());
+                            }
+
+                            // If the opponent is attacking...            king...       of my color...
+                            if (opponentAttackedTiles.contains(ghostBoard.kings[Chess.board.colorToMove].tilesWithPieces[0])) {
+                                continue; // ...my move was illegal
+                            }
+                            else {
+                                legalMoves.add(moveToVerify); // ...my move was legal
+                            }
+                        }
+
+                        for (Move legalMove : legalMoves) {
+                            short legalMoveValue = legalMove.moveValue;
+                            int legalStartTile = (legalMoveValue & 0b0000000000111111);
+                            int legalEndTile = (legalMoveValue & 0b0000111111000000) >> 6;
 
                             if (legalStartTile == (int) (Math.round((piece.getLocation().y / 72.0) - 1) * 8 + Math.round((piece.getLocation().x / 72.0) - 1))) {
                                 legalMoveTiles.add(legalEndTile);
@@ -98,6 +131,11 @@ public class Graphics {
                 // Piece placed down
                 piece.addMouseListener(new MouseAdapter() {
                     @Override public void mouseReleased(MouseEvent e) {
+
+                        // Generate pseudo-legal moves
+                        MoveUtility checkMyMoves = new MoveUtility();
+                        List<Move> pseudoLegalMoves = checkMyMoves.generateMoves(Chess.board);
+
                         int moveFlag = Move.Flag.none;
 
                         // Figure out move flag
@@ -124,17 +162,52 @@ public class Graphics {
                             }
                         }
 
-                        // Create a new move and make it on the board
+                        // Create a new move
                         Move move = new Move(pieceTracker.tilesWithPieces[finalI], (int) (Math.round((piece.getLocation().y / 72.0) - 1) * 8 + Math.round((piece.getLocation().x / 72.0) - 1)), moveFlag);
-                        boolean moveMade = Chess.board.makeMove(move, false);
 
-                        // Update the board and position
-                        if (moveMade) {
-                            Settings.drawSettings(); // Update the fen string in the text field
-                            Chess.board.loadPosition(FenUtility.changePlayerPerspective(FenUtility.buildFenFromPosition())); // Load the new position
-                            drawPosition(); // Draw the position
-                            drawBoard(null);
+                        // Create a list of pseudo-legal move values
+                        List<Short> pseudoLegalMoveValues = new ArrayList<>();
+                        for (Move plm : pseudoLegalMoves) { pseudoLegalMoveValues.add(plm.moveValue); }
+
+                        // Check if the move the player is trying to make is in the list of pseudo-legal moves
+                        if (pseudoLegalMoveValues.contains(move.moveValue)) {
+                            Board ghostBoard = new Board(); // Deep copy the board
+                            try { ghostBoard = (Board) Chess.board.clone(); }
+                            catch (CloneNotSupportedException cloneNotSupportedException) { cloneNotSupportedException.printStackTrace(); }
+
+                            ghostBoard.makeMove(move); // Make the player's move on the board
+
+                            // Generate all of the opponent's responses to the move
+                            MoveUtility checkTheirMoves = new MoveUtility();
+                            List<Move> opponentResponses = checkTheirMoves.generateMoves(ghostBoard);
+
+                            // Create a list of the tiles the opponent is attacking
+                            List<Integer> opponentAttackedTiles = new ArrayList<>();
+                            for (Move opponentResponse : opponentResponses) {
+                                opponentAttackedTiles.add(opponentResponse.endTile());
+                            }
+
+                            // If the opponent is attacking...            king...       of friendly color... the move was illegal
+                            if (opponentAttackedTiles.contains(ghostBoard.kings[Chess.board.colorToMove].tilesWithPieces[0])) {
+                                Chess.graphics.drawPosition(); // Redraw the board
+                                Chess.graphics.drawBoard(null); // Redraw the board
+                            }
+                            else {
+                                // Update internal data-structure
+                                Chess.board.makeMove(move);
+
+                                // Update visual representation of the board
+                                Settings.drawSettings(); // Update the fen string in the text field
+                                Chess.board.loadPosition(FenUtility.changePlayerPerspective(FenUtility.buildFenFromPosition())); // Load the new position
+                                drawPosition(); // Draw the position
+                                drawBoard(null);
+                            }
                         }
+                        else {
+                            Chess.graphics.drawPosition(); // Redraw the board
+                            Chess.graphics.drawBoard(null); // Redraw the board
+                        }
+
                     }
                 });
 
@@ -155,7 +228,7 @@ public class Graphics {
     //
     // Arguments--
     //
-    // None
+    // highlightTiles: a list of tiles to highlight (intended for highlighting legal moves)
     //
     // Returns--
     //

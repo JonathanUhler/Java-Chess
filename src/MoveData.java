@@ -17,7 +17,7 @@ import java.util.List;
 //
 public class MoveData {
 
-    //                                     /    Rook     \/   Bishop   \
+    //                                /    Rook   \/   Bishop   \
     // Move offsets for the 8 dirs  | W   E  N   S  NE  SW NW  SE
     public final int[] slidingOffsets = {-1, 1, -8, 8, -7, 7, -9, 9};
 

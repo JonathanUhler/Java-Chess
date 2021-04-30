@@ -6,14 +6,12 @@
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
 
 
-import java.util.Arrays;
-
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
 // public class PieceTracker
 //
 // Keeps track of all pieces (adding pieces to the board, removing pieces, changing piece location)
 //
-public class PieceTracker {
+public class PieceTracker implements Cloneable {
 
     public int[] tilesWithPieces; // A list of tiles that already have pieces on them
     public int[] tileMap; // Allows the ability to transition from a tile's index to the index of that tile in the tilesWithPieces array (eg, given tileIndex, where does tileIndex correspond in the tilesWithPieces array?)
@@ -82,7 +80,6 @@ public class PieceTracker {
         tilesWithPieces[pieceIndex] = tilesWithPieces[pieceCount - 1]; // Change the index of the piece being removed to the last element of the array to fill in gaps
         tileMap[tilesWithPieces[pieceIndex]] = pieceIndex; // After the gap has been filled, make sure to update the location of the piece that filled said gap in the tileMap
         pieceCount--; // Decrease the total number of pieces
-        System.out.println("remove: " + Arrays.toString(tilesWithPieces) + ", tile: " + tile);
     }
     // end: void removePieceFromTile
 
@@ -110,9 +107,32 @@ public class PieceTracker {
         int pieceIndex = tileMap[startingTile]; // Fetch the index in tilesWithPieces from the tileMap using the starting tile
         tilesWithPieces[pieceIndex] = (int) endingTile; // Move the piece
         tileMap[(int) endingTile] = pieceIndex; // Update the tileMap
-        System.out.println("move: " + Arrays.toString(tilesWithPieces));
     }
     // end: void movePiece
+
+
+    // ====================================================================================================
+    // public Object clone
+    //
+    // Clones the current PieceTracker object to a new PieceTracker object
+    //
+    // Arguments--
+    //
+    // None
+    //
+    // Returns--
+    //
+    // newPieceTracker: clones piece tracker
+    //
+    @Override public Object clone() throws CloneNotSupportedException {
+        PieceTracker newPieceTracker = (PieceTracker) super.clone();
+
+        newPieceTracker.tilesWithPieces = this.tilesWithPieces.clone();
+        newPieceTracker.tileMap = this.tileMap.clone();
+
+        return newPieceTracker;
+    }
+    // end: public Object clone
 
 }
 // end: public class PieceTracker

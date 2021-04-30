@@ -10,7 +10,6 @@ import javax.sound.sampled.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 
 
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
@@ -18,7 +17,7 @@ import java.util.List;
 //
 // Sets up the application frame and creates the 8x8 chessboard
 //
-public class Board {
+public class Board implements Cloneable {
 
     public final File chessProjectPath = new File("./").getAbsoluteFile().getParentFile().getParentFile(); // Get the path for .../Chess/
 
@@ -199,7 +198,7 @@ public class Board {
     //
     // None
     //
-    public boolean makeMove(Move move, boolean isGhost) {
+    public void makeMove(Move move) {
         int moveFrom = move.startTile(); // Tile the piece starts on
         int moveTo = move.endTile(); // Tile the piece goes to
 
@@ -215,20 +214,13 @@ public class Board {
         boolean isPromotion = move.isPromotion();
         boolean isEnPassant = (moveFlag == Move.Flag.enPassantCapture);
 
-        // Generate legal moves
-        MoveUtility checkMoves = new MoveUtility();
-        List<Short> legalMoves = checkMoves.generateMoves();
-
         // Make sure the end tile is on the board
         if (moveFrom > 63 || moveTo > 63) {
-            return false;
+            return;
         }
 
-        // If the move being played was not found, it is illegal
-        if (!legalMoves.contains(move.moveValue)) {
-            Chess.graphics.drawPosition(); // Redraw the board
-            Chess.graphics.drawBoard(null); // Redraw the board
-            return false;
+        if (movePiece == 0) {
+            return;
         }
 
         // Update halfmoves and fullmoves
@@ -336,11 +328,78 @@ public class Board {
         else { // Otherwise, add it
             threeFoldRepetition.put(currentFenPosition, 1);
         }
-
-        // The move was made and should be played on the board visually
-        return !isGhost;
     }
     // end: public void makeMove
+
+
+    // ====================================================================================================
+    // public Object clone
+    //
+    // Creates a deep copy of the current Board object into a new Board object
+    //
+    // Arguments--
+    //
+    // None
+    //
+    // Returns--
+    //
+    // newBoard:    the deep copy
+    //
+    @Override public Object clone() throws CloneNotSupportedException {
+        Board newBoard = (Board) super.clone();
+
+        newBoard.pawns = new PieceTracker[] {
+                (PieceTracker) this.pawns[0].clone(),
+                (PieceTracker) this.pawns[1].clone()
+        };
+        newBoard.knights = new PieceTracker[] {
+                (PieceTracker) this.knights[0].clone(),
+                (PieceTracker) this.knights[1].clone()
+        };
+        newBoard.bishops = new PieceTracker[] {
+                (PieceTracker) this.bishops[0].clone(),
+                (PieceTracker) this.bishops[1].clone()
+        };
+        newBoard.rooks = new PieceTracker[] {
+                (PieceTracker) this.rooks[0].clone(),
+                (PieceTracker) this.rooks[1].clone()
+        };
+        newBoard.queens = new PieceTracker[] {
+                (PieceTracker) this.queens[0].clone(),
+                (PieceTracker) this.queens[1].clone()
+        };
+        newBoard.kings = new PieceTracker[] {
+                (PieceTracker) this.kings[0].clone(),
+                (PieceTracker) this.kings[1].clone()
+        };
+
+        PieceTracker spacer = new PieceTracker(0, 0, 0);
+        newBoard.allPieceTrackers = new PieceTracker[] {
+                // White
+                spacer,
+                newBoard.pawns[newBoard.whiteIndex],
+                newBoard.knights[newBoard.whiteIndex],
+                newBoard.bishops[newBoard.whiteIndex],
+                newBoard.rooks[newBoard.whiteIndex],
+                spacer,
+                newBoard.queens[newBoard.whiteIndex],
+                newBoard.kings[newBoard.whiteIndex],
+                // Black
+                spacer,
+                newBoard.pawns[newBoard.blackIndex],
+                newBoard.knights[newBoard.blackIndex],
+                newBoard.bishops[newBoard.blackIndex],
+                newBoard.rooks[newBoard.blackIndex],
+                spacer,
+                newBoard.queens[newBoard.blackIndex],
+                newBoard.kings[newBoard.blackIndex],
+        };
+
+        newBoard.tile = this.tile.clone();
+
+        return newBoard;
+    }
+    // end: public Object clone
 
 }
 // end: public class Board

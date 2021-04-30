@@ -47,6 +47,9 @@ PRE-RELEASES--
 	pre-1.5.0	4/27/21			Changes in this version:
 									-Added en passant
 									-Fixed a minor issue with normal pawn captures
+									
+	pre-1.6.0	4/29/21			Changes in this version:
+									-Added algorithm to generate fully legal moves and discard moves that wander in to check or ignore an active check on the king
 
 
 FULL-RELEASES--
