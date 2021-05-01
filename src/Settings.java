@@ -205,7 +205,6 @@ public class Settings {
             @Override
             public void actionPerformed(ActionEvent e) {
                 perspectiveChanged = true;
-                Chess.board.whiteOnBottom = !Chess.board.whiteOnBottom;
                 Chess.board.loadPosition(FenUtility.changePlayerPerspective(FenUtility.buildFenFromPosition()));
                 Chess.graphics.drawPosition();
                 Chess.graphics.drawBoard(null);

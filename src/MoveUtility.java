@@ -201,11 +201,11 @@ public class MoveUtility {
 
         // Initialize pawn movement
         pawnOffsets = new ArrayList<>();
-        pawnOffsets.add(-8);
+        pawnOffsets.add(8 * boardToUse.pawnDir);
         List<Integer> edgeTilesLeft = Arrays.asList(0, 8, 16, 24, 32, 40, 48, 56), edgeTilesRight = Arrays.asList(7, 15, 23, 31, 39, 47, 55, 63); // Check to make sure a pawn isn't capturing by wrapping around the board
 
         if (precomputedMoveData.pawnStartingTiles.contains(startTile)) { // Double pawn push
-            pawnOffsets.add(-16);
+            pawnOffsets.add(16 * boardToUse.pawnDir);
         }
 
         for (int direction = 0; direction < pawnOffsets.size(); direction++) {
@@ -214,25 +214,25 @@ public class MoveUtility {
 
             int pieceOnEndTile = boardToUse.tile[endTile]; // Figure out if there is a piece on the ending tile
             //                       Is the current direction being checked a movement of 8?   |  Is the capture on the board?               |  Is the direction going up
-            int capturablePieceOne = (pawnOffsets.get(direction) == -8) ? (((endTile - 1) >= 0 && (endTile + 1) < 64) ? (boardToUse.tile[endTile - 1]) : 0) : 0;
-            int capturablePieceTwo = (pawnOffsets.get(direction) == -8) ? (((endTile - 1) >= 0 && (endTile + 1) < 64) ? (boardToUse.tile[endTile + 1]) : 0) : 0;
-            int enPassantPiece = (enPassantTile != -1) ? boardToUse.tile[enPassantTile + 8] : 0;
+            int capturablePieceOne = (pawnOffsets.get(direction) == 8 * boardToUse.pawnDir) ? (((endTile - 1) >= 0 && (endTile + 1) < 64) ? ((boardToUse.pawnDir == -1) ? boardToUse.tile[endTile - 1] : boardToUse.tile[endTile + 1]) : 0) : 0;
+            int capturablePieceTwo = (pawnOffsets.get(direction) == 8 * boardToUse.pawnDir) ? (((endTile - 1) >= 0 && (endTile + 1) < 64) ? ((boardToUse.pawnDir == -1) ? boardToUse.tile[endTile + 1] : boardToUse.tile[endTile - 1]) : 0) : 0;
+            int enPassantPiece = (enPassantTile != -1) ? boardToUse.tile[enPassantTile - (8 * boardToUse.pawnDir)] : 0;
 
             // If there is a piece on the ending tile, the pawn cannot move there (friendly or not)
             if (pieceOnEndTile != 0) {
-                pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(-16))); // Remove the option to move two squares and jump over the piece in front
-                pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(-8))); // Remove the option to move one square forward
+                pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(16 * boardToUse.pawnDir))); // Remove the option to move two squares and jump over the piece in front
+                pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(8 * boardToUse.pawnDir))); // Remove the option to move one square forward
 
                 if (!(Piece.checkColor(capturablePieceOne, boardToUse.opponentColor, true)) && !(Piece.checkColor(capturablePieceTwo, boardToUse.opponentColor, true))) { continue; } // Make sure pawns don't capture the piece directly in front of them
             }
 
             // En passant captures
             if (enPassantPiece != 0) {
-                if (enPassantTile == (startTile - 9) && !edgeTilesRight.contains((startTile - 9))) {
-                    pawnOffsets.add(-9);
+                if (enPassantTile == (startTile + (9 * boardToUse.pawnDir)) && !edgeTilesRight.contains((startTile + (9 * boardToUse.pawnDir)))) {
+                    pawnOffsets.add(9 * boardToUse.pawnDir);
                 }
-                if (enPassantTile == (startTile - 7) && !edgeTilesLeft.contains((startTile - 7))) {
-                    pawnOffsets.add(-7);
+                if (enPassantTile == (startTile + (7 * boardToUse.pawnDir)) && !edgeTilesLeft.contains((startTile + (7 * boardToUse.pawnDir)))) {
+                    pawnOffsets.add(7 * boardToUse.pawnDir);
                 }
 
                 movesGenerated.addAll(generateEnPassantCaptures(startTile));
@@ -241,10 +241,10 @@ public class MoveUtility {
             // Regular captures
             if (Piece.checkColor(capturablePieceOne, boardToUse.opponentColor, true) || Piece.checkColor(capturablePieceTwo, boardToUse.opponentColor, true)) {
                 if (Piece.checkColor(capturablePieceOne, boardToUse.opponentColor, true) && !edgeTilesLeft.contains(endTile)) {
-                    pawnOffsets.add(-9);
+                    pawnOffsets.add(9 * boardToUse.pawnDir);
                 }
                 if (Piece.checkColor(capturablePieceTwo, boardToUse.opponentColor, true) && !edgeTilesRight.contains(endTile)) {
-                    pawnOffsets.add(-7);
+                    pawnOffsets.add(7 * boardToUse.pawnDir);
                 }
 
                 movesGenerated.addAll(generatePawnCaptures(startTile));
@@ -262,7 +262,7 @@ public class MoveUtility {
             }
 
             // Pawn moved two forward
-            if (pawnOffsets.get(direction) == -16) {
+            if (pawnOffsets.get(direction) == 16 * boardToUse.pawnDir) {
                 moveFlag = Move.Flag.pawnTwoForward;
             }
 
@@ -309,8 +309,8 @@ public class MoveUtility {
             movesGenerated.add(new Move(startTile, endTile, moveFlag));
         }
 
-        pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(-9)));
-        pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(-9)));
+        pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(9 * boardToUse.pawnDir)));
+        pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(7 * boardToUse.pawnDir)));
 
         return movesGenerated;
     }
@@ -335,7 +335,7 @@ public class MoveUtility {
 
         for (int pawnOffset : pawnOffsets) {
             int endTile = startTile + pawnOffset; // Find the end tile
-            int enPassantPiece = (enPassantTile != -1) ? boardToUse.tile[enPassantTile + 8] : 0; // Find the piece being targeted by the en passant move
+            int enPassantPiece = (enPassantTile != -1) ? boardToUse.tile[enPassantTile - (8 * boardToUse.pawnDir)] : 0; // Find the piece being targeted by the en passant move
 
             moveFlag = Move.Flag.none;
             // End tile is the en passant tile and the piece is another pawn
@@ -346,8 +346,8 @@ public class MoveUtility {
             movesGenerated.add(new Move(startTile, endTile, moveFlag)); // Save the move
         }
 
-        pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(-9)));
-        pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(-7)));
+        pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(9 * boardToUse.pawnDir)));
+        pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(7 * boardToUse.pawnDir)));
 
         return movesGenerated;
     }

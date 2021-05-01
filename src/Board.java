@@ -53,7 +53,7 @@ public class Board implements Cloneable {
     public int colorToMove; // Which color is to move
     public int opponentColor; // What is the opposing color
     public int friendlyColor; // What is the safe color
-    public boolean whiteOnBottom = true; // Did the white player start with pieces on the bottom of the board?
+    public int pawnDir = -1; // What direction do pawns move (up or down)?
 
     public boolean showLegalMoves = true; // Should legal moves be highlighted?
 
@@ -198,7 +198,7 @@ public class Board implements Cloneable {
     //
     // None
     //
-    public void makeMove(Move move) {
+    public void makeMove(Move move, boolean isGhost) {
         int moveFrom = move.startTile(); // Tile the piece starts on
         int moveTo = move.endTile(); // Tile the piece goes to
 
@@ -234,10 +234,9 @@ public class Board implements Cloneable {
             // If a piece is captured, remove it
             getPieceTracker(capturedPieceType, opponentColor).removePieceFromTile(moveTo); // 0 = white, 1 = black
 
-            try {
-                BoardManager.playSound(chessProjectPath + "/reference/sounds/capture.wav"); // Play the capture sound
-            } catch (LineUnavailableException | IOException | UnsupportedAudioFileException exception) {
-                exception.printStackTrace(); // Gracefully handle any possible exceptions from the capture sound failing
+            if (!isGhost) {
+                try { BoardManager.playSound(chessProjectPath + "/reference/sounds/capture.wav"); } // Play the capture sound
+                catch (LineUnavailableException | IOException | UnsupportedAudioFileException exception) { exception.printStackTrace(); } // Gracefully handle any possible exceptions from the capture sound failing
             }
         }
 
@@ -249,10 +248,9 @@ public class Board implements Cloneable {
             getPieceTracker(enPassantCapturedType, opponentColor).removePieceFromTile(moveTo + 8); // 0 = white, 1 = black
             tile[moveTo + 8] = 0;
 
-            try {
-                BoardManager.playSound(chessProjectPath + "/reference/sounds/capture.wav"); // Play the capture sound
-            } catch (LineUnavailableException | IOException | UnsupportedAudioFileException exception) {
-                exception.printStackTrace(); // Gracefully handle any possible exceptions from the capture sound failing
+            if (!isGhost) {
+                try { BoardManager.playSound(chessProjectPath + "/reference/sounds/capture.wav"); } // Play the capture sound
+                catch (LineUnavailableException | IOException | UnsupportedAudioFileException exception) { exception.printStackTrace(); } // Gracefully handle any possible exceptions from the capture sound failing
             }
         }
 
@@ -260,10 +258,9 @@ public class Board implements Cloneable {
         getPieceTracker(movePieceType, colorToMove).movePiece(moveFrom, moveTo); // 0 = white, 1 = black
 
         if (capturedPieceType == 0 && !isPromotion && !isEnPassant) {
-            try {
-                BoardManager.playSound(chessProjectPath + "/reference/sounds/move.wav"); // Play the move sound
-            } catch (LineUnavailableException | IOException | UnsupportedAudioFileException exception) {
-                exception.printStackTrace(); // Gracefully handle any possible exceptions from the move sound failing
+            if (!isGhost) {
+                try { BoardManager.playSound(chessProjectPath + "/reference/sounds/move.wav"); } // Play the capture sound
+                catch (LineUnavailableException | IOException | UnsupportedAudioFileException exception) { exception.printStackTrace(); } // Gracefully handle any possible exceptions from the capture sound failing
             }
         }
 
@@ -317,19 +314,50 @@ public class Board implements Cloneable {
         colorToMove ^= 1;
         opponentColor ^= 1;
         friendlyColor ^= 1;
-        whiteOnBottom = !whiteOnBottom;
 
         // If a pawn was moved or a piece was captured, reset the 50 move counter
         if (Piece.pieceType(movePiece) == Piece.Pawn) { fiftyMoveRule = 0; }
 
-        if (threeFoldRepetition.containsKey(currentFenPosition)) { // If the current position has already happened, update the number of times it has appeared
-            threeFoldRepetition.put(currentFenPosition, threeFoldRepetition.get(currentFenPosition) + 1);
-        }
-        else { // Otherwise, add it
-            threeFoldRepetition.put(currentFenPosition, 1);
+        if (!isGhost) {
+            if (threeFoldRepetition.containsKey(currentFenPosition)) { // If the current position has already happened, update the number of times it has appeared
+                threeFoldRepetition.put(currentFenPosition, threeFoldRepetition.get(currentFenPosition) + 1);
+            } else { // Otherwise, add it
+                threeFoldRepetition.put(currentFenPosition, 1);
+            }
         }
     }
     // end: public void makeMove
+
+
+    public int checkGameState(int numLegalMoves, boolean inCheck) {
+        // 0 = ongoing game
+        // 1 = draw by 50-move rule
+        // 2 = draw by threefold repetition
+        // 3 = draw by stalemate
+        // 4 = win/loss by checkmate
+
+        System.out.println("numLegalmoves: " + numLegalMoves + ", incheck: " + inCheck);
+
+        if (fiftyMoveRule >= 50) {
+            System.out.println("Draw by 50-move rule");
+            return 1; // Draw by 50-move rule
+        }
+        else if (threeFoldRepetition.get(currentFenPosition) != null && threeFoldRepetition.get(currentFenPosition) >= 3) {
+            System.out.println("Draw by threefold repetition");
+            return 2; // Draw by threefold repetition
+        }
+        else if (numLegalMoves == 0) {
+            if (!inCheck) {
+                System.out.println("Draw by stalemate");
+                return 3; // Draw by stalemate
+            }
+            System.out.println((colorToMove ^ 1) + " wins by checkmate");
+            return 4; // Win by checkmate if no legal moves and not stalemate
+        }
+        else {
+            return 0; // Game still ongoing
+        }
+    }
 
 
     // ====================================================================================================

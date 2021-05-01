@@ -53,6 +53,7 @@ public class Graphics {
         int pieceW = (int) (w * 0.1); // Starting width for a piece
         int pieceH = (int) (w * 0.1); // Starting height for a piece
         ArrayList<Integer> legalMoveTiles = new ArrayList<>(); // List of legal ending moves
+        List<Move> legalMoves = new ArrayList<>();
 
         for (PieceTracker pieceTracker : Chess.board.allPieceTrackers) {
             for (int i = 0; i < pieceTracker.pieceCount; i++) {
@@ -67,8 +68,6 @@ public class Graphics {
                         // Get and store the values of the mouse position when the mouse is pressed
                         x_pressed = e.getX();
                         y_pressed = e.getY();
-
-                        List<Move> legalMoves = new ArrayList<>();
 
                         // Generate pseudo-legal moves
                         MoveUtility checkMyMoves = new MoveUtility();
@@ -85,10 +84,12 @@ public class Graphics {
                                 cloneNotSupportedException.printStackTrace();
                             }
 
-                            ghostBoard.makeMove(moveToVerify);
+                            ghostBoard.pawnDir = -1;
+                            ghostBoard.makeMove(moveToVerify, true);
 
                             // Generate all of the opponent's responses to my single move
                             MoveUtility checkTheirMoves = new MoveUtility();
+                            ghostBoard.pawnDir = 1;
                             List<Move> opponentResponses = checkTheirMoves.generateMoves(ghostBoard);
                             // Create a list of the tiles my opponent is attacking
                             List<Integer> opponentAttackedTiles = new ArrayList<>();
@@ -175,10 +176,11 @@ public class Graphics {
                             try { ghostBoard = (Board) Chess.board.clone(); }
                             catch (CloneNotSupportedException cloneNotSupportedException) { cloneNotSupportedException.printStackTrace(); }
 
-                            ghostBoard.makeMove(move); // Make the player's move on the board
+                            ghostBoard.makeMove(move, true); // Make the player's move on the board
 
                             // Generate all of the opponent's responses to the move
                             MoveUtility checkTheirMoves = new MoveUtility();
+                            ghostBoard.pawnDir = 1;
                             List<Move> opponentResponses = checkTheirMoves.generateMoves(ghostBoard);
 
                             // Create a list of the tiles the opponent is attacking
@@ -189,12 +191,14 @@ public class Graphics {
 
                             // If the opponent is attacking...            king...       of friendly color... the move was illegal
                             if (opponentAttackedTiles.contains(ghostBoard.kings[Chess.board.colorToMove].tilesWithPieces[0])) {
+                                Chess.board.checkGameState(legalMoves.size(), true);
                                 Chess.graphics.drawPosition(); // Redraw the board
                                 Chess.graphics.drawBoard(null); // Redraw the board
                             }
                             else {
                                 // Update internal data-structure
-                                Chess.board.makeMove(move);
+                                Chess.board.makeMove(move, false);
+                                Chess.board.checkGameState(legalMoves.size(), false);
 
                                 // Update visual representation of the board
                                 Settings.drawSettings(); // Update the fen string in the text field

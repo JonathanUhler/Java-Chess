@@ -50,6 +50,9 @@ PRE-RELEASES--
 									
 	pre-1.6.0	4/29/21			Changes in this version:
 									-Added algorithm to generate fully legal moves and discard moves that wander in to check or ignore an active check on the king
+									
+	pre-1.6.1	4/30/21			Changes in this version:
+									-Fixed the bug outlined in issue #7
 
 
 FULL-RELEASES--
