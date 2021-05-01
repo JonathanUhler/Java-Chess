@@ -53,6 +53,9 @@ PRE-RELEASES--
 									
 	pre-1.6.1	4/30/21			Changes in this version:
 									-Fixed the bug outlined in issue #7
+									
+	pre-1.6.2	4/30/21			Changes in this version:
+									-Fixed the bug outlined in issue #6
 
 
 FULL-RELEASES--

@@ -223,7 +223,7 @@ public class MoveUtility {
                 pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(16 * boardToUse.pawnDir))); // Remove the option to move two squares and jump over the piece in front
                 pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(8 * boardToUse.pawnDir))); // Remove the option to move one square forward
 
-                if (!(Piece.checkColor(capturablePieceOne, boardToUse.opponentColor, true)) && !(Piece.checkColor(capturablePieceTwo, boardToUse.opponentColor, true))) { continue; } // Make sure pawns don't capture the piece directly in front of them
+                if (!(Piece.checkColor(capturablePieceOne, boardToUse.opponentColor, true)) && !(Piece.checkColor(capturablePieceTwo, boardToUse.opponentColor, true)) && !(Piece.checkColor(enPassantPiece, boardToUse.opponentColor, true))) { continue; } // Make sure pawns don't capture the piece directly in front of them
             }
 
             // En passant captures
@@ -262,12 +262,14 @@ public class MoveUtility {
             }
 
             // Pawn moved two forward
-            if (pawnOffsets.get(direction) == 16 * boardToUse.pawnDir) {
+            if (pawnOffsets.size() > 0 && pawnOffsets.get(direction) == 16 * boardToUse.pawnDir) {
                 moveFlag = Move.Flag.pawnTwoForward;
             }
 
             // Add the move to the list of legal moves
-            movesGenerated.add(new Move(startTile, endTile, moveFlag));
+            if (pieceOnEndTile == 0) {
+                movesGenerated.add(new Move(startTile, endTile, moveFlag));
+            }
         }
 
         return movesGenerated;
