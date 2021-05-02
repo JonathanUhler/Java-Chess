@@ -263,6 +263,7 @@ public class Settings {
 
         // Create an action listener for the button
         ActionListener newGameRequested = e -> {
+            Chess.board.threeFoldRepetition = new HashMap<>();
             Chess.board.loadPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0");
             Chess.graphics.drawPosition();
             Chess.graphics.drawBoard(null);

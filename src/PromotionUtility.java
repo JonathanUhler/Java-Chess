@@ -89,7 +89,7 @@ public class PromotionUtility {
 
 
     // ====================================================================================================
-    // public void createApplication
+    // public void createPromotionWindow
     //
     // Creates the JFrame
     //
@@ -106,20 +106,9 @@ public class PromotionUtility {
         promotionDialog.add(addPromotionMenu());
         promotionDialog.setBounds(50, 60, 150, 100);
         promotionDialog.setVisible(true);
-
-//        promotionWindow.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Terminate the frame when the 'x' button of the application window is pressed
-//        promotionWindow.setBounds(50, 60, 150, 100); // Set the size of the frame
-//        promotionWindow.setLayout(null);
-//        promotionWindow.add(addPromotionMenu());
-//
-//        JLabel label = new JLabel("Select piece...");
-//        label.setBounds(20, 0, 150, 40);
-//        promotionWindow.add(label);
-//
-//        promotionWindow.setResizable(false); // Prevent the JFrame from being resized
-//        promotionWindow.setVisible(true); // Show the frame
+        promotionWindow.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
     }
-    // end: public void createApplication
+    // end: public void createPromotionWindow
 
 }
 // end: public class PromotionUtility

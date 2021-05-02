@@ -185,20 +185,18 @@ public class Graphics {
 
                             // Create a list of the tiles the opponent is attacking
                             List<Integer> opponentAttackedTiles = new ArrayList<>();
-                            for (Move opponentResponse : opponentResponses) {
-                                opponentAttackedTiles.add(opponentResponse.endTile());
-                            }
+                            for (Move opponentResponse : opponentResponses) { opponentAttackedTiles.add(opponentResponse.endTile()); }
 
                             // If the opponent is attacking...            king...       of friendly color... the move was illegal
                             if (opponentAttackedTiles.contains(ghostBoard.kings[Chess.board.colorToMove].tilesWithPieces[0])) {
-                                Chess.board.checkGameState(legalMoves.size(), true);
+                                GameStateUtility.checkGameState(legalMoves.size(), true);
                                 Chess.graphics.drawPosition(); // Redraw the board
                                 Chess.graphics.drawBoard(null); // Redraw the board
                             }
                             else {
                                 // Update internal data-structure
                                 Chess.board.makeMove(move, false);
-                                Chess.board.checkGameState(legalMoves.size(), false);
+                                GameStateUtility.checkGameState(legalMoves.size(), false);
 
                                 // Update visual representation of the board
                                 Settings.drawSettings(); // Update the fen string in the text field

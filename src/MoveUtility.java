@@ -212,18 +212,18 @@ public class MoveUtility {
             int endTile = startTile + pawnOffsets.get(direction); // Get the legal ending tile for the piece. Multiply by (i + 1) because sliding pieces can move an infinite distance in each of their directions
             if (endTile < 0 || endTile > 63) { continue; }
 
-            int pieceOnEndTile = boardToUse.tile[endTile]; // Figure out if there is a piece on the ending tile
-            //                       Is the current direction being checked a movement of 8?   |  Is the capture on the board?               |  Is the direction going up
-            int capturablePieceOne = (pawnOffsets.get(direction) == 8 * boardToUse.pawnDir) ? (((endTile - 1) >= 0 && (endTile + 1) < 64) ? ((boardToUse.pawnDir == -1) ? boardToUse.tile[endTile - 1] : boardToUse.tile[endTile + 1]) : 0) : 0;
-            int capturablePieceTwo = (pawnOffsets.get(direction) == 8 * boardToUse.pawnDir) ? (((endTile - 1) >= 0 && (endTile + 1) < 64) ? ((boardToUse.pawnDir == -1) ? boardToUse.tile[endTile + 1] : boardToUse.tile[endTile - 1]) : 0) : 0;
-            int enPassantPiece = (enPassantTile != -1) ? boardToUse.tile[enPassantTile - (8 * boardToUse.pawnDir)] : 0;
+            int pieceUp8 = ((startTile + (8 * boardToUse.pawnDir)) < 64 && (startTile + (8 * boardToUse.pawnDir)) >= 0) ? boardToUse.tile[startTile + (8 * boardToUse.pawnDir)] : 0; // Piece directly in front of the pawn
+            int pieceUp16 = ((startTile + (16 * boardToUse.pawnDir)) < 64 && (startTile + (16 * boardToUse.pawnDir)) >= 0) ? boardToUse.tile[startTile + (16 * boardToUse.pawnDir)] : 0; // Piece two tiles up from the pawn
+            int capturablePieceOne = (pawnOffsets.get(direction) == 8 * boardToUse.pawnDir) ? ((boardToUse.pawnDir == -1) ? ((endTile - 1 >= 0) ? boardToUse.tile[endTile - 1] : 0) : ((endTile + 1 < 64) ? boardToUse.tile[endTile + 1] : 0)) : 0; // Piece that the pawn can capture to one side
+            int capturablePieceTwo = (pawnOffsets.get(direction) == 8 * boardToUse.pawnDir) ? ((boardToUse.pawnDir == -1) ? ((endTile + 1 < 64) ? boardToUse.tile[endTile + 1] : 0) : ((endTile - 1 >= 0) ? boardToUse.tile[endTile - 1] : 0)) : 0; // Piece that the pawn can capture to the other side
+            int enPassantPiece = (enPassantTile != -1) ? boardToUse.tile[enPassantTile - (8 * boardToUse.pawnDir)] : 0; // Piece that the pawn can en passant capture
 
-            // If there is a piece on the ending tile, the pawn cannot move there (friendly or not)
-            if (pieceOnEndTile != 0) {
+            if (pieceUp8 != 0) {
                 pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(16 * boardToUse.pawnDir))); // Remove the option to move two squares and jump over the piece in front
-                pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(8 * boardToUse.pawnDir))); // Remove the option to move one square forward
-
-                if (!(Piece.checkColor(capturablePieceOne, boardToUse.opponentColor, true)) && !(Piece.checkColor(capturablePieceTwo, boardToUse.opponentColor, true)) && !(Piece.checkColor(enPassantPiece, boardToUse.opponentColor, true))) { continue; } // Make sure pawns don't capture the piece directly in front of them
+                pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(8 * boardToUse.pawnDir))); // Remove the option to move one square
+            }
+            if (pieceUp16 != 0) {
+                pawnOffsets.removeAll(new ArrayList<>(Collections.singletonList(16 * boardToUse.pawnDir))); // Allow the pawn to move one square, but prevent it from moving two squares and landing on a piece
             }
 
             // En passant captures
@@ -253,7 +253,7 @@ public class MoveUtility {
 
             // Pawn promoted
             moveFlag = Move.Flag.none;
-            if (MoveData.pawnPromotionTiles.contains(endTile)) {
+            if (pawnOffsets.size() > 0 && MoveData.pawnPromotionTiles.contains(endTile)) {
                 moveFlag = Move.Flag.promoteToQueen; movesGenerated.add(new Move(startTile, endTile, moveFlag));
                 moveFlag = Move.Flag.promoteToRook; movesGenerated.add(new Move(startTile, endTile, moveFlag));
                 moveFlag = Move.Flag.promoteToKnight; movesGenerated.add(new Move(startTile, endTile, moveFlag));
@@ -267,7 +267,7 @@ public class MoveUtility {
             }
 
             // Add the move to the list of legal moves
-            if (pieceOnEndTile == 0) {
+            if (pieceUp8 == 0) {
                 movesGenerated.add(new Move(startTile, endTile, moveFlag));
             }
         }

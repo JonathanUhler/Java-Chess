@@ -329,37 +329,6 @@ public class Board implements Cloneable {
     // end: public void makeMove
 
 
-    public int checkGameState(int numLegalMoves, boolean inCheck) {
-        // 0 = ongoing game
-        // 1 = draw by 50-move rule
-        // 2 = draw by threefold repetition
-        // 3 = draw by stalemate
-        // 4 = win/loss by checkmate
-
-        System.out.println("numLegalmoves: " + numLegalMoves + ", incheck: " + inCheck);
-
-        if (fiftyMoveRule >= 50) {
-            System.out.println("Draw by 50-move rule");
-            return 1; // Draw by 50-move rule
-        }
-        else if (threeFoldRepetition.get(currentFenPosition) != null && threeFoldRepetition.get(currentFenPosition) >= 3) {
-            System.out.println("Draw by threefold repetition");
-            return 2; // Draw by threefold repetition
-        }
-        else if (numLegalMoves == 0) {
-            if (!inCheck) {
-                System.out.println("Draw by stalemate");
-                return 3; // Draw by stalemate
-            }
-            System.out.println((colorToMove ^ 1) + " wins by checkmate");
-            return 4; // Win by checkmate if no legal moves and not stalemate
-        }
-        else {
-            return 0; // Game still ongoing
-        }
-    }
-
-
     // ====================================================================================================
     // public Object clone
     //
