@@ -202,7 +202,7 @@ public class MoveUtility {
         // Initialize pawn movement
         pawnOffsets = new ArrayList<>();
         pawnOffsets.add(8 * boardToUse.pawnDir);
-        List<Integer> edgeTilesLeft = Arrays.asList(0, 8, 16, 24, 32, 40, 48, 56), edgeTilesRight = Arrays.asList(7, 15, 23, 31, 39, 47, 55, 63); // Check to make sure a pawn isn't capturing by wrapping around the board
+        List<Integer> edgeTilesLeft = (boardToUse.pawnDir == -1) ? Arrays.asList(0, 8, 16, 24, 32, 40, 48, 56) : Arrays.asList(7, 15, 23, 31, 39, 47, 55, 63), edgeTilesRight = (boardToUse.pawnDir == -1) ? Arrays.asList(7, 15, 23, 31, 39, 47, 55, 63): Arrays.asList(0, 8, 16, 24, 32, 40, 48, 56); // Check to make sure a pawn isn't capturing by wrapping around the board
 
         if (precomputedMoveData.pawnStartingTiles.contains(startTile)) { // Double pawn push
             pawnOffsets.add(16 * boardToUse.pawnDir);
@@ -236,6 +236,10 @@ public class MoveUtility {
                 }
 
                 movesGenerated.addAll(generateEnPassantCaptures(startTile));
+            }
+
+            if (boardToUse != Chess.board && startTile == 31) {
+                System.out.println("start: " + startTile + ", end: " + endTile + ", dirs: " + pawnOffsets.size() + ", up8: " + pieceUp8 + ", up16: " + pieceUp16 + ", cap1: " + capturablePieceOne + ", cap2: " + capturablePieceTwo + ", epPiece: " + enPassantPiece);
             }
 
             // Regular captures

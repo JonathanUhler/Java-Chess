@@ -60,6 +60,9 @@ PRE-RELEASES--
 	pre-1.6.3	5/1/21			Changes in this version:
 									-Discovered and fixed various pawn movement issues
 									-Began basic implementation of draw/win states
+									
+	pre-1.6.4	5/2/21			Changes in this version:
+									-Discovered and fixed an issue with pawns and check
 
 
 FULL-RELEASES--
