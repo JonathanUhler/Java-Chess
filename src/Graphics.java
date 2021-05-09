@@ -68,6 +68,8 @@ public class Graphics {
                         // Get and store the values of the mouse position when the mouse is pressed
                         x_pressed = e.getX();
                         y_pressed = e.getY();
+                        
+                        pieces.setComponentZOrder(piece, 0);
 
                         // Generate pseudo-legal moves
                         MoveUtility checkMyMoves = new MoveUtility();
@@ -213,7 +215,7 @@ public class Graphics {
                     }
                 });
 
-                pieces.add(piece, 0); // Add the piece to the pieces layered pane
+                pieces.add(piece, 1); // Add the piece to the pieces layered pane
             }
         }
 

@@ -129,7 +129,8 @@ public class MoveUtility {
             // Make sure there are available tiles in this direction
             if (precomputedMoveData.tilesToEdge[startTile][direction] == 0) { continue; }
 
-            int endTile = startTile + precomputedMoveData.slidingOffsets[direction]; // Get the legal ending tile for the piece. Multiply by (i + 1) because sliding pieces can move an infinite distance in each of their directions
+            int offset = precomputedMoveData.slidingOffsets[direction];
+            int endTile = startTile + offset; // Get the legal ending tile for the piece. Multiply by (i + 1) because sliding pieces can move an infinite distance in each of their directions
             int pieceOnEndTile = boardToUse.tile[endTile]; // Figure out if there is a piece on the ending tile
 
             // If the piece on the ending tile is of the same color, the move is illegal
@@ -236,10 +237,6 @@ public class MoveUtility {
                 }
 
                 movesGenerated.addAll(generateEnPassantCaptures(startTile));
-            }
-
-            if (boardToUse != Chess.board && startTile == 31) {
-                System.out.println("start: " + startTile + ", end: " + endTile + ", dirs: " + pawnOffsets.size() + ", up8: " + pieceUp8 + ", up16: " + pieceUp16 + ", cap1: " + capturablePieceOne + ", cap2: " + capturablePieceTwo + ", epPiece: " + enPassantPiece);
             }
 
             // Regular captures

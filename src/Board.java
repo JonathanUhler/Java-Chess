@@ -15,7 +15,7 @@ import java.util.HashMap;
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
 // public class Board
 //
-// Sets up the application frame and creates the 8x8 chessboard
+// Keeps track of the board and pieces on the board. Handles moving pieces and and updating the boardstate
 //
 public class Board implements Cloneable {
 

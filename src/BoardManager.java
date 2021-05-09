@@ -23,6 +23,8 @@ public class BoardManager {
     // ====================================================================================================
     // public static void playSound
     //
+    // Plays a sound given a sound file
+    //
     // Arguments--
     //
     // soundFile:   the path to the sound file (must be in .wav format)
@@ -43,6 +45,9 @@ public class BoardManager {
 
     // ====================================================================================================
     // public static Point frameRelativeMousePosition
+    //
+    // Takes in the position of a JFrame and the mouse position and returns the mouse position relative
+    // to the JFrame instead of relative to the entire computer screen.
     //
     // Arguments--
     //

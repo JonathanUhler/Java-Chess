@@ -63,6 +63,9 @@ PRE-RELEASES--
 									
 	pre-1.6.4	5/2/21			Changes in this version:
 									-Discovered and fixed an issue with pawns and check
+									
+	pre-1.6.5	5/9/21			Changes in this version:
+									-Fixed a minor issue with component z order when dragging pieces
 
 
 FULL-RELEASES--
