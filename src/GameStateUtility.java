@@ -36,14 +36,12 @@ public class GameStateUtility {
     // Returns--
     //
     // state of the game as an integer
-    public static int checkGameState(int numLegalMoves, boolean inCheck) {
+    public static int actOnGameState(int numLegalMoves, boolean inCheck) {
         // 0 = ongoing game
         // 1 = draw by 50-move rule
         // 2 = draw by threefold repetition
         // 3 = draw by stalemate
         // 4 = win/loss by checkmate
-
-        System.out.println("numLegalmoves: " + numLegalMoves + ", incheck: " + inCheck);
 
         if (Chess.board.fiftyMoveRule >= 50) {
             gameOver("Draw: 50-move rule");

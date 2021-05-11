@@ -12,13 +12,63 @@ import java.util.*;
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
 // public class MoveUtility
 //
-// Handles moves and move legality
+// Handles move generation
 //
 public class MoveUtility {
 
     MoveData precomputedMoveData; // Basic move data/information
     Board boardToUse;
     int moveFlag = Move.Flag.none;
+
+
+    // ====================================================================================================
+    // public static List<Short> returnMoveValues
+    //
+    // Returns a list of move values from a list of move objects
+    //
+    // Arguments--
+    //
+    // listOfMoves: the list of move objects
+    //
+    // Returns--
+    //
+    // moveVals:    the list of move values
+    //
+    public static List<Short> returnMoveValues(List<Move> listOfMoves) {
+        List<Short> moveVals = new ArrayList<>();
+
+        for (Move move : listOfMoves) {
+            moveVals.add(move.moveValue);
+        }
+
+        return moveVals;
+    }
+    // end: public static List<Short> returnMoveValues
+
+
+    // ====================================================================================================
+    // public static List<Integer> returnEndingTiles
+    //
+    // Returns a list of ending tiles from a list of move objects
+    //
+    // Arguments--
+    //
+    // listOfMoves: the list of move objects
+    //
+    // Returns--
+    //
+    // endTiles:    the list of end tiles
+    //
+    public static List<Integer> returnEndingTiles(List<Move> listOfMoves) {
+        List<Integer> endTiles = new ArrayList<>();
+
+        for (Move move : listOfMoves) {
+            endTiles.add(move.endTile());
+        }
+
+        return endTiles;
+    }
+    // end: public static List<Integer> returnEndingTiles
 
 
     // ====================================================================================================

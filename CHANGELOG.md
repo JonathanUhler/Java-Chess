@@ -67,6 +67,10 @@ PRE-RELEASES--
 	pre-1.6.5	5/9/21			Changes in this version:
 									-Fixed a minor issue with component z order when dragging pieces
 
+	pre-1.7.0	5/11/21			Changes in this version:
+									-Added draw and win/loss game states
+									-Moves legal move generation to LegalMoveUtility.java
+
 
 FULL-RELEASES--
 

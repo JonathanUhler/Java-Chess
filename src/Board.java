@@ -9,7 +9,9 @@
 import javax.sound.sampled.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
@@ -48,6 +50,8 @@ public class Board implements Cloneable {
 
     public String currentFenPosition; // Current arrangement of pieces on the board in fen notation
     public HashMap<String, Integer> threeFoldRepetition = new HashMap<>(); // List of positions and how many times they have appeared in the game
+
+    public List<Integer> tilesOpponentControls = new ArrayList<>();
 
     public boolean whitesMove; // Is white to move?
     public int colorToMove; // Which color is to move
@@ -308,13 +312,6 @@ public class Board implements Cloneable {
             enPassantCol = 7 - (moveTo % 8);
         }
 
-        // Update whose turn it is to move
-        // 0 = white, 1 = black
-        whitesMove = !whitesMove;
-        colorToMove ^= 1;
-        opponentColor ^= 1;
-        friendlyColor ^= 1;
-
         // If a pawn was moved or a piece was captured, reset the 50 move counter
         if (Piece.pieceType(movePiece) == Piece.Pawn) { fiftyMoveRule = 0; }
 
@@ -327,6 +324,58 @@ public class Board implements Cloneable {
         }
     }
     // end: public void makeMove
+
+
+    // ====================================================================================================
+    // public void changePlayer
+    //
+    // Changes information about which player is current taking their turn
+    //
+    // Arguments--
+    //
+    // None
+    //
+    // Returns--
+    //
+    // None
+    //
+    public void changePlayer() {
+        // Update whose turn it is to move
+        // 0 = white, 1 = black
+        whitesMove = !whitesMove;
+        colorToMove ^= 1;
+        opponentColor ^= 1;
+        friendlyColor ^= 1;
+    }
+    // public void changePlayer
+
+
+    // ====================================================================================================
+    // public void checkState
+    //
+    // Checks the state of the game to determine how many legal moves the current player has and if they
+    // are in check
+    //
+    // Arguments--
+    //
+    // None
+    //
+    // Returns--
+    //
+    // None
+    //
+    public void checkState() {
+        // Figure out if the player is in check
+        boolean inCheck = false;
+        if (tilesOpponentControls.contains(63 - kings[colorToMove].tilesWithPieces[0])) { inCheck = true; }
+
+        // Figure out how many legal moves the player has
+        int numLegalMoves = new LegalMoveUtility().allLegalMoves().size();
+
+        // Update the game state (check for draw or win/loss)
+        GameStateUtility.actOnGameState(numLegalMoves, inCheck);
+    }
+    // end: public void checkState
 
 
     // ====================================================================================================
