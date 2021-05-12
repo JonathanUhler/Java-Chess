@@ -71,6 +71,10 @@ PRE-RELEASES--
 									-Added draw and win/loss game states
 									-Moves legal move generation to LegalMoveUtility.java
 
+	pre-1.8.0	5/12/21			Changes in this version:
+									-Fixed a minor issue with stalemate
+									-Added castling
+
 
 FULL-RELEASES--
 

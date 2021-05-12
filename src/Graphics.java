@@ -77,7 +77,7 @@ public class Graphics {
 
                         // Get the tiles for the piece selected by the player
                         for (Move legalMove : legalMoves) {
-                            short legalMoveValue = legalMove.moveValue;
+                            int legalMoveValue = legalMove.moveValue;
                             int legalStartTile = (legalMoveValue & 0b0000000000111111);
                             int legalEndTile = (legalMoveValue & 0b0000111111000000) >> 6;
 
@@ -104,12 +104,14 @@ public class Graphics {
                     @Override public void mouseReleased(MouseEvent e) {
 
                         int moveFlag = Move.Flag.none;
+                        int startTile = pieceTracker.tilesWithPieces[finalI];
+                        int endTile = (int) (Math.round((piece.getLocation().y / 72.0) - 1) * 8 + Math.round((piece.getLocation().x / 72.0) - 1));
 
                         // Figure out move flag
                         // En passant and promotion
-                        if (Piece.pieceType(Chess.board.tile[pieceTracker.tilesWithPieces[finalI]]) == Piece.Pawn) {
+                        if (Piece.pieceType(Chess.board.tile[startTile]) == Piece.Pawn) {
                             // Promotion
-                            if (MoveData.pawnPromotionTiles.contains((int) (Math.round((piece.getLocation().y / 72.0) - 1) * 8 + Math.round((piece.getLocation().x / 72.0) - 1)))) {
+                            if (MoveData.pawnPromotionTiles.contains(endTile)) {
                                 PromotionUtility promotion = new PromotionUtility();
                                 promotion.createPromotionWindow(); // Show a dialog box for promotion
 
@@ -117,25 +119,44 @@ public class Graphics {
                             }
 
                             // Pawn pushed two
-                            if (((int) (Math.round((piece.getLocation().y / 72.0) - 1) * 8 + Math.round((piece.getLocation().x / 72.0) - 1)) + 16) == pieceTracker.tilesWithPieces[finalI]) {
+                            if ((endTile + 16) == pieceTracker.tilesWithPieces[finalI]) {
                                 moveFlag = Move.Flag.pawnTwoForward;
                             }
 
                             // En passant
                             int enPassantCol = FenUtility.loadPositionFromFen(FenUtility.buildFenFromPosition()).enPassantCol;
                             int enPassantTile = (enPassantCol != -1) ? (2 * 8) + enPassantCol : -1; // Tile behind pawn that moved 2
-                            if ((int) (Math.round((piece.getLocation().y / 72.0) - 1) * 8 + Math.round((piece.getLocation().x / 72.0) - 1)) == enPassantTile) {
+                            if (endTile == enPassantTile) {
                                 moveFlag = Move.Flag.enPassantCapture;
+                            }
+                        }
+                        // Castling
+                        else if (Piece.pieceType(Chess.board.tile[startTile]) == Piece.King) {
+                            // White king castle
+                            if (Chess.board.colorToMove == 0) {
+                                if (startTile - 2 == endTile) {
+                                    moveFlag = Move.Flag.whiteCastleQueenside;
+                                } else if (startTile + 2 == endTile) {
+                                    moveFlag = Move.Flag.whiteCastleKingside;
+                                }
+                            }
+                            // Black king castle
+                            else {
+                                if (startTile - 2 == endTile) {
+                                    moveFlag = Move.Flag.blackCastleKingside;
+                                } else if (startTile + 2 == endTile) {
+                                    moveFlag = Move.Flag.blackCastleQueenside;
+                                }
                             }
                         }
 
                         // Create a new move
-                        Move move = new Move(pieceTracker.tilesWithPieces[finalI], (int) (Math.round((piece.getLocation().y / 72.0) - 1) * 8 + Math.round((piece.getLocation().x / 72.0) - 1)), moveFlag);
+                        Move move = new Move(startTile, endTile, moveFlag);
 
                         // Generate pseudo-legal moves
                         MoveUtility checkMyMoves = new MoveUtility();
                         List<Move> pseudoLegalMoves = checkMyMoves.generateMoves(Chess.board);
-                        List<Short> pseudoLegalMoveValues = new ArrayList<>(MoveUtility.returnMoveValues(pseudoLegalMoves));
+                        List<Integer> pseudoLegalMoveValues = new ArrayList<>(MoveUtility.returnMoveValues(pseudoLegalMoves));
 
                         // Check if the move the player is trying to make is in the list of pseudo-legal moves
                         if (pseudoLegalMoveValues.contains(move.moveValue)) {

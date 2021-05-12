@@ -217,12 +217,14 @@ public class Board implements Cloneable {
         int moveFlag = move.moveFlag();
         boolean isPromotion = move.isPromotion();
         boolean isEnPassant = (moveFlag == Move.Flag.enPassantCapture);
+        boolean isCastle = move.isCastle();
 
         // Make sure the end tile is on the board
         if (moveFrom > 63 || moveTo > 63) {
             return;
         }
 
+        // Make sure a real piece was moved
         if (movePiece == 0) {
             return;
         }
@@ -261,10 +263,72 @@ public class Board implements Cloneable {
         // Handle movement
         getPieceTracker(movePieceType, colorToMove).movePiece(moveFrom, moveTo); // 0 = white, 1 = black
 
-        if (capturedPieceType == 0 && !isPromotion && !isEnPassant) {
+        if (capturedPieceType == 0 && !isPromotion && !isEnPassant && !isCastle) {
             if (!isGhost) {
                 try { BoardManager.playSound(chessProjectPath + "/reference/sounds/move.wav"); } // Play the capture sound
                 catch (LineUnavailableException | IOException | UnsupportedAudioFileException exception) { exception.printStackTrace(); } // Gracefully handle any possible exceptions from the capture sound failing
+            }
+        }
+
+        // Handle change in castling legality
+        // King moved --> castling rights lost for both sides
+        if (movePieceType == Piece.King) {
+            if (colorToMove == 0) {
+                castleK = false;
+                castleQ = false;
+            } else {
+                castlek = false;
+                castleq = false;
+            }
+        }
+        // Rook moved
+        else if (movePieceType == Piece.Rook) {
+            // Rook on tile 63 moved --> castling rights on right side lost
+            if (moveFrom == 63) {
+                if (colorToMove == 0) { castleK = false; }
+                else { castleq = false; }
+            }
+            // Rook on tile 56 moved --> castling rights on left side lost
+            else if (moveFrom == 56) {
+                if (colorToMove == 0) { castleQ = false; }
+                else { castlek = false; }
+            }
+        }
+        // The rook on the right side was captured; castling right is no longer allowed
+        else if (moveTo == 0) {
+            if ((colorToMove ^ 1) == 0) { castleK = false; }
+            else { castleq = false; }
+        }
+        // The rook on the left side was captured; castling left is no longer allowed
+        else if (moveTo == 7) {
+            if ((colorToMove ^ 1) == 0) { castleQ = false; }
+            else { castlek = false; }
+        }
+
+        // Handle castling
+        if (isCastle) {
+            // King castled to the right
+            if (moveTo > moveFrom) {
+                getPieceTracker(movePieceType, colorToMove).movePiece(moveFrom, moveTo);
+                getPieceTracker(Piece.Rook, colorToMove).movePiece(63, moveTo - 1);
+                tile[moveTo - 1] = tile[63];
+                tile[63] = 0;
+            }
+            // King castled to the left
+            else if (moveTo < moveFrom) {
+                getPieceTracker(movePieceType, colorToMove).movePiece(moveFrom, moveTo);
+                getPieceTracker(Piece.Rook, colorToMove).movePiece(56, moveTo + 1);
+                tile[moveTo + 1] = tile[56];
+                tile[56] = 0;
+            }
+
+            // Remove the ability to castle a second time
+            if (colorToMove == 0) {
+                castleK = false;
+                castleQ = false;
+            } else {
+                castlek = false;
+                castleq = false;
             }
         }
 
@@ -367,7 +431,7 @@ public class Board implements Cloneable {
     public void checkState() {
         // Figure out if the player is in check
         boolean inCheck = false;
-        if (tilesOpponentControls.contains(63 - kings[colorToMove].tilesWithPieces[0])) { inCheck = true; }
+        if (tilesOpponentControls.contains(kings[colorToMove].tilesWithPieces[0])) { inCheck = true; }
 
         // Figure out how many legal moves the player has
         int numLegalMoves = new LegalMoveUtility().allLegalMoves().size();

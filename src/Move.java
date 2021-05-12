@@ -21,23 +21,27 @@ public class Move {
     public static final class Flag {
         public static final int none = 0;
         public static final int enPassantCapture = 1;
-        public static final int castled = 2;
-        public static final int promoteToQueen = 3;
-        public static final int promoteToKnight = 4;
-        public static final int promoteToRook = 5;
-        public static final int promoteToBishop = 6;
-        public static final int pawnTwoForward = 7;
+        public static final int promoteToQueen = 2;
+        public static final int promoteToKnight = 3;
+        public static final int promoteToRook = 4;
+        public static final int promoteToBishop = 5;
+        public static final int pawnTwoForward = 6;
+        public static final int whiteCastleKingside = 7;
+        public static final int whiteCastleQueenside = 8;
+        public static final int blackCastleKingside = 9;
+        public static final int blackCastleQueenside = 10;
     }
     // end: public static final class MoveFlag
 
 
-    short moveValue;
+    int moveValue;
+
 
     // Bits 0-5 store starting tile
     // Bits 6-11 store ending tile
     // Bits 12-15 store flag for the move
-    final short startTileMasker = 0b0000000000111111;
-    final short endTileMasker = 0b0000111111000000;
+    final int startTileMasker = 0b0000000000111111;
+    final int endTileMasker = 0b0000111111000000;
 
 
     // ----------------------------------------------------------------------------------------------------
@@ -87,7 +91,7 @@ public class Move {
     // flag:        special flag for the move
     //
     public Move (int startTile, int endTile, int flag) {
-        this.moveValue = (short) (startTile | endTile << 6 | flag << 12);
+        this.moveValue = (startTile | endTile << 6 | flag << 12);
     }
     // end: public Move
 
@@ -105,6 +109,12 @@ public class Move {
     public boolean isPromotion() {
         int flag = moveFlag();
         return flag == Flag.promoteToQueen || flag == Flag.promoteToRook || flag == Flag.promoteToKnight || flag == Flag.promoteToBishop;
+    }
+
+
+    public boolean isCastle() {
+        int flag = moveFlag();
+        return flag == Flag.whiteCastleKingside || flag == Flag.whiteCastleQueenside || flag == Flag.blackCastleKingside || flag == Flag.blackCastleQueenside;
     }
 
 

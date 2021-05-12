@@ -21,6 +21,8 @@ public class MoveData {
     // Move offsets for the 8 dirs  | W   E  N   S  NE  SW NW  SE
     public final int[] slidingOffsets = {-1, 1, -8, 8, -7, 7, -9, 9};
 
+    public final int[] castlingOffsets = {-2, 2};
+
     public static final List<Integer> pawnPromotionTiles = Arrays.asList(0, 1, 2, 3, 4, 5, 6, 7);
     public final List<Integer> pawnStartingTiles = Arrays.asList(48, 49, 50, 51, 52, 53, 54, 55);
 

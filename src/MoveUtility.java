@@ -22,7 +22,7 @@ public class MoveUtility {
 
 
     // ====================================================================================================
-    // public static List<Short> returnMoveValues
+    // public static List<Integer> returnMoveValues
     //
     // Returns a list of move values from a list of move objects
     //
@@ -34,8 +34,8 @@ public class MoveUtility {
     //
     // moveVals:    the list of move values
     //
-    public static List<Short> returnMoveValues(List<Move> listOfMoves) {
-        List<Short> moveVals = new ArrayList<>();
+    public static List<Integer> returnMoveValues(List<Move> listOfMoves) {
+        List<Integer> moveVals = new ArrayList<>();
 
         for (Move move : listOfMoves) {
             moveVals.add(move.moveValue);
@@ -43,7 +43,7 @@ public class MoveUtility {
 
         return moveVals;
     }
-    // end: public static List<Short> returnMoveValues
+    // end: public static List<Integer> returnMoveValues
 
 
     // ====================================================================================================
@@ -175,12 +175,13 @@ public class MoveUtility {
     List<Move> generateKingMoves(int startTile) {
         List<Move> movesGenerated = new ArrayList<>();
 
+        // Regular king moves
         for (int direction = 0; direction < 8; direction++) {
             // Make sure there are available tiles in this direction
             if (precomputedMoveData.tilesToEdge[startTile][direction] == 0) { continue; }
 
             int offset = precomputedMoveData.slidingOffsets[direction];
-            int endTile = startTile + offset; // Get the legal ending tile for the piece. Multiply by (i + 1) because sliding pieces can move an infinite distance in each of their directions
+            int endTile = startTile + offset;
             int pieceOnEndTile = boardToUse.tile[endTile]; // Figure out if there is a piece on the ending tile
 
             // If the piece on the ending tile is of the same color, the move is illegal
@@ -188,6 +189,43 @@ public class MoveUtility {
 
             // Add the move to the list of legal moves
             movesGenerated.add(new Move(startTile, endTile));
+        }
+
+        // Castling moves
+        for (int castleDir = 0; castleDir < 2; castleDir++) {
+            int offset = precomputedMoveData.castlingOffsets[castleDir];
+            int endTile = startTile + offset;
+
+            // White castles
+            if (boardToUse.colorToMove == 0 && !(Chess.board.tilesOpponentControls.contains(Chess.board.kings[Chess.board.colorToMove].tilesWithPieces[0]))) {
+                // White queenside is allowed and all tiles are clear
+                if (offset == -2 && boardToUse.castleQ && boardToUse.tile[startTile - 1] == 0 && boardToUse.tile[startTile - 2] == 0 && boardToUse.tile[startTile - 3] == 0) {
+                    moveFlag = Move.Flag.none;
+                    moveFlag = Move.Flag.whiteCastleQueenside;
+                    movesGenerated.add(new Move(startTile, endTile, moveFlag));
+                }
+                // White kingside is allowed and all tiles are clear
+                else if (offset == 2 && boardToUse.castleK && boardToUse.tile[startTile + 1] == 0 && boardToUse.tile[startTile + 2] == 0) {
+                    moveFlag = Move.Flag.none;
+                    moveFlag = Move.Flag.whiteCastleKingside;
+                    movesGenerated.add(new Move(startTile, endTile, moveFlag));
+                }
+            }
+            // Black castles
+            else if (boardToUse.colorToMove == 1 && !(Chess.board.tilesOpponentControls.contains(Chess.board.kings[Chess.board.colorToMove].tilesWithPieces[0]))) {
+                // Black queenside is allowed and all tiles are clear
+                if (offset == 2 && boardToUse.castleq && boardToUse.tile[startTile + 1] == 0 && boardToUse.tile[startTile + 2] == 0 && boardToUse.tile[startTile + 3] == 0) {
+                    moveFlag = Move.Flag.none;
+                    moveFlag = Move.Flag.blackCastleQueenside;
+                    movesGenerated.add(new Move(startTile, endTile, moveFlag));
+                }
+                // Black kingside is allowed and all tiles are clear
+                else if (offset == -2 && boardToUse.castlek && boardToUse.tile[startTile - 1] == 0 && boardToUse.tile[startTile - 2] == 0) {
+                    moveFlag = Move.Flag.none;
+                    moveFlag = Move.Flag.blackCastleKingside;
+                    movesGenerated.add(new Move(startTile, endTile, moveFlag));
+                }
+            }
         }
 
         return movesGenerated;
