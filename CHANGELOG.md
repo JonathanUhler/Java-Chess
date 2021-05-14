@@ -80,3 +80,6 @@ FULL-RELEASES--
 
 	version		 date						changes
 	-------		--------		----------------------------------
+	1.0.0		5/13/21			Changes in this version:
+									-Fixed castling through check
+									-First full version of Java-Chess

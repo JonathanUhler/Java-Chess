@@ -330,6 +330,11 @@ public class Board implements Cloneable {
                 castlek = false;
                 castleq = false;
             }
+
+            if (!isGhost) {
+                try { BoardManager.playSound(chessProjectPath + "/reference/sounds/castle.wav"); } // Play the castle sound
+                catch (LineUnavailableException | IOException | UnsupportedAudioFileException exception) { exception.printStackTrace(); }
+            }
         }
 
         // Handle promotion
@@ -431,7 +436,11 @@ public class Board implements Cloneable {
     public void checkState() {
         // Figure out if the player is in check
         boolean inCheck = false;
-        if (tilesOpponentControls.contains(kings[colorToMove].tilesWithPieces[0])) { inCheck = true; }
+        if (tilesOpponentControls.contains(kings[colorToMove].tilesWithPieces[0])) {
+            inCheck = true;
+            try { BoardManager.playSound(chessProjectPath + "/reference/sounds/check.wav"); } // Play the check sound
+            catch (LineUnavailableException | IOException | UnsupportedAudioFileException exception) { exception.printStackTrace(); }
+        }
 
         // Figure out how many legal moves the player has
         int numLegalMoves = new LegalMoveUtility().allLegalMoves().size();

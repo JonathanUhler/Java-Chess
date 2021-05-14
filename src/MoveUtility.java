@@ -197,30 +197,30 @@ public class MoveUtility {
             int endTile = startTile + offset;
 
             // White castles
-            if (boardToUse.colorToMove == 0 && !(Chess.board.tilesOpponentControls.contains(Chess.board.kings[Chess.board.colorToMove].tilesWithPieces[0]))) {
+            if (boardToUse.colorToMove == 0 && !(Chess.board.tilesOpponentControls.contains(Chess.board.kings[Chess.board.colorToMove].tilesWithPieces[0]))) { // Prevent castling out of check
                 // White queenside is allowed and all tiles are clear
-                if (offset == -2 && boardToUse.castleQ && boardToUse.tile[startTile - 1] == 0 && boardToUse.tile[startTile - 2] == 0 && boardToUse.tile[startTile - 3] == 0) {
+                if (offset == -2 && boardToUse.castleQ && boardToUse.tile[startTile - 1] == 0 && boardToUse.tile[startTile - 2] == 0 && boardToUse.tile[startTile - 3] == 0 && !(Chess.board.tilesOpponentControls.contains(startTile - 1))) {
                     moveFlag = Move.Flag.none;
                     moveFlag = Move.Flag.whiteCastleQueenside;
                     movesGenerated.add(new Move(startTile, endTile, moveFlag));
                 }
                 // White kingside is allowed and all tiles are clear
-                else if (offset == 2 && boardToUse.castleK && boardToUse.tile[startTile + 1] == 0 && boardToUse.tile[startTile + 2] == 0) {
+                else if (offset == 2 && boardToUse.castleK && boardToUse.tile[startTile + 1] == 0 && boardToUse.tile[startTile + 2] == 0 && !(Chess.board.tilesOpponentControls.contains(startTile + 1))) {
                     moveFlag = Move.Flag.none;
                     moveFlag = Move.Flag.whiteCastleKingside;
                     movesGenerated.add(new Move(startTile, endTile, moveFlag));
                 }
             }
             // Black castles
-            else if (boardToUse.colorToMove == 1 && !(Chess.board.tilesOpponentControls.contains(Chess.board.kings[Chess.board.colorToMove].tilesWithPieces[0]))) {
+            else if (boardToUse.colorToMove == 1 && !(Chess.board.tilesOpponentControls.contains(Chess.board.kings[Chess.board.colorToMove].tilesWithPieces[0]))) { // Prevent castling out of check
                 // Black queenside is allowed and all tiles are clear
-                if (offset == 2 && boardToUse.castleq && boardToUse.tile[startTile + 1] == 0 && boardToUse.tile[startTile + 2] == 0 && boardToUse.tile[startTile + 3] == 0) {
+                if (offset == 2 && boardToUse.castleq && boardToUse.tile[startTile + 1] == 0 && boardToUse.tile[startTile + 2] == 0 && boardToUse.tile[startTile + 3] == 0 && !(Chess.board.tilesOpponentControls.contains(startTile + 1))) {
                     moveFlag = Move.Flag.none;
                     moveFlag = Move.Flag.blackCastleQueenside;
                     movesGenerated.add(new Move(startTile, endTile, moveFlag));
                 }
                 // Black kingside is allowed and all tiles are clear
-                else if (offset == -2 && boardToUse.castlek && boardToUse.tile[startTile - 1] == 0 && boardToUse.tile[startTile - 2] == 0) {
+                else if (offset == -2 && boardToUse.castlek && boardToUse.tile[startTile - 1] == 0 && boardToUse.tile[startTile - 2] == 0 && !(Chess.board.tilesOpponentControls.contains(startTile - 1))) {
                     moveFlag = Move.Flag.none;
                     moveFlag = Move.Flag.blackCastleKingside;
                     movesGenerated.add(new Move(startTile, endTile, moveFlag));
