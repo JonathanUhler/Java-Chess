@@ -330,5 +330,14 @@ public class Graphics {
     }
     // end: public void createApplication
 
+
+    public Point getWindowPosition() {
+        Point windowPos = new Point();
+        windowPos.x = appWindow.getX();
+        windowPos.y = appWindow.getY();
+
+        return windowPos;
+    }
+
 }
 // end: public class Graphics

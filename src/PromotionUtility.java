@@ -104,7 +104,7 @@ public class PromotionUtility {
     public void createPromotionWindow() {
         promotionDialog.setLayout(new FlowLayout());
         promotionDialog.add(addPromotionMenu());
-        promotionDialog.setBounds(50, 60, 150, 100);
+        promotionDialog.setBounds(Chess.graphics.getWindowPosition().x + 275, Chess.graphics.getWindowPosition().y + 325, 200, 100);
         promotionDialog.setVisible(true);
         promotionWindow.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
     }

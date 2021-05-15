@@ -83,3 +83,6 @@ FULL-RELEASES--
 	1.0.0		5/13/21			Changes in this version:
 									-Fixed castling through check
 									-First full version of Java-Chess
+
+	1.0.1		5/14/21			Changes in this version:
+									-Gamestate and pawn promotion dialog boxes now display relative to the board

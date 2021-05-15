@@ -161,7 +161,7 @@ public class GameStateUtility {
     //
     static void createEndWindow() {
         endDialog.setLayout(new FlowLayout());
-        endDialog.setBounds(50, 60, 200, 100);
+        endDialog.setBounds(Chess.graphics.getWindowPosition().x + 275, Chess.graphics.getWindowPosition().y + 325, 200, 100);
         endDialog.setVisible(true);
         endWindow.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
     }
