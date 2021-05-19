@@ -89,3 +89,6 @@ FULL-RELEASES--
 
 	1.0.2		5/19/21			Changes in this version:
 									-Material advantage/score is now displayed along with the other settings and config
+
+	1.0.3		5/19/21			Changes in this version:
+									-Fixed a minor issue with FEN position being displayed

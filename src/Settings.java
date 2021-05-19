@@ -166,7 +166,7 @@ public class Settings {
     // customFenBox:    the JTextField for the custom fen position
     //
     private static JTextField customFenPosition() {
-        String fenToDisplay = FenUtility.changePlayerPerspective(FenUtility.buildFenFromPosition());
+        String fenToDisplay = FenUtility.buildFenFromPosition();
 
         JTextField customFenBox = new JTextField(fenToDisplay);
 
@@ -279,6 +279,19 @@ public class Settings {
     // end: private static JButton newGame
 
 
+    // ====================================================================================================
+    // private static JLabel pieceMaterial
+    //
+    // Shows piece advantage/score
+    //
+    // Arguments--
+    //
+    // None
+    //
+    // Returns--
+    //
+    // material:    a label with the piece materials
+    //
     private static JLabel pieceMaterial() {
         int white = Chess.board.whiteMaterial;
         int black = Chess.board.blackMaterial;
@@ -294,6 +307,7 @@ public class Settings {
 
         return material;
     }
+    // end: private static JLabel pieceMaterial
 
 }
 // end: public class Settings
