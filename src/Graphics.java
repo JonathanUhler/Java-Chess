@@ -54,12 +54,30 @@ public class Graphics {
         int pieceH = (int) (w * 0.1); // Starting height for a piece
         ArrayList<Integer> legalMoveTiles = new ArrayList<>(); // List of legal ending moves
         List<Move> legalMoves = new ArrayList<>(); // List of fully legal moves
+        Chess.board.whiteMaterial = 0; Chess.board.blackMaterial = 0;
 
         for (PieceTracker pieceTracker : Chess.board.allPieceTrackers) {
             for (int i = 0; i < pieceTracker.pieceCount; i++) {
                 String pieceBinaryIdentifier = Integer.toBinaryString(pieceTracker.pieceColor | pieceTracker.pieceType); // Define the binary string for the piece (that is the color | the type)
                 JLabel piece = new JLabel(new ImageIcon(Chess.board.chessProjectPath + "/reference/pieces/" + pieceBinaryIdentifier + ".png")); // Create a new label with the correct image
                 piece.setBounds(pieceStartingX * ((pieceTracker.tilesWithPieces[i] % 8) + 1), pieceStartingY * (int) ((Math.floor(pieceTracker.tilesWithPieces[i] / 8.0)) + 1), pieceW, pieceH); // Set the size and position of the piece
+
+                // Add up the piece material for each side
+                if (pieceTracker.pieceColor == Piece.White) {
+                    if (pieceTracker.pieceType == Piece.Pawn) { Chess.board.whiteMaterial += 1; }
+                    if (pieceTracker.pieceType == Piece.Knight) { Chess.board.whiteMaterial += 3; }
+                    if (pieceTracker.pieceType == Piece.Bishop) { Chess.board.whiteMaterial += 3; }
+                    if (pieceTracker.pieceType == Piece.Rook) { Chess.board.whiteMaterial += 5; }
+                    if (pieceTracker.pieceType == Piece.Queen) { Chess.board.whiteMaterial += 9; }
+                }
+                else if (pieceTracker.pieceColor == Piece.Black) {
+                    if (pieceTracker.pieceType == Piece.Pawn) { Chess.board.blackMaterial += 1; }
+                    if (pieceTracker.pieceType == Piece.Knight) { Chess.board.blackMaterial += 3; }
+                    if (pieceTracker.pieceType == Piece.Bishop) { Chess.board.blackMaterial += 3; }
+                    if (pieceTracker.pieceType == Piece.Rook) { Chess.board.blackMaterial += 5; }
+                    if (pieceTracker.pieceType == Piece.Queen) { Chess.board.blackMaterial += 9; }
+                }
+                Settings.drawSettings();
 
                 int finalI = i;
                 // Piece picked up

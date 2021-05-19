@@ -51,7 +51,9 @@ public class Board implements Cloneable {
     public String currentFenPosition; // Current arrangement of pieces on the board in fen notation
     public HashMap<String, Integer> threeFoldRepetition = new HashMap<>(); // List of positions and how many times they have appeared in the game
 
-    public List<Integer> tilesOpponentControls = new ArrayList<>();
+    public List<Integer> tilesOpponentControls = new ArrayList<>(); // List of the tiles the opponent attacks
+    public int whiteMaterial; // Piece material that white has
+    public int blackMaterial; // Piece material that black has
 
     public boolean whitesMove; // Is white to move?
     public int colorToMove; // Which color is to move

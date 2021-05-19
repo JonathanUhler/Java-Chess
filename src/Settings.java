@@ -50,6 +50,7 @@ public class Settings {
         settingsPanel.add(boardTheme()); // Add the dropdown menu to the view
 //        settingsPanel.add(changePerspective()); // Add the button to change player perspective
         settingsPanel.add(showLegalMoves()); // Add the button to toggle legal moves
+        settingsPanel.add(pieceMaterial()); // Add the text for the piece material
         settingsPanel.add(customFenPosition()); // Add the text box for the current fen position
 
         return settingsPanel;
@@ -276,6 +277,23 @@ public class Settings {
         return newGame;
     }
     // end: private static JButton newGame
+
+
+    private static JLabel pieceMaterial() {
+        int white = Chess.board.whiteMaterial;
+        int black = Chess.board.blackMaterial;
+
+        String materialMessage;
+
+        materialMessage = "Material: Black +" + (black - white);
+        if (white > black) { materialMessage = "Material: White +" + (white - black); }
+        else if (white == black) { materialMessage = "Material: Even +0"; }
+
+        JLabel material = new JLabel(materialMessage);
+        material.setBounds((int) (w * 9.5), w * 3, w * 3, w); // Set the location of the label
+
+        return material;
+    }
 
 }
 // end: public class Settings

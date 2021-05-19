@@ -86,3 +86,6 @@ FULL-RELEASES--
 
 	1.0.1		5/14/21			Changes in this version:
 									-Gamestate and pawn promotion dialog boxes now display relative to the board
+
+	1.0.2		5/19/21			Changes in this version:
+									-Material advantage/score is now displayed along with the other settings and config
