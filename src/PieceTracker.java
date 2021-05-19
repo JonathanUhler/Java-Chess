@@ -30,6 +30,10 @@ public class PieceTracker implements Cloneable {
     //
     // maxCountPerPieceType:    the maximum amount of a given type of piece possible in a game
     //
+    // color: the color of the piece tracker
+    //
+    // type: the type of the piece tracker
+    //
     public PieceTracker (int maxCountPerPieceType, int color, int type) {
         maxPieces = maxCountPerPieceType;
         tilesWithPieces = new int[maxCountPerPieceType];
@@ -65,7 +69,7 @@ public class PieceTracker implements Cloneable {
     // ====================================================================================================
     // void removePieceFromTile
     //
-    // Removes an existing piece form a given tile
+    // Removes an existing piece from a given tile
     //
     // Arguments--
     //

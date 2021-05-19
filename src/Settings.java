@@ -11,7 +11,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
@@ -61,7 +60,7 @@ public class Settings {
     // ====================================================================================================
     // private static JComboBox playerColor
     //
-    // Creates the combo box for the players desired stating color
+    // Creates the combo box for the players desired starting color
     //
     // Arguments--
     //

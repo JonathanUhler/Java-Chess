@@ -113,7 +113,12 @@ public class Graphics {
                     @Override public void mouseDragged(MouseEvent e) {
                         // When the mouse is dragged, update the position of the piece image (this doesn't change the location of the piece yet)
                         Point frameRelativeMousePos = BoardManager.frameRelativeMousePosition(appWindow, new Point(e.getXOnScreen(), e.getYOnScreen()));
-                        piece.setLocation(frameRelativeMousePos.x - x_pressed, frameRelativeMousePos.y - y_pressed);
+                        if (frameRelativeMousePos.x > 72 && frameRelativeMousePos.x < 648) {
+                            piece.setLocation(frameRelativeMousePos.x - x_pressed, piece.getY());
+                        }
+                        if (frameRelativeMousePos.y> 72 && frameRelativeMousePos.y < 648) {
+                            piece.setLocation(piece.getX(), frameRelativeMousePos.y - y_pressed);
+                        }
                     }
                 });
 

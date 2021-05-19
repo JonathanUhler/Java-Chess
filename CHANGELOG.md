@@ -92,3 +92,6 @@ FULL-RELEASES--
 
 	1.0.3		5/19/21			Changes in this version:
 									-Fixed a minor issue with FEN position being displayed
+
+	1.0.4		5/19/21			Changes in this version:
+									-Documentation updates

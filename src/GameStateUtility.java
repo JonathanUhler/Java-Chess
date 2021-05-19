@@ -6,14 +6,11 @@
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
 
 
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.UnsupportedAudioFileException;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
-import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
+
 
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
 // public class GameStateUtility
@@ -24,13 +21,12 @@ public class GameStateUtility {
 
     static final JFrame endWindow = new JFrame(); // Create a new application window
     static JDialog endDialog = new JDialog(endWindow, "Game Finished", true);
-    public static final File chessProjectPath = new File("./").getAbsoluteFile().getParentFile().getParentFile(); // Get the path for .../Chess/
 
 
     // ====================================================================================================
-    // public static int checkGameState
+    // public static int actOnGameState
     //
-    // Checks the state of the game
+    // Acts on the state of the game
     //
     // Arguments--
     //
@@ -69,7 +65,7 @@ public class GameStateUtility {
             return 0; // Game still ongoing
         }
     }
-    // end: public static int checkGameState
+    // end: public static int actOnGameState
 
 
     // ====================================================================================================

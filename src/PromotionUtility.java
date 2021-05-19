@@ -53,7 +53,7 @@ public class PromotionUtility {
     //
     // Returns--
     //
-    // None
+    // promotionType: the JComboBox
     //
     public JComboBox<String> addPromotionMenu() {
         JComboBox<String> promotionType = new JComboBox<>(new String[]{"Queen", "Rook", "Knight", "Bishop"});
