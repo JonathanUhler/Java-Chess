@@ -23,7 +23,7 @@ import java.util.List;
 //
 public class Graphics {
 
-    public final boolean DEBUG_MODE = true; // Enables/disables whether tiles show their indicies
+    public final boolean DEBUG_MODE = false; // Enables/disables whether tiles show their indicies
 
     public final int w = 720, h = w; // Width and height of the JFrame application window
     public final JFrame appWindow = new JFrame("Chess"); // Create a new application window
@@ -423,8 +423,8 @@ public class Graphics {
                 drawBoard(null); // Draw the board
                 Chess.board.checkState(); // Check on the state of the game
 
-                AI ai = new AI();
-                System.out.println("eval: " + ai.search(2));
+//                AI ai = new AI();
+//                System.out.println("eval: " + ai.search(4, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY));
             }
         }
         // The proposed move was not a psuedo legal move (and thus also not a legal move)

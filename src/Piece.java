@@ -111,5 +111,22 @@ public class Piece {
     }
     // end: public static boolean checkSliding
 
+
+    public static int getValue(int piece) {
+        switch (Piece.pieceType(piece)) {
+            case Piece.Pawn:
+                return 1;
+            case Piece.Knight:
+            case Piece.Bishop:
+                return 3;
+            case Piece.Rook:
+                return 5;
+            case Piece.Queen:
+                return 9;
+            default:
+                return 0;
+        }
+    }
+
 }
 // end: public class Piece

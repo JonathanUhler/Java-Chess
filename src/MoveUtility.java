@@ -356,14 +356,13 @@ public class MoveUtility {
             if (Piece.checkColor(capturablePieceOne, boardToUse.opponentColor, true) || Piece.checkColor(capturablePieceTwo, boardToUse.opponentColor, true)) {
                 if (Piece.checkColor(capturablePieceOne, boardToUse.opponentColor, true) && !edgeTilesLeft.contains(endTile)) {
                     pawnOffsets.add(9 * boardToUse.pawnDir);
-                    movesGenerated.addAll(generatePawnCaptures(startTile));
-                    continue;
                 }
                 if (Piece.checkColor(capturablePieceTwo, boardToUse.opponentColor, true) && !edgeTilesRight.contains(endTile)) {
                     pawnOffsets.add(7 * boardToUse.pawnDir);
-                    movesGenerated.addAll(generatePawnCaptures(startTile));
-                    continue;
                 }
+
+                movesGenerated.addAll(generatePawnCaptures(startTile));
+                continue;
             }
 
             // Pawn promoted

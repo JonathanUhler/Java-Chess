@@ -98,3 +98,6 @@ FULL-RELEASES--
     
     1.0.5		5/21/21			Changes in this version:
 									-Move generation optimizations
+
+	1.0.6		5/22/21			Changes in this version:
+									-Fixed a minor issue with pawn promotion
