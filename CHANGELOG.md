@@ -95,3 +95,6 @@ FULL-RELEASES--
 
 	1.0.4		5/19/21			Changes in this version:
 									-Documentation updates
+    
+    1.0.5		5/21/21			Changes in this version:
+									-Move generation optimizations

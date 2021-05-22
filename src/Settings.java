@@ -292,8 +292,8 @@ public class Settings {
     // material:    a label with the piece materials
     //
     private static JLabel pieceMaterial() {
-        int white = Chess.board.whiteMaterial;
-        int black = Chess.board.blackMaterial;
+        int white = Chess.board.countMaterial(Chess.board.whiteIndex);
+        int black = Chess.board.countMaterial(Chess.board.blackIndex);
 
         String materialMessage;
 

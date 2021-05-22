@@ -47,6 +47,31 @@ public class MoveUtility {
 
 
     // ====================================================================================================
+    // public static List<Integer> returnStartingTiles
+    //
+    // Returns a list of starting tiles from a list of move objects
+    //
+    // Arguments--
+    //
+    // listOfMoves: the list of move objects
+    //
+    // Returns--
+    //
+    // startTiles:    the list of start tiles
+    //
+    public static List<Integer> returnStartingTiles(List<Move> listOfMoves) {
+        List<Integer> startTiles = new ArrayList<>();
+
+        for (Move move : listOfMoves) {
+            startTiles.add(move.startTile());
+        }
+
+        return startTiles;
+    }
+    // end: public static List<Integer> returnStartingTiles
+
+
+    // ====================================================================================================
     // public static List<Integer> returnEndingTiles
     //
     // Returns a list of ending tiles from a list of move objects
@@ -319,25 +344,26 @@ public class MoveUtility {
             if (enPassantPiece != 0) {
                 if (enPassantTile == (startTile + (9 * boardToUse.pawnDir)) && !edgeTilesRight.contains((startTile + (9 * boardToUse.pawnDir)))) {
                     pawnOffsets.add(9 * boardToUse.pawnDir);
+                    movesGenerated.addAll(generateEnPassantCaptures(startTile));
                 }
                 if (enPassantTile == (startTile + (7 * boardToUse.pawnDir)) && !edgeTilesLeft.contains((startTile + (7 * boardToUse.pawnDir)))) {
                     pawnOffsets.add(7 * boardToUse.pawnDir);
+                    movesGenerated.addAll(generateEnPassantCaptures(startTile));
                 }
-
-                movesGenerated.addAll(generateEnPassantCaptures(startTile));
             }
 
             // Regular captures
             if (Piece.checkColor(capturablePieceOne, boardToUse.opponentColor, true) || Piece.checkColor(capturablePieceTwo, boardToUse.opponentColor, true)) {
                 if (Piece.checkColor(capturablePieceOne, boardToUse.opponentColor, true) && !edgeTilesLeft.contains(endTile)) {
                     pawnOffsets.add(9 * boardToUse.pawnDir);
+                    movesGenerated.addAll(generatePawnCaptures(startTile));
+                    continue;
                 }
                 if (Piece.checkColor(capturablePieceTwo, boardToUse.opponentColor, true) && !edgeTilesRight.contains(endTile)) {
                     pawnOffsets.add(7 * boardToUse.pawnDir);
+                    movesGenerated.addAll(generatePawnCaptures(startTile));
+                    continue;
                 }
-
-                movesGenerated.addAll(generatePawnCaptures(startTile));
-                continue;
             }
 
             // Pawn promoted
@@ -425,6 +451,9 @@ public class MoveUtility {
         List<Move> movesGenerated = new ArrayList<>();
 
         for (int pawnOffset : pawnOffsets) {
+            if (pawnOffset != (9 * boardToUse.pawnDir) && pawnOffset != (7 * boardToUse.pawnDir)) {
+                continue;
+            }
             int endTile = startTile + pawnOffset; // Find the end tile
             int enPassantPiece = (enPassantTile != -1) ? boardToUse.tile[enPassantTile - (8 * boardToUse.pawnDir)] : 0; // Find the piece being targeted by the en passant move
 

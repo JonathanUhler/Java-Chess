@@ -52,8 +52,6 @@ public class Board implements Cloneable {
     public HashMap<String, Integer> threeFoldRepetition = new HashMap<>(); // List of positions and how many times they have appeared in the game
 
     public List<Integer> tilesOpponentControls = new ArrayList<>(); // List of the tiles the opponent attacks
-    public int whiteMaterial; // Piece material that white has
-    public int blackMaterial; // Piece material that black has
 
     public boolean whitesMove; // Is white to move?
     public int colorToMove; // Which color is to move
@@ -398,6 +396,51 @@ public class Board implements Cloneable {
 
 
     // ====================================================================================================
+    // public int evaluatePosition
+    //
+    // Counts the material  of a given player
+    //
+    // Arguments--
+    //
+    // color:       the color of the player to count for
+    //
+    // Returns--
+    //
+    // material:    the material of the given player
+    public int countMaterial(int color) {
+        int material = 0;
+
+        material += this.pawns[color].pieceCount;
+        material += this.knights[color].pieceCount * 3;
+        material += this.bishops[color].pieceCount * 3;
+        material += this.rooks[color].pieceCount * 5;
+        material += this.queens[color].pieceCount * 9;
+
+        return material;
+    }
+    // end: public int countMaterial
+
+
+    // ====================================================================================================
+    // public boolean playerInCheck
+    //
+    // Figures out if the current player is in check or not
+    //
+    // Arguments--
+    //
+    // None
+    //
+    // Returns--
+    //
+    // Whether the current player is in check
+    //
+    public boolean playerInCheck() {
+        return tilesOpponentControls.contains(kings[colorToMove].tilesWithPieces[0]);
+    }
+    // end: public boolean playerInCheck
+
+
+    // ====================================================================================================
     // public void changePlayer
     //
     // Changes information about which player is current taking their turn
@@ -437,9 +480,7 @@ public class Board implements Cloneable {
     //
     public void checkState() {
         // Figure out if the player is in check
-        boolean inCheck = false;
-        if (tilesOpponentControls.contains(kings[colorToMove].tilesWithPieces[0])) {
-            inCheck = true;
+        if (playerInCheck()) {
             try { BoardManager.playSound(chessProjectPath + "/reference/sounds/check.wav"); } // Play the check sound
             catch (LineUnavailableException | IOException | UnsupportedAudioFileException exception) { exception.printStackTrace(); }
         }
@@ -448,7 +489,7 @@ public class Board implements Cloneable {
         int numLegalMoves = new LegalMoveUtility().allLegalMoves().size();
 
         // Update the game state (check for draw or win/loss)
-        GameStateUtility.actOnGameState(numLegalMoves, inCheck);
+        GameStateUtility.actOnGameState(numLegalMoves, playerInCheck());
     }
     // end: public void checkState
 
