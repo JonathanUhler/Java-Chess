@@ -26,7 +26,7 @@ The project currently only supports FEN (forsyth-edwards notation) for saving an
 # AI Player
 The project currently has an AI/computer player that can be enabled/disabled by pressing the "Enable AI" button. To play against the computer make sure the button is green, then make your first move; the computer will think for a few seconds and then play its move.
 
-Technical information about the computer player--
+Technical information about the computer player--\
 Algorithm: minimax\
 Speed optimizations: none of note, the search is currently pure\
 Skill optimizations: capture incentives, piece tile tables (positional play incentives)
