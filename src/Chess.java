@@ -9,6 +9,7 @@
 import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
 import java.util.HashMap;
 
 
@@ -31,16 +32,18 @@ public class Chess {
     //
     public static void main(String[] args) throws IOException {
         // Load all config for the user
-        String theme, startingFEN;
+        String theme, startingFEN, aiEnable;
         try {
             String stringifiedConfigData = JSONUtility.read(new File("./").getAbsoluteFile().getParentFile().getParentFile() + "/config/config.json"); // Get user config data
             HashMap<String, String> userConfigData = JSONUtility.stringToDictionary(stringifiedConfigData); // Convert user config data into a hashmap
             startingFEN = userConfigData.get("startingFEN"); // Get the theme and preference for starting color
+            aiEnable = userConfigData.get("aiEnable");
         }
-        catch (IndexOutOfBoundsException indexException) {
+        catch (NoSuchFileException | IndexOutOfBoundsException e) {
             theme = "Gray";
             startingFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 0";
-            JSONUtility.write(new File("./").getAbsoluteFile().getParentFile().getParentFile() + "/config/config.json", "{theme=" + theme + ", startingFEN=" + startingFEN + "}");
+            aiEnable = "false";
+            JSONUtility.write(new File("./").getAbsoluteFile().getParentFile().getParentFile() + "/config/config.json", "{theme=" + theme + ", startingFEN=" + startingFEN + ", aiEnable=" + aiEnable + "}");
         }
 
         // Initialize classes
@@ -50,6 +53,7 @@ public class Chess {
         // Initialize the board and starting position of the pieces
         graphics.createApplication(); // Create the JFrame window
         board.loadPosition(startingFEN); // Load the starting position
+        board.enableAI = (aiEnable.equals("true"));
         JPanel settings = Settings.drawSettings(); // Display options
         graphics.drawPosition(); // Display all the pieces of the current position onto the frame
         graphics.drawBoard(null); // Display the tiles that make up the board

@@ -10,6 +10,7 @@ import javax.sound.sampled.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -60,6 +61,7 @@ public class Board implements Cloneable {
     public int pawnDir = -1; // What direction do pawns move (up or down)?
 
     public boolean showLegalMoves = true; // Should legal moves be highlighted?
+    public boolean enableAI = false; // Should the AI player be enabled?
 
 
     // ====================================================================================================
@@ -391,6 +393,7 @@ public class Board implements Cloneable {
                 threeFoldRepetition.put(currentFenPosition, 1);
             }
         }
+
     }
     // end: public void makeMove
 
@@ -486,7 +489,7 @@ public class Board implements Cloneable {
         }
 
         // Figure out how many legal moves the player has
-        int numLegalMoves = new LegalMoveUtility().allLegalMoves().size();
+        int numLegalMoves = new LegalMoveUtility().allLegalMoves(this).size();
 
         // Update the game state (check for draw or win/loss)
         GameStateUtility.actOnGameState(numLegalMoves, playerInCheck());

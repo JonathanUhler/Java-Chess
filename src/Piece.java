@@ -112,6 +112,19 @@ public class Piece {
     // end: public static boolean checkSliding
 
 
+    // ====================================================================================================
+    // public static int getValue
+    //
+    // Returns the value of a piece
+    //
+    // Arguments--
+    //
+    // piece:   the piece to get the value of
+    //
+    // Returns--
+    //
+    // The integer value of the piece
+    //
     public static int getValue(int piece) {
         switch (Piece.pieceType(piece)) {
             case Piece.Pawn:
@@ -127,6 +140,7 @@ public class Piece {
                 return 0;
         }
     }
+    // end: public static int getValue
 
 }
 // end: public class Piece

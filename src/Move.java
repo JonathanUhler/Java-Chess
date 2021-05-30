@@ -122,5 +122,10 @@ public class Move {
         return moveValue >> 12;
     }
 
+
+    public static boolean isCapture(Move move, Board board) {
+        return (board.tile[move.endTile()] != 0);
+    }
+
 }
 // end: public class Move

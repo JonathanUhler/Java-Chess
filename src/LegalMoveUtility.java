@@ -29,23 +29,20 @@ public class LegalMoveUtility {
     // Returns--
     //
     // legalMoves:  a list of all the legal moves for the current player
-    public List<Move> allLegalMoves() {
+    public List<Move> allLegalMoves(Board board) {
         List<Move> legalMoves = new ArrayList<>();
 
         // Generate pseudo-legal moves
         MoveUtility checkMyMoves = new MoveUtility();
-        List<Move> pseudoLegalMoves = checkMyMoves.generateMoves(Chess.board);
+        List<Move> pseudoLegalMoves = checkMyMoves.generateMoves(board);
 
         // For each of my possible moves...
         for (Move moveToVerify : pseudoLegalMoves) {
             // Make my move on the ghost board deep copy
             // Deep copy the real board
             Board ghostBoard = new Board();
-            try {
-                ghostBoard = (Board) Chess.board.clone();
-            } catch (CloneNotSupportedException cloneNotSupportedException) {
-                cloneNotSupportedException.printStackTrace();
-            }
+            try { ghostBoard = (Board) board.clone(); }
+            catch (CloneNotSupportedException cloneNotSupportedException) { cloneNotSupportedException.printStackTrace(); }
 
             ghostBoard.pawnDir = -1;
             ghostBoard.makeMove(moveToVerify, true);

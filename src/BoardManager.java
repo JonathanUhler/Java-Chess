@@ -11,6 +11,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
+import java.util.*;
+import java.util.List;
 
 
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
@@ -44,6 +46,25 @@ public class BoardManager {
 
 
     // ====================================================================================================
+    // public static void debugMessage
+    //
+    // Prints a debug message from a standard location
+    //
+    // Arguments--
+    //
+    // msg: the message to print
+    //
+    // Returns--
+    //
+    // None
+    //
+    public static void debugMessage(String msg) {
+        System.out.println("BoardManager.debugMessage % " + msg);
+    }
+    // end: public static void debugMessage
+
+
+    // ====================================================================================================
     // public static Point frameRelativeMousePosition
     //
     // Takes in the position of a JFrame and the mouse position and returns the mouse position relative
@@ -68,6 +89,36 @@ public class BoardManager {
         return frameRelativeMousePos;
     }
     // end: public static void frameRelativeMousePosition
+
+
+    // ====================================================================================================
+    // public static HashMap<Move, Integer> sortByValue
+    //
+    // Sorts a hashmap by its values
+    //
+    // Arguments--
+    //
+    // hm:      the hashmap to sort
+    //
+    // Returns--
+    //
+    // temp:    the sorted hashmap
+    public static HashMap<Move, Integer> sortByValue(HashMap<Move, Integer> hm) {
+        // Create a list from elements of HashMap
+        List<Map.Entry<Move, Integer> > list = new LinkedList<>(hm.entrySet());
+
+        // Sort the list
+        list.sort(Map.Entry.comparingByValue());
+
+        // put data from sorted list to hashmap
+        HashMap<Move, Integer> temp = new LinkedHashMap<>();
+        for (Map.Entry<Move, Integer> aa : list) {
+            temp.put(aa.getKey(), aa.getValue());
+        }
+
+        return temp;
+    }
+    // end: public static HashMap<Move, Integer> sortByValue
 
 }
 // end: public class BoardManager

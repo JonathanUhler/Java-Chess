@@ -262,7 +262,7 @@ public class Graphics {
 
         // Generate legal moves to highlight legal tiles
         LegalMoveUtility legalMoveUtil = new LegalMoveUtility();
-        legalMoves.addAll(legalMoveUtil.allLegalMoves());
+        legalMoves.addAll(legalMoveUtil.allLegalMoves(Chess.board));
 
         // Get the tiles for the piece selected by the player
         for (Move legalMove : legalMoves) {
@@ -276,8 +276,6 @@ public class Graphics {
         }
 
         drawBoard(legalMoveTiles);
-
-        System.out.println("# legal: " + legalMoves.size());
     }
     // end: void mousePressed
 
@@ -409,22 +407,10 @@ public class Graphics {
             else {
                 // Update internal data-structure
                 Chess.board.makeMove(move, false);
+                postMoveUpdates();
 
-                // Save the tiles controlled by the player that just moved to figure out if the next player is in check
-                MoveUtility lookForCheck = new MoveUtility();
-                Chess.board.tilesOpponentControls.clear();
-                for (int i : MoveUtility.returnEndingTiles(lookForCheck.generateMoves(Chess.board))) { Chess.board.tilesOpponentControls.add(63 - i); }
-
-                // Update visual representation of the board
-                Chess.board.changePlayer(); // Change information about whose turn it is
-                Settings.drawSettings(); // Update the fen string in the text field
-                Chess.board.loadPosition(FenUtility.changePlayerPerspective(FenUtility.buildFenFromPosition())); // Load the new position
-                drawPosition(); // Draw the position
-                drawBoard(null); // Draw the board
-                Chess.board.checkState(); // Check on the state of the game
-
-//                AI ai = new AI();
-//                System.out.println("eval: " + ai.search(4, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY));
+                // If the AI is enabled, make its move
+                if (Chess.board.enableAI) { AI.makeMove(); }
             }
         }
         // The proposed move was not a psuedo legal move (and thus also not a legal move)
@@ -434,6 +420,36 @@ public class Graphics {
         }
     }
     // end: void mouseReleased
+
+
+    // ====================================================================================================
+    // void postMoveUpdates
+    //
+    // Makes some changes to the graphical representation after a move is made
+    //
+    // Arguments--
+    //
+    // None
+    //
+    // Returns--
+    //
+    // None
+    //
+    void postMoveUpdates() {
+        // Save the tiles controlled by the player that just moved to figure out if the next player is in check
+        MoveUtility lookForCheck = new MoveUtility();
+        Chess.board.tilesOpponentControls.clear();
+        for (int i : MoveUtility.returnEndingTiles(lookForCheck.generateMoves(Chess.board))) { Chess.board.tilesOpponentControls.add(63 - i); }
+
+        // Update visual representation of the board
+        Chess.board.changePlayer(); // Change information about whose turn it is
+        Settings.drawSettings(); // Update the fen string in the text field
+        Chess.board.loadPosition(FenUtility.changePlayerPerspective(FenUtility.buildFenFromPosition())); // Load the new position
+        drawPosition(); // Draw the position
+        drawBoard(null); // Draw the board
+        Chess.board.checkState(); // Check on the state of the game
+    }
+    // end: void postMoveUpdates
 
 }
 // end: public class Graphics
