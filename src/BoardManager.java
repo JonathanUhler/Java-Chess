@@ -120,5 +120,28 @@ public class BoardManager {
     }
     // end: public static HashMap<Move, Integer> sortByValue
 
+
+    // ====================================================================================================
+    // public static HashMap<String, Integer> copy
+    //
+    // Returns a deep copy of a hashmap
+    //
+    // Arguments--
+    //
+    // original:    the original hashmap to copy
+    //
+    // Returns--
+    //
+    // copy:        the hashmap copy
+    //
+    public static HashMap<String, Integer> copy(HashMap<String, Integer> original) {
+        HashMap<String, Integer> copy = new HashMap<>();
+        for (Map.Entry<String, Integer> entry : original.entrySet()) {
+            copy.put(entry.getKey(), entry.getValue());
+        }
+        return copy;
+    }
+    // end: public static HashMap<String, Integer> copy
+
 }
 // end: public class BoardManager

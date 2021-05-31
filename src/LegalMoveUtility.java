@@ -56,7 +56,7 @@ public class LegalMoveUtility {
             List<Integer> opponentAttackedTiles = new ArrayList<>(MoveUtility.returnEndingTiles(opponentResponses));
 
             // If the opponent is attacking...            king...       of my color...
-            if (opponentAttackedTiles.contains(ghostBoard.kings[Chess.board.colorToMove].tilesWithPieces[0])) {
+            if (opponentAttackedTiles.contains(ghostBoard.kings[ghostBoard.colorToMove ^ 1].tilesWithPieces[0])) {
                 continue; // ...my move was illegal
             }
             else {

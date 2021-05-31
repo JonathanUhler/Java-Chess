@@ -179,12 +179,18 @@ public class AI {
 
         // Make move
         ghostBoard.makeMove(move, true);
+        MoveUtility lookForCheck = new MoveUtility();
+        ghostBoard.tilesOpponentControls.clear();
+        ghostBoard.tilesOpponentControls.addAll(MoveUtility.returnEndingTiles(lookForCheck.generateMoves(ghostBoard)));
+
+        // Check for draw by threefold repetition
+        if (ghostBoard.threeFoldRepetition.containsValue(3)) {
+            return 0;
+        }
 
         // Update the incremental value
         if (currentLevel % 2 == 0) { runningTotal -= incrementalVal; } // Human level
         else { runningTotal += incrementalVal; } // AI level
-
-//        System.out.println("start: " + (63 - move.startTile()) + ", end: " + (63 - move.endTile()) + ", level: " + currentLevel + ", running total: " + runningTotal);
 
         // Increase the level
         currentLevel++;
@@ -198,14 +204,19 @@ public class AI {
         // Generate possible moves
         ghostBoard.changePlayer();
         LegalMoveUtility legalMoveUtility = new LegalMoveUtility();
-        List<Move> legalMoves = orderMoves(legalMoveUtility.allLegalMoves(ghostBoard), ghostBoard);
+        List<Move> legalMoves = legalMoveUtility.allLegalMoves(ghostBoard);
         movesFound += legalMoves.size();
 
         // Check to see if the current node leads to the end of the game
         if (legalMoves.size() == 0) {
+            if (ghostBoard.playerInCheck()) {
+                try { ghostBoard = (Board) unmakeMove.clone(); }
+                catch (CloneNotSupportedException cloneNotSupportedException) { cloneNotSupportedException.printStackTrace(); }
+                return (currentLevel % 2 == 0) ? Double.POSITIVE_INFINITY : Double.NEGATIVE_INFINITY;
+            } // Checkmate
+
             try { ghostBoard = (Board) unmakeMove.clone(); }
             catch (CloneNotSupportedException cloneNotSupportedException) { cloneNotSupportedException.printStackTrace(); }
-            if (Chess.board.playerInCheck()) { return (currentLevel % 2 == 0) ? Double.POSITIVE_INFINITY : Double.NEGATIVE_INFINITY; } // Checkmate
             return 0; // Stalemate
         }
 
@@ -216,6 +227,7 @@ public class AI {
             double evaluation = search(currentLevel, maxDepth, nextMove, runningTotal);
 
             bestEval = (currentLevel % 2 == 0) ? Math.min(bestEval, evaluation) : Math.max(bestEval, evaluation);
+
         }
 
         try { ghostBoard = (Board) unmakeMove.clone(); }
@@ -262,14 +274,13 @@ public class AI {
             }
 
             if (bestMove != null) {
-                System.out.println("current: " + aiMoveScore + ", best: " + bestScore + ", current move start: " + (63 - aiMove.startTile()) + ", current move end: " + (63 - aiMove.endTile()) + ", best move start: " + (63 - bestMove.startTile()) + ", best move end: " + (63 - bestMove.endTile()));
-            }
+                BoardManager.debugMessage("AI -- Evaluating move: " + (aiMoves.indexOf(aiMove) + 1) + "/" + aiMoves.size()); }
         }
 
         LocalTime end = LocalTime.now();
 
         if (bestMove != null) {
-            BoardManager.debugMessage("Total moves evaluated: " + totalMoves + ", best capture score: " + bestScore + ", time: " + Duration.between(start, end).toMillis() + "ms");
+            BoardManager.debugMessage("AI -- Total moves evaluated: " + totalMoves + ", best capture score: " + bestScore + ", time: " + Duration.between(start, end).toMillis() + "ms");
             Chess.board.makeMove(bestMove, false);
             Chess.graphics.postMoveUpdates();
             Chess.graphics.drawBoard(new ArrayList<>(Arrays.asList(63 - bestMove.startTile(), 63 - bestMove.endTile())));

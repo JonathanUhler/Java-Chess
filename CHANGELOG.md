@@ -105,3 +105,6 @@ FULL-RELEASES--
 	2.0.0		5/30/21		Changes in this version:
 						-Minor all-around improvements
 						-Added AI class and the ability to enable/disable the computer player
+
+	2.0.1		5/31/21		Changes in this version:
+						-AI will now prioritize checkmate
