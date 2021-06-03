@@ -18,6 +18,8 @@ Once compiled (make sure the "Chess.class" file exists in your working directory
 java Chess
 ```
 
+Alternatively, run the program by navigating to the Java-Chess/src directory and double-clicking on the Chess.jar file
+
 
 # Loading and Saving Games
 The project currently only supports FEN (forsyth-edwards notation) for saving and loading games. When playing, a JTextField at the top of the program will update after each move to properly display the board state. FEN positions can also be loaded by pasting or writing a valid position into the text field and pressing the 'enter' key.
