@@ -1,0 +1,106 @@
+package engine.piece;
+
+
+import java.io.Serializable;
+
+
+public class Piece implements Serializable {
+
+	public static final class Type {
+		public static final int NONE = 0;
+		public static final int PAWN = 1;
+		public static final int KNIGHT = 2;
+		public static final int BISHOP = 3;
+		public static final int ROOK = 4;
+		public static final int QUEEN = 5;
+		public static final int KING = 6;
+	}
+
+
+	public static final class Color {
+		public static final int NONE = 0;
+		public static final int WHITE = 1;
+		public static final int BLACK = 2;
+	}
+	
+
+	private int type;
+	private int color;
+
+
+	public Piece(int type, int color) {
+		this.type = type;
+		this.color = color;
+	}
+
+
+	public int getType() {
+		return this.type;
+	}
+
+
+	public int getColor() {
+		return this.color;
+	}
+
+
+	public boolean friendly(boolean whiteToMove) {
+		if ((this.color == Color.WHITE && whiteToMove) ||
+			(this.color == Color.BLACK && !whiteToMove))
+			return true;
+		return false;
+	}
+
+
+		@Override
+	public boolean equals(Object obj) {
+		Piece pObj;
+		try {
+		    pObj = (Piece) obj;
+		}
+		catch (ClassCastException e) {
+			return false;
+		}
+
+		if (pObj == null)
+			return false;
+
+		if (pObj.getType() == this.type && pObj.getColor() == this.color)
+			return true;
+
+		return false;
+	}
+
+
+	@Override
+	public String toString() {
+		String pieceChar = "?";
+
+		switch (this.type) {
+		case Type.PAWN:
+			pieceChar = "P";
+			break;
+		case Type.KNIGHT:
+			pieceChar = "N";
+			break;
+		case Type.BISHOP:
+			pieceChar = "B";
+			break;
+		case Type.ROOK:
+			pieceChar = "R";
+			break;
+		case Type.QUEEN:
+			pieceChar = "Q";
+			break;
+		case Type.KING:
+			pieceChar = "K";
+			break;
+		}
+
+		if (this.color == Color.BLACK)
+			pieceChar = pieceChar.toLowerCase();
+
+		return pieceChar;
+	}
+	
+}

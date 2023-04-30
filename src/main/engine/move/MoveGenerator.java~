@@ -1,0 +1,357 @@
+package engine.move;
+
+
+import util.Log;
+import util.Vector;
+import util.Coordinate;
+import engine.piece.Piece;
+import engine.board.BoardInfo;
+import engine.board.Board;
+import java.util.ArrayList;
+import java.util.Arrays;
+
+
+public class MoveGenerator {
+
+	public static final Vector[] KNIGHT_OFFSETS = {new Vector(1, 2), new Vector(2, 1), new Vector(2, -1),
+												   new Vector(1, -2), new Vector(-1, -2), new Vector(-2, -1),
+												   new Vector(-2, 1), new Vector(-1, 2)};
+	public static final Vector[] BISHOP_OFFSETS = {new Vector(1, 1),  new Vector(1, -1),
+												   new Vector(-1, -1), new Vector(-1, 1)};
+	public static final Vector[] ROOK_OFFSETS = {new Vector(0, 1), new Vector(1, 0),
+												 new Vector(0, -1), new Vector(-1, 0)};
+	public static final Vector[] QUEEN_OFFSETS = {new Vector(0, 1), new Vector(1, 1), new Vector(1, 0),
+												  new Vector(1, -1), new Vector(0, -1), new Vector(-1, -1),
+												  new Vector(-1, 0), new Vector(-1, 1)};
+	public static final Vector[] KING_OFFSETS = {new Vector(0, 1), new Vector(1, 1), new Vector(1, 0),
+												  new Vector(1, -1), new Vector(0, -1), new Vector(-1, -1),
+												  new Vector(-1, 0), new Vector(-1, 1)};
+
+
+	public static ArrayList<Coordinate> generateTilesControlled(BoardInfo boardInfo) {
+		ArrayList<Coordinate> tilesControlled = new ArrayList<>();
+		ArrayList<Move> moves = new ArrayList<>();
+
+		for (Coordinate tile : Coordinate.getAllValidCoordinates()) {
+			Piece piece = boardInfo.getPiece(tile);
+
+			if (piece != null) {
+				if (piece.friendly(boardInfo.whiteToMove)) {
+					switch (piece.getType()) {
+					case Piece.Type.PAWN:
+						tilesControlled.addAll(MoveGenerator.generatePawnTilesControlled(tile, boardInfo));
+						break;
+					case Piece.Type.KNIGHT:
+						moves.addAll(MoveGenerator.generateKnightMoves(tile, boardInfo));
+						break;
+					case Piece.Type.BISHOP:
+						moves.addAll(MoveGenerator.generateSlidingMoves(tile, boardInfo, MoveGenerator.BISHOP_OFFSETS));
+						break;
+					case Piece.Type.ROOK:
+						moves.addAll(MoveGenerator.generateSlidingMoves(tile, boardInfo, MoveGenerator.ROOK_OFFSETS));
+						break;
+					case Piece.Type.QUEEN:
+						moves.addAll(MoveGenerator.generateSlidingMoves(tile, boardInfo, MoveGenerator.QUEEN_OFFSETS));
+						break;
+					case Piece.Type.KING:
+						moves.addAll(MoveGenerator.generateKingMoves(tile, boardInfo));
+						break;
+					}
+				}
+			}
+		}
+
+		for (Move m : moves)
+			tilesControlled.add(m.getEndTile());
+
+		return tilesControlled;
+	}
+	
+
+	public static ArrayList<Move> generateLegalMoves(BoardInfo boardInfo) {
+		ArrayList<Move> legalMoves = new ArrayList<>();
+		ArrayList<Move> pseudoLegalMoves = MoveGenerator.generatePseudoLegalMoves(boardInfo);
+
+		int kingColor = (boardInfo.whiteToMove) ? Piece.Color.WHITE : Piece.Color.BLACK;
+		Piece kingPiece = new Piece(Piece.Type.KING, kingColor);
+		
+		if (kingPiece == null) {
+			Log.stdlog(Log.WARN, "MoveGenerator", "no king piece present to calculate legal moves, returning p-legal");
+			return pseudoLegalMoves;
+		}
+		
+		for (Move pseudoLegalMove : pseudoLegalMoves) {
+			BoardInfo ghostInfo = (BoardInfo) boardInfo.clone();
+			Board ghostBoard = new Board(ghostInfo);
+
+			ghostBoard.makeMove(pseudoLegalMove);
+			Coordinate kingTile = ghostInfo.getTilesWithPiece(kingPiece).get(0);
+
+			ghostInfo.whiteToMove = !boardInfo.whiteToMove;
+
+			ArrayList<Coordinate> opponentAttackingTiles = MoveGenerator.generateTilesControlled(ghostInfo);
+			if (!opponentAttackingTiles.contains(kingTile))
+				legalMoves.add(pseudoLegalMove);
+		}
+
+		return legalMoves;
+	}
+	
+
+	public static ArrayList<Move> generatePseudoLegalMoves(BoardInfo boardInfo) {
+		ArrayList<Move> pseudoLegalMoves = new ArrayList<>();
+
+		for (Coordinate tile : Coordinate.getAllValidCoordinates()) {
+			Piece piece = boardInfo.getPiece(tile);
+
+			if (piece != null) {
+				if (piece.friendly(boardInfo.whiteToMove)) {
+					switch (piece.getType()) {
+					case Piece.Type.PAWN:
+						pseudoLegalMoves.addAll(MoveGenerator.generatePawnMoves(tile, boardInfo));
+						break;
+					case Piece.Type.KNIGHT:
+						pseudoLegalMoves.addAll(MoveGenerator.generateKnightMoves(tile, boardInfo));
+						break;
+					case Piece.Type.BISHOP:
+						pseudoLegalMoves.addAll(MoveGenerator.generateSlidingMoves(tile, boardInfo,
+																				   MoveGenerator.BISHOP_OFFSETS));
+						break;
+					case Piece.Type.ROOK:
+						pseudoLegalMoves.addAll(MoveGenerator.generateSlidingMoves(tile, boardInfo,
+																				   MoveGenerator.ROOK_OFFSETS));
+						break;
+					case Piece.Type.QUEEN:
+						pseudoLegalMoves.addAll(MoveGenerator.generateSlidingMoves(tile, boardInfo,
+																				   MoveGenerator.QUEEN_OFFSETS));
+						break;
+					case Piece.Type.KING:
+						pseudoLegalMoves.addAll(MoveGenerator.generateKingMoves(tile, boardInfo));
+						break;
+					}
+				}
+			}
+		}
+
+		return pseudoLegalMoves;
+	}
+
+
+	private static ArrayList<Move> generateSlidingMoves(Coordinate startTile, BoardInfo boardInfo, Vector[] offsets) {
+		ArrayList<Move> movesGenerated = new ArrayList<>();
+
+		for (Vector offset : offsets) {
+			Vector tempOffset = offset;
+			int scaleFactor = 2;
+			while (startTile.shift(offset).isValidTile()) {
+				Coordinate endTile = startTile.shift(tempOffset);
+				if (!endTile.isValidTile()) break;
+
+				Piece pieceOnEndTile = boardInfo.getPiece(endTile);
+				if (pieceOnEndTile == null)
+					movesGenerated.add(new Move(startTile, endTile));
+				else {
+					if (pieceOnEndTile.friendly(boardInfo.whiteToMove)) break;
+					movesGenerated.add(new Move(startTile, endTile));
+					if (!pieceOnEndTile.friendly(boardInfo.whiteToMove)) break;
+				}
+				
+				tempOffset = offset.scale(scaleFactor);
+				scaleFactor++;
+			}
+		}
+		
+		return movesGenerated;
+	}
+
+
+	private static ArrayList<Move> generateKnightMoves(Coordinate startTile, BoardInfo boardInfo) {
+		ArrayList<Move> movesGenerated = new ArrayList<>();
+
+		for (Vector offset : MoveGenerator.KNIGHT_OFFSETS) {
+			Coordinate endTile = startTile.shift(offset);
+			if (!endTile.isValidTile()) continue;
+
+			Piece pieceOnEndTile = boardInfo.getPiece(endTile);
+			if (pieceOnEndTile == null)
+				movesGenerated.add(new Move(startTile, endTile));
+			else {
+				if (pieceOnEndTile.friendly(boardInfo.whiteToMove)) continue;
+				movesGenerated.add(new Move(startTile, endTile));
+			}
+		}
+		
+		return movesGenerated;
+	}
+
+
+	private static ArrayList<Move> generateKingMoves(Coordinate startTile, BoardInfo boardInfo) {
+		ArrayList<Move> movesGenerated = new ArrayList<>();
+
+		// Regular moves
+		for (Vector offset : MoveGenerator.KING_OFFSETS) {
+			Coordinate endTile = startTile.shift(offset);
+			if (!endTile.isValidTile()) continue;
+
+			Piece pieceOnEndTile = boardInfo.getPiece(endTile);
+			if (pieceOnEndTile == null)
+				movesGenerated.add(new Move(startTile, endTile));
+			else {
+				if (pieceOnEndTile.friendly(boardInfo.whiteToMove)) continue;
+				movesGenerated.add(new Move(startTile, endTile));
+			}
+		}
+
+		// Castling moves
+		if (boardInfo.whiteToMove)
+			movesGenerated.addAll(MoveGenerator.generateCastlingMoves(startTile, boardInfo,
+																	  boardInfo.castleK, boardInfo.castleQ));
+		else
+			movesGenerated.addAll(MoveGenerator.generateCastlingMoves(startTile, boardInfo,
+																	  boardInfo.castlek, boardInfo.castleq));
+		
+		return movesGenerated;
+	}
+
+
+	private static ArrayList<Move> generateCastlingMoves(Coordinate startTile, BoardInfo boardInfo,
+														 boolean castleKingside, boolean castleQueenside) {
+		ArrayList<Move> movesGenerated = new ArrayList<>();
+
+		if (!boardInfo.tilesOpponentControls.contains(startTile)) {
+			Coordinate endTileK = startTile.shift(new Vector(2, 0));
+			if (castleKingside == true &&
+				boardInfo.getPiece(startTile.shift(new Vector(1, 0))) == null &&
+				boardInfo.getPiece(startTile.shift(new Vector(2, 0))) == null &&
+				!boardInfo.tilesOpponentControls.contains(startTile.shift(new Vector(1, 0))) &&
+				!boardInfo.tilesOpponentControls.contains(startTile.shift(new Vector(2, 0))))
+				movesGenerated.add(new Move(startTile, endTileK, Move.Flag.CASTLE_KINGSIDE));
+
+			Coordinate endTileQ = startTile.shift(new Vector(-2, 0));
+			if (castleQueenside == true &&
+				boardInfo.getPiece(startTile.shift(new Vector(-1, 0))) == null &&
+				boardInfo.getPiece(startTile.shift(new Vector(-2, 0))) == null &&
+				boardInfo.getPiece(startTile.shift(new Vector(-3, 0))) == null &&
+				!boardInfo.tilesOpponentControls.contains(startTile.shift(new Vector(-1, 0))) &&
+				!boardInfo.tilesOpponentControls.contains(startTile.shift(new Vector(-2, 0))) &&
+				!boardInfo.tilesOpponentControls.contains(startTile.shift(new Vector(-3, 0))))
+				movesGenerated.add(new Move(startTile, endTileQ, Move.Flag.CASTLE_QUEENSIDE));
+		}
+
+		return movesGenerated;
+	}
+
+
+	private static ArrayList<Coordinate> generatePawnTilesControlled(Coordinate startTile, BoardInfo boardInfo) {
+		ArrayList<Coordinate> tilesControlled = new ArrayList<>();
+
+		int pawnDir = (boardInfo.whiteToMove) ? 1 : -1;
+		Vector v_leftCapture = new Vector(-1, 1 * pawnDir);
+		Vector v_rightCapture = new Vector(1, 1 * pawnDir);
+		Coordinate leftCapture = startTile.shift(v_leftCapture);
+		Coordinate rightCapture = startTile.shift(v_rightCapture);
+
+		if (leftCapture.isValidTile())
+			tilesControlled.add(leftCapture);
+		if (rightCapture.isValidTile())
+			tilesControlled.add(rightCapture);
+		
+		return tilesControlled;
+	}
+
+
+	// Pawn moves
+	//  DIR = (boardInfo.whiteToMove) ? 1 : -1;
+	//  - <0,1*DIR> if valid AND no piece blocking <0,1*DIR>  \  if (white AND end on a8-h8) OR (black AND end on a1-h1)
+	//  - <-1,1*DIR> if valid AND enemy piece                  | then add 4 moves with each possible promotion flag
+	//  - <1,1*DIR> if valid AND enemy piece                  /
+	//  - (<0,2*DIR> if valid AND no piece blocking <0,1*DIR> AND <0,2*DIR>) AND
+	//    ((white AND on square a2-h2) OR (black AND on square a7-h7))
+	//  - <-1,1*DIR> flag ep if <-1,1*DIR> == ep tile
+	//  - <1,1*DIR> flag ep if <1,1*DIR> == ep tile
+	private static ArrayList<Move> generatePawnMoves(Coordinate startTile, BoardInfo boardInfo) {
+		ArrayList<Move> movesGenerated = new ArrayList<>();
+
+		// Generate the vectors and coordinates for all of the possible positions of pawn moves
+		int pawnDir = (boardInfo.whiteToMove) ? 1 : -1;
+		int homeRowY = (boardInfo.whiteToMove) ? 1 : 6;
+		int promotionRowY = (boardInfo.whiteToMove) ? 7 : 0;
+		Vector v_oneForward = new Vector(0, 1 * pawnDir);
+		Vector v_twoFoward = new Vector(0, 2 * pawnDir);
+		Vector v_leftCapture = new Vector(-1, 1 * pawnDir);
+		Vector v_rightCapture = new Vector(1, 1 * pawnDir);
+		Coordinate oneForward = startTile.shift(v_oneForward);
+		Coordinate twoForward = startTile.shift(v_twoFoward);
+		Coordinate leftCapture = startTile.shift(v_leftCapture);
+		Coordinate rightCapture = startTile.shift(v_rightCapture);
+		ArrayList<Coordinate> homeRowTiles = new ArrayList<>();
+		ArrayList<Coordinate> promotionRowTiles = new ArrayList<>();
+
+		for (int x = 0; x < 8; x++)
+			homeRowTiles.add(new Coordinate(x, homeRowY));
+		for (int x = 0; x < 8; x++)
+			promotionRowTiles.add(new Coordinate(x, promotionRowY));
+
+		
+		// One forward
+		if (oneForward.isValidTile() &&
+			boardInfo.getPiece(oneForward) == null)
+		{
+			if (promotionRowTiles.contains(oneForward)) {
+				movesGenerated.add(new Move(startTile, oneForward, Move.Flag.PROMOTE_KNIGHT));
+				movesGenerated.add(new Move(startTile, oneForward, Move.Flag.PROMOTE_BISHOP));
+				movesGenerated.add(new Move(startTile, oneForward, Move.Flag.PROMOTE_ROOK));
+				movesGenerated.add(new Move(startTile, oneForward, Move.Flag.PROMOTE_QUEEN));
+			}
+			else
+				movesGenerated.add(new Move(startTile, oneForward));
+		}
+
+		// Left capture
+		if (leftCapture.isValidTile() &&
+			boardInfo.getPiece(leftCapture) != null &&
+			!boardInfo.getPiece(leftCapture).friendly(boardInfo.whiteToMove))
+		{
+			if (promotionRowTiles.contains(leftCapture)) {
+				movesGenerated.add(new Move(startTile, leftCapture, Move.Flag.PROMOTE_KNIGHT));
+				movesGenerated.add(new Move(startTile, leftCapture, Move.Flag.PROMOTE_BISHOP));
+				movesGenerated.add(new Move(startTile, leftCapture, Move.Flag.PROMOTE_ROOK));
+				movesGenerated.add(new Move(startTile, leftCapture, Move.Flag.PROMOTE_QUEEN));
+			}
+			else
+				movesGenerated.add(new Move(startTile, leftCapture));
+		}
+
+		// Right capture
+		if (rightCapture.isValidTile() &&
+			boardInfo.getPiece(rightCapture) != null &&
+			!boardInfo.getPiece(rightCapture).friendly(boardInfo.whiteToMove))
+		{
+			if (promotionRowTiles.contains(rightCapture)) {
+				movesGenerated.add(new Move(startTile, rightCapture, Move.Flag.PROMOTE_KNIGHT));
+				movesGenerated.add(new Move(startTile, rightCapture, Move.Flag.PROMOTE_BISHOP));
+				movesGenerated.add(new Move(startTile, rightCapture, Move.Flag.PROMOTE_ROOK));
+				movesGenerated.add(new Move(startTile, rightCapture, Move.Flag.PROMOTE_QUEEN));
+			}
+			else
+				movesGenerated.add(new Move(startTile, rightCapture));
+		}
+
+		// Two forward
+		if (homeRowTiles.contains(startTile) &&
+			twoForward.isValidTile() &&
+			boardInfo.getPiece(oneForward) == null &&
+			boardInfo.getPiece(twoForward) == null)
+			movesGenerated.add(new Move(startTile, twoForward, Move.Flag.PAWN_TWO_FORWARD));
+
+		// En passant
+		if (boardInfo.enPassantTile != null &&
+			boardInfo.enPassantTile.isValidTile() &&
+			(leftCapture.equals(boardInfo.enPassantTile) ||
+			 rightCapture.equals(boardInfo.enPassantTile)))
+			movesGenerated.add(new Move(startTile, boardInfo.enPassantTile, Move.Flag.EN_PASSANT));
+		
+		return movesGenerated;
+	}
+
+}

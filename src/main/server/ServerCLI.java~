@@ -1,0 +1,54 @@
+package server;
+
+
+public class ServerCLI {
+
+	private void cliRun() {
+		Scanner cliIn = new Scanner(System.in);
+		Log.stdout(Log.INFO, "Server CLI", "CLI established, type \"help\"");
+		while (cliIn.hasNext()) {
+			String input = cliIn.nextLine();
+			int spaceIndex = input.indexOf(" ");
+			String cmd = null;
+			String arg = null;
+			if (spaceIndex == -1)
+				cmd = input;
+			else {
+				cmd = input.substring(0, spaceIndex);
+				arg = input.substring(spaceIndex + 1);
+			}
+
+			switch (cmd) {
+			case "help":
+				Log.stdout(Log.INFO, "Server CLI", "Usage: <command> [args]");
+				Log.stdout(Log.INFO, "Server CLI", "\tset <fen> : sets the board to a given fen string");
+				Log.stdout(Log.INFO, "Server CLI", "\tget       : prints the current BoardInfo object");
+				Log.stdout(Log.INFO, "Server CLI", "\tperft     : runs perft test suite");
+				Log.stdout(Log.INFO, "Server CLI", "\taddr      : prints the server address and port");
+				Log.stdout(Log.INFO, "Server CLI", "\thelp      : print this message");
+				break;
+			case "set":
+				BoardInfo setInfo = FenUtility.informationFromFen(arg);
+				if (setInfo != null)
+					this.board = new Board(setInfo);
+				else
+					Log.stdout(Log.ERROR, "Server CLI", "Invalid argument for set: " + arg);
+				break;
+			case "get":
+				Log.stdout(Log.INFO, "Server CLI", this.board.getInfo().toString());
+				break;
+			case "perft":
+				Log.stdout(Log.INFO, "Server CLI", "Running perft test suite, this may take several minutes...");
+				PerftTest.run();
+				break;
+			case "addr":
+				Log.stdout(Log.INFO, "Server CLI", "Server can be reached at: " + this.ip + ":" + this.port);
+				break;
+			default:
+				Log.stdout(Log.INFO, "Server CLI", "Invalid command: " + cmd);
+				break;
+			}
+		}
+	}
+	
+}

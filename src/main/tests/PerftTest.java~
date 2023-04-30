@@ -1,0 +1,74 @@
+package tests;
+
+
+import util.Log;
+import engine.move.Move;
+import engine.move.MoveGenerator;
+import engine.board.Board;
+import engine.board.BoardInfo;
+import engine.fen.FenUtility;
+import java.util.ArrayList;
+
+
+public class PerftTest {
+
+	private static final int MAX_DEPTH = 3;
+	private static final ArrayList<String> TESTS = new ArrayList<>() {{
+			add("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1;20;400;8902;197281;4865609;119060324");
+	}};
+
+
+	// Source: https://www.chessprogramming.org/Perft#Perft_function
+	private static int perft(Board board, int depth) {
+		if (depth == 0)
+			return 1;
+
+		int nodes = 0;
+		ArrayList<Move> moves = MoveGenerator.generateLegalMoves(board.getInfo());
+		for (Move move : moves) {
+			board.makeMove(move);
+			nodes += PerftTest.perft(board, depth - 1);
+			board.unmakeMove();
+		}
+
+		return nodes;
+	}
+
+
+	public static void run() {
+		for (String test : PerftTest.TESTS) {
+			String[] testSplit = test.split(";");
+			if (testSplit.length != 7 || PerftTest.MAX_DEPTH < 1 || PerftTest.MAX_DEPTH > testSplit.length - 1) {
+				Log.stdlog(Log.WARN, "PerftTest", "test skipped, improper length or MAX_DEPTH is out of range");
+				continue;
+			}
+
+			String fenString = testSplit[0];
+			BoardInfo boardInfo = FenUtility.informationFromFen(fenString);
+			Board board = new Board(boardInfo);
+
+			long startTime = System.currentTimeMillis();
+			int numTotalNodes = PerftTest.perft(board, PerftTest.MAX_DEPTH);
+			long endTime = System.currentTimeMillis();
+			long totalTime = endTime - startTime;
+			
+			int numExpectedNodes;
+			String numExpectedNodesString = testSplit[PerftTest.MAX_DEPTH];
+			try {
+				numExpectedNodes = Integer.parseInt(numExpectedNodesString);
+			}
+			catch (NumberFormatException e) {
+				Log.stdlog(Log.WARN, "PerftTest", "test eval skipped, could not parse expected nodes as int");
+				continue;
+			}
+
+			boolean passed = (numTotalNodes == numExpectedNodes);
+			Log.stdout(Log.DEBUG, "PerftTest",
+					   "Depth: " + PerftTest.MAX_DEPTH +
+					   "  Result: " + numTotalNodes +
+					   "  Time: " + totalTime + "ms" +
+					   "  --  " + ((passed) ? "Passed" : "FAILED (expected " + numExpectedNodes + ")"));
+		}
+	}
+
+}

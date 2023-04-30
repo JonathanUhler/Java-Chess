@@ -1,0 +1,1 @@
+javac -Xlint:unchecked -d obj/ $(find src/ -name '*.java') #src/**/*.java

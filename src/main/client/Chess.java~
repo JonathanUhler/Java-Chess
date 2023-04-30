@@ -1,0 +1,20 @@
+package client;
+
+
+import javax.swing.JFrame;
+
+
+public class Chess {
+
+	public static void main(String[] args) {		
+	    JFrame frame = new JFrame("Chess");
+		GUI gui = new GUI();
+
+		frame.add(gui);
+
+		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.pack();
+		frame.setVisible(true);
+	}
+	
+}

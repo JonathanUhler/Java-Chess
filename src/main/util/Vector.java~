@@ -1,0 +1,56 @@
+package util;
+
+
+public class Vector {
+
+	private int deltaX;
+	private int deltaY;
+	
+
+	public Vector(int deltaX, int deltaY) {
+		this.deltaX = deltaX;
+		this.deltaY = deltaY;
+	}
+
+
+	public int getXChange() {
+		return this.deltaX;
+	}
+
+
+	public int getYChange() {
+		return this.deltaY;
+	}
+
+
+	public Vector scale(int scaleFactor) {
+		return new Vector(this.deltaX * scaleFactor, this.deltaY * scaleFactor);
+	}
+	
+
+	@Override
+	public boolean equals(Object obj) {
+		Vector vObj;
+		try {
+		    vObj = (Vector) obj;
+		}
+		catch (ClassCastException e) {
+			return false;
+		}
+
+		if (vObj == null)
+			return false;
+
+		if (vObj.getXChange() == this.deltaX && vObj.getYChange() == this.deltaY)
+			return true;
+		
+		return false;
+	}
+
+
+	@Override
+	public String toString() {
+		return "<" + this.deltaX + ", " + this.deltaY + ">";
+	}
+
+}

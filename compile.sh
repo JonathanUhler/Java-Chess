@@ -1,3 +1,7 @@
-#!/bin/zsh
-javac -d src/jv/ src/src/**/*.java
-#java -cp jv:lib/gson-2.2.2.jar main.PeriodCountdown
+#!/bin/bash
+
+
+mkdir -p obj
+rm -rf obj/*
+
+javac -Xlint:unchecked -Xlint:deprecation -cp 'src/lib/*' -d obj/ $(find src/main -name '*.java')
