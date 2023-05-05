@@ -14,7 +14,7 @@ Improved project created 4/30/23 -- Changelog begin:
 
 ## [2.1.0] - 10/7/21
 ### Added
-* Created compile.sh, jar.sh and build-mac.sh to atomate the build process
+* Created compile.sh, jar.sh and build-mac.sh to automate the build process
 * Created native dmg for mac app
 ### Fixed
 * Refactored codebase to be more object-oriented and fixed possible code access issues
