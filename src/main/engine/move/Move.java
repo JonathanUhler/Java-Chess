@@ -14,9 +14,9 @@ import util.Coordinate;
 import util.Vector;
 import util.StringUtility;
 import engine.piece.Piece;
-import java.util.ArrayList;
 import java.io.Serializable;
 import javax.swing.JComboBox;
+import java.util.ArrayList;
 
 
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=

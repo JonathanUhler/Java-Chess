@@ -1,2 +1,4 @@
 .DS_Store
-Deprecated-Java-Chess
+*~
+*.log
+deprecated

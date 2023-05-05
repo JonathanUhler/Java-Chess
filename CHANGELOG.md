@@ -10,7 +10,7 @@ Improved project created 4/30/23 -- Changelog begin:
 ## [1.0.0] - 4/30/23
 * First working version of Improved Java-Chess
 
-Original project created 3/25/21 -- Old changelog begin:
+# Original project created 3/25/21 -- Old changelog begin:
 
 ## [2.1.0] - 10/7/21
 ### Added

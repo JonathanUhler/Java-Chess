@@ -15,14 +15,14 @@ import engine.fen.FenUtility;
 import engine.piece.Piece;
 import engine.move.Move;
 import engine.move.MoveGenerator;
-import java.util.HashMap;
-import java.util.ArrayList;
 import java.io.Serializable;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.ArrayList;
 
 
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=

@@ -15,7 +15,6 @@ import engine.board.BoardInfo;
 import engine.piece.Piece;
 import engine.move.Move;
 import engine.move.MoveGenerator;
-import java.util.ArrayList;
 import java.io.IOException;
 import java.awt.Point;
 import java.awt.Dimension;
@@ -26,6 +25,7 @@ import javax.swing.JLayeredPane;
 import javax.swing.JLabel;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
+import java.util.ArrayList;
 
 
 // +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
