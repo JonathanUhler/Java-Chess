@@ -1,59 +1,59 @@
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-// FenUtility.java
-// Networking-Chess
-//
-// Created by Jonathan Uhler
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-
-
 package engine.fen;
 
 
-import util.Log;
 import util.Coordinate;
 import util.StringUtility;
 import engine.board.BoardInfo;
 import engine.piece.Piece;
 
 
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-// public class FenUtility
-//
-// Handles parsing of FEN strings, the only supported format of board information by this engine
-//
+/**
+ * Handles the parsing of Forsyth-Edwards Notation strings, which are the standard supported 
+ * format of board information for this engine.
+ *
+ * @author Jonathan Uhler
+ */
 public class FenUtility {
 
-	// ====================================================================================================
-	// public static BoardInfo informationFromFen
-	//
-	// Builds a BoardInfo object from a FEN string
-	//
-	// Arguments--
-	//
-	//  fenString: the FEN string to convert to a BoardInfo object
-	//
-	// Returns--
-	//
-	//  A BoardInfo object if one could be successfully generated. If a BoardInfo object could not be
-	//  generated, a FATAL error is thrown
-	//
+	/**
+	 * Creates a {@code BoardInfo} object from a FEN string.
+	 *
+	 * @param fenString  the FEN string to convert to a {@code BoardInfo} object.
+	 *
+	 * @return a {@code BoardInfo} object if one could be generated. If an object could not be 
+	 *         generated and could not be salvaged an exception will be thrown.
+	 *
+	 * @throws NullPointerException      if {@code fenString == null}.
+	 * @throws IllegalArgumentException  if the argument contains an incorrect number of components.
+	 * @throws IllegalArgumentException  if the board dimensions of the FEN string are invalid 
+	 *                                   (exceed 8x8).
+	 * @throws IllegalArgumentException  if the player identifier is not {@code "w"} or {@code "b"}.
+	 * @throws IllegalArgumentException  if the en passant tile identifier is not "-" and not two 
+	 *                                   characters. If the en passant tile contains two characters
+	 *                                   but is not a valid tile on the board, the en passant tile 
+	 *                                   returned by this object is assumed to be none.
+	 *
+	 * @see engine.board.BoardInfo
+	 */
 	public static BoardInfo informationFromFen(String fenString) {
+		if (fenString == null)
+			throw new NullPointerException("fenString was null");
+		
 		String[] fenSplit = fenString.split(" ");
-
-		if (fenSplit.length != 6) {
-			Log.stdlog(Log.ERROR, "FenUtility", "fen string with invalid length passed to informationFromFen");
-			return null;
-		}
+		if (fenSplit.length != 6)
+			throw new IllegalArgumentException("fenString does not have length 6: " + fenString);
 
 		// Tiles
-		// Start tile for a FEN string (from white's perspective) is top-left first, bottom-right last. But A1/(0,0) is
-		// at the bottom-left which is strangely not the last square in FEN. To address this, every index is relative
-		// to the bottom-left square (A1) as "0" and thus the first square for FEN is x=0,y=8
+		// Start tile for a FEN string (from white's perspective) is top-left first, bottom-right
+		// last. But A1/(0,0) is at the bottom-left which is strangely not the last square in FEN.
+		// To address this, every index is relative to the bottom-left square (A1) as "0" and thus
+		// the first square for FEN is x=0,y=8
+		String tilesStr = fenSplit[0];
 		Piece[][] tiles = new Piece[8][8];
 		int x = 0;
 		int y = 7;
 
-		for (char fenChar : fenSplit[0].toCharArray()) {
+		for (char fenChar : tilesStr.toCharArray()) {
 			// "/" for moving down to the next line
 			if (fenChar == '/') {
 				x = 0;
@@ -63,10 +63,15 @@ public class FenUtility {
 			else if (Character.isDigit(fenChar)) {
 				x += Character.getNumericValue(fenChar);
 			}
-			// Other characters, assumed to be valid letters, otherwise a null piece (blank tile) will be placed
+			// Other characters, assumed to be valid letters, otherwise a null piece
+			// (blank tile) will be placed
 			else {
-				int color = (Character.isUpperCase(fenChar)) ? Piece.Color.WHITE : Piece.Color.BLACK;
-				int type = Piece.Type.NONE;
+				Piece.Color color =
+					(Character.isUpperCase(fenChar)) ?
+					Piece.Color.WHITE :
+					Piece.Color.BLACK;
+				Piece.Type type = Piece.Type.NONE;
+				
 				switch (Character.toLowerCase(fenChar)) {
 				case 'p':
 					type = Piece.Type.PAWN;
@@ -86,15 +91,11 @@ public class FenUtility {
 				case 'k':
 					type = Piece.Type.KING;
 					break;
-				default:
-					Log.stdlog(Log.WARN, "FenUtility", "character in fen string was not in PNBRQK, defaulting to NONE");
-					break;
 				}
 
-				if (!(new Coordinate(x, y)).isValidTile()) {
-					Log.stdlog(Log.ERROR, "FenUtility", "invalid coordinate (invalid mix of numbers or \"/\")");
-					return null;
-				}
+				if (!(new Coordinate(x, y)).isValidTile())
+					throw new IllegalArgumentException("invalid dims, found x=" + x +
+													   ", y=" + y + ": " + fenString);
 
 				tiles[y][x] = new Piece(type, color);
 				x++;
@@ -102,32 +103,33 @@ public class FenUtility {
 		}
 
 		// Current move
-		if (!fenSplit[1].equals("w") && !fenSplit[1].equals("b")) {
-			Log.stdlog(Log.ERROR, "FenUtility", "invalid turn identifier, not w or b");
-			return null;
-		}
-		
-		boolean whiteToMove = fenSplit[1].equals("w");
+		String playerStr = fenSplit[1];
+		if (!playerStr.equals("w") && !playerStr.equals("b"))
+			throw new IllegalArgumentException("unknown player identifier: " + playerStr);
+		boolean whiteToMove = playerStr.equals("w");
 
 		// Castling rights
-		boolean castleK = fenSplit[2].contains("K");
-		boolean castleQ = fenSplit[2].contains("Q");
-		boolean castlek = fenSplit[2].contains("k");
-		boolean castleq = fenSplit[2].contains("q");
+		String castlingRightsStr = fenSplit[2];
+		boolean castleK = castlingRightsStr.contains("K");
+		boolean castleQ = castlingRightsStr.contains("Q");
+		boolean castlek = castlingRightsStr.contains("k");
+		boolean castleq = castlingRightsStr.contains("q");
 
 		// En passant tile
+		String enPassantStr = fenSplit[3];
 		Coordinate enPassantTile;
-		if (fenSplit[3].equals("-"))
+		if (enPassantStr.equals("-"))
 			enPassantTile = null;
 		else {
-			char epCol = fenSplit[3].charAt(0);
+			if (enPassantStr.length() != 2)
+				throw new IllegalArgumentException("invalid EP tile id length: " + enPassantStr);
+			
+			char epCol = enPassantStr.charAt(0);
 			int epX = epCol - 'a';
-			int epY = Character.getNumericValue(fenSplit[3].charAt(1)) - 1;
+			int epY = Character.getNumericValue(enPassantStr.charAt(1)) - 1;
 			enPassantTile = new Coordinate(epX, epY);
-			if (!enPassantTile.isValidTile()) {
-				Log.stdlog(Log.WARN, "FenUtility", "calculated en passant tile is invalid, defaulting to null");
+			if (!enPassantTile.isValidTile())
 				enPassantTile = null;
-			}
 		}
 
 		// Halfmoves
@@ -141,23 +143,21 @@ public class FenUtility {
 							 castleK, castleQ, castlek, castleq,
 							 enPassantTile, halfmoves, fullmoves);
 	}
-	// end: public static BoardInfo informationFromFen
 
 
-	// ====================================================================================================
-	// public static String fenFromInformation
-	//
-	// Builds a fen string from a BoardInfo object
-	//
-	// Arguments--
-	//
-	//  boardInfo: the BoardInfo objec to turn into a string
-	//
-	// Returns--
-	//
-	//  A FEN string
-	//
+	/**
+	 * Creates a FEN {@code String} object from a {@code BoardInfo} object.
+	 *
+	 * @param boardInfo  the {@code BoardInfo} object to convert to a FEN string.
+	 *
+	 * @return a {@code String} object.
+	 *
+	 * @throws NullPointerException  if {@code boardInfo == null}.
+	 */
 	public static String fenFromInformation(BoardInfo boardInfo) {
+		if (boardInfo == null)
+			throw new NullPointerException("boardInfo was null");
+		
 		String fenString = "";
 
 		// Tiles
@@ -171,30 +171,30 @@ public class FenUtility {
 						numEmptyCols = 0;
 					}
 
-					int pieceType = piece.getType();
+					Piece.Type pieceType = piece.getType();
 					String pieceChar = "";
 					switch (pieceType) {
-					case Piece.Type.PAWN:
+					case PAWN:
 						pieceChar = "P";
 						break;
-					case Piece.Type.KNIGHT:
+					case KNIGHT:
 						pieceChar = "N";
 						break;
-					case Piece.Type.BISHOP:
+					case BISHOP:
 						pieceChar = "B";
 						break;
-					case Piece.Type.ROOK:
+					case ROOK:
 						pieceChar = "R";
 						break;
-					case Piece.Type.QUEEN:
+					case QUEEN:
 						pieceChar = "Q";
 						break;
-					case Piece.Type.KING:
+					case KING:
 						pieceChar = "K";
 						break;
 					}
 
-					if (piece.getColor() == Piece.Color.BLACK)
+					if (piece.isBlack())
 						pieceChar = pieceChar.toLowerCase();
 
 					fenString += pieceChar;
@@ -253,7 +253,5 @@ public class FenUtility {
 
 		return fenString;
 	}
-	// end: public static String fenFromInformation
 
 }
-// end: public class FenUtility

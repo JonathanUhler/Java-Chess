@@ -1,247 +1,292 @@
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-// Move.java
-// Networking-Chess
-//
-// Created by Jonathan Uhler
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-
-
 package engine.move;
 
 
-import util.Log;
 import util.Coordinate;
 import util.Vector;
 import util.StringUtility;
 import engine.piece.Piece;
 import java.io.Serializable;
 import javax.swing.JComboBox;
+import javax.swing.JOptionPane;
+import java.util.List;
 import java.util.ArrayList;
 
 
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-// public class Move implements Serializable
-//
-// A class to represent a move from one tile to another, with an option "flag" to represent unusal
-// moves or moves of more than 1 piece (i.e. castling). Implements the Serializable interface to
-// allow easy byte-by-byte deep-copy in the BoardInfo class
-//
+/**
+ * Represents a move from one tile to another with an optional flat to represent special moves. 
+ * This class implements the {@code Serializable} interface to allow deep-copying by the 
+ * {@code BoardInfo} class.
+ *
+ * @author Jonathan Uhler
+ */
 public class Move implements Serializable {
 
-	// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-	// public static final class Flag
-	//
-	// A class to represent the possible flags for a move, used for special cases like castling or promotion
-	//
-	public static final class Flag {
-		// List of possible flags
-		public static final int NONE = 0;
-		public static final int PAWN_TWO_FORWARD = 1;
-		public static final int EN_PASSANT = 2;
-		public static final int PROMOTE_KNIGHT = 3;
-		public static final int PROMOTE_BISHOP = 4;
-		public static final int PROMOTE_ROOK = 5;
-		public static final int PROMOTE_QUEEN = 6;
-		public static final int CASTLE_KINGSIDE = 7;
-		public static final int CASTLE_QUEENSIDE = 8;
-		
-
-		// Private variables used to check if a flag is valid, should be updated accordingly if any
-		// new flags are added in the future
-		private static final int minFlag = 0;
-		private static final int maxFlag = 8;
-
-		public static boolean isValid(int flag) {
-			return flag >= Flag.minFlag && flag <= Flag.maxFlag;
-		}
-
-
-		// ====================================================================================================
-		// public static int inferFlag
-		//
-		// Infers the flag that should be assigned to a move based on the move locations, piece moved, and
-		// some other information.
-		//
-		// Arguments--
-		//
-		//  piece:         the piece being moved
-		//
-		//  startTile:     the tile the piece started on
-		//
-		//  endTile:       the tile the piece ended on
-		//
-		//  enPassantTile: the en passant tile if one is available, null otherwise
-		//
-		// Returns--
-		//
-		//  One of the integer flags in the Move.Flag class, representing the best-fitting flag for the move
-		//
-		public static int inferFlag(Piece piece, Coordinate startTile, Coordinate endTile, Coordinate enPassantTile) {
-			int color = piece.getColor();
-
-			// Validity check for the data. If a flag cannot be determined because any of the arguments are
-			// invalid, then return NONE as the flag
-			if (piece == null || startTile == null || endTile == null ||
-				!startTile.isValidTile() || !endTile.isValidTile())
-				return Flag.NONE;
-
-			// Pawn flags: promotion, two forward, and ep capture
-			if (piece.getType() == Piece.Type.PAWN) {
-				// As with other places in the codebase, things like the pawn home row/promotion row, and pawn
-				// direction change based on who the player is, so that needs to be found, then the list of
-				// tiles need to be gatehred
-				int promotionRowY = (color == Piece.Color.WHITE) ? 7 : 0;
-				ArrayList<Coordinate> promotionRowTiles = new ArrayList<>();
-				for (int x = 0; x < 8; x++)
-					promotionRowTiles.add(new Coordinate(x, promotionRowY));
-				int yOffset = (color == Piece.Color.WHITE) ? 1 : -1; // Which direction pawns move
-
-				// Pawn two forward
-				if (startTile.shift(new Vector(0, 2 * yOffset)).equals(endTile))
-					return Flag.PAWN_TWO_FORWARD;
-
-				// En passant capture
-				else if (enPassantTile != null &&
-						 endTile.equals(enPassantTile))
-					return Flag.EN_PASSANT;
-
-				// Promotion
-				else if (promotionRowTiles.contains(endTile)) {
-					String[] promotionOptions = {"Queen", "Rook", "Bishop", "Knight"};
-					JComboBox<String> promotionComboBox = new JComboBox<String>(promotionOptions);
-					Log.gfxmsg("Promote to...", promotionComboBox);
-					String promotionPiece = (String) promotionComboBox.getSelectedItem();
-					switch (promotionPiece) {
-					case "Queen":
-						return Flag.PROMOTE_QUEEN;
-					case "Rook":
-						return Flag.PROMOTE_ROOK;
-					case "Bishop":
-						return Flag.PROMOTE_BISHOP;
-					case "Knight":
-						return Flag.PROMOTE_KNIGHT;
-					}
-				}
-			}
-			// King flags: castling king-/queen-side
-			else if (piece.getType() == Piece.Type.KING) {
-				if (startTile.shift(new Vector(2, 0)).equals(endTile))
-					return Flag.CASTLE_KINGSIDE;
-				
-				else if (startTile.shift(new Vector(-2, 0)).equals(endTile))
-					return Flag.CASTLE_QUEENSIDE;
-			}
-
-			return Flag.NONE;
-		}
-		// end: public int inferFlag
+    /**
+	 * Represents a special or conditional move. These include: moving pawns two forward, 
+	 * en passant capture, promotion, and castling.
+	 */
+	public static enum Flag {
+		/** No special flag; this is an ordinary move. */
+	    NONE,
+		/** A pawn has been moved two tiles forward for its first move. */
+		PAWN_TWO_FORWARD,
+		/** A pawn has captured through en passant. */
+		EN_PASSANT,
+		/** A pawn has been promoted to a knight. */
+		PROMOTE_KNIGHT,
+		/** A pawn has been promoted to a bishop. */
+		PROMOTE_BISHOP,
+		/** A pawn has been promoted to a rook. */
+		PROMOTE_ROOK,
+		/** A pawn has been promoted to a queen. */
+		PROMOTE_QUEEN,
+		/** A kingside castle was performed. */
+		CASTLE_KINGSIDE,
+		/** A queenside castle was performed. */
+		CASTLE_QUEENSIDE
 	}
-	// end: public static final class Flag
 	
 
+	/** The origin of the piece. */
 	private Coordinate startTile;
+	/** The destination of the piece. */
 	private Coordinate endTile;
-	private int flag;
+	/** The move flag, for special move types. */
+	private Move.Flag flag;
 
 
-	// ----------------------------------------------------------------------------------------------------
-	// public Move
-	//
+	/**
+	 * Constructs a {@code Move} object between two tiles.
+	 *
+	 * @param startTile  the origin of the piece being moved.
+	 * @param endTile    the destination of the piece being moved.
+	 *
+	 * @see Move(Coordinate, Coordinate, Move.Flag)
+	 */
 	public Move(Coordinate startTile, Coordinate endTile) {
 		this(startTile, endTile, Flag.NONE);
 	}
-	// end: public Move
 
 
-	// ----------------------------------------------------------------------------------------------------
-	// public Move
-	//
-	// Argments--
-	//
-	//  startTile: the tile the move starts on
-	//
-	//  endTile:   the tile the move ends on
-	//
-	//  flag:      a flag used to define special moves, NONE by default
-	//
-	public Move(Coordinate startTile, Coordinate endTile, int flag) {
+	/**
+	 * Constructs a {@code Move} object between two tiles.
+	 *
+	 * @param startTile  the origin of the piece being moved.
+	 * @param endTile    the destination of the piece being moved.
+	 * @param flag the   special flag for this move.
+	 *
+	 * @throws NullPointerException      if {@code startTile} or {@code endTile} is null.
+	 * @throws NullPointerException      if {@code flag} is null.
+	 * @throws IllegalArgumentException  if {@code startTile} or {@code endTile} is invalid.
+	 */
+	public Move(Coordinate startTile, Coordinate endTile, Move.Flag flag) {
+		if (startTile == null || endTile == null)
+			throw new NullPointerException("tiles were null: found startTile=" +
+										   startTile + ", endTile=" + endTile);
+		if (!startTile.isValidTile() || !endTile.isValidTile())
+			throw new IllegalArgumentException("tiles were invalid: startTile valid: " +
+											   startTile.isValidTile() + ", endTile valid: " +
+											   endTile.isValidTile());
+		if (flag == null)
+			throw new NullPointerException("flag was null");
+		
 		this.startTile = startTile;
 		this.endTile = endTile;
-
-		if (!startTile.isValidTile() ||
-			!endTile.isValidTile())
-			Log.stdlog(Log.ERROR, "Move", "constructed with invalid start or end tile");
-
-		if (Flag.isValid(flag)) {
-			this.flag = flag;
-		}
-		else {
-			Log.stdout(Log.ERROR, "Move", "Move object created with invalid flag, defaulting to NONE");
-			this.flag = Flag.NONE;
-		}
+	    this.flag = flag;
 	}
-	// end: public Move
 
 
-	// ====================================================================================================
-	// GET methods
+    /**
+	 * Gets the start tile of this move.
+	 *
+	 * @return the start tile of this move.
+	 */
 	public Coordinate getStartTile() {
 		return this.startTile;
 	}
 
+	
+	/**
+	 * Gets the end tile of this move.
+	 *
+	 * @return the end tile of this move.
+	 */
 	public Coordinate getEndTile() {
 		return this.endTile;
 	}
 
-	public int getFlag() {
+	
+	/**
+	 * Gets the flag of this move.
+	 *
+	 * @return the flag of this move.
+	 */
+	public Move.Flag getFlag() {
 		return this.flag;
 	}
 
+
+	/**
+	 * Determines if this move resulted in the promotion of a piece. Promotion is defined if 
+	 * {@code getFlag().equals(Move.Flag.PROMOTE_*)}
+	 *
+	 * @return true if this move resulted in the promotion of a piece.
+	 */
 	public boolean isPromotion() {
-		if (this.flag == Flag.PROMOTE_KNIGHT ||
-			this.flag == Flag.PROMOTE_BISHOP ||
-			this.flag == Flag.PROMOTE_ROOK ||
-			this.flag == Flag.PROMOTE_QUEEN)
+		if (this.flag.equals(Move.Flag.PROMOTE_KNIGHT) ||
+			this.flag.equals(Move.Flag.PROMOTE_BISHOP) ||
+			this.flag.equals(Move.Flag.PROMOTE_ROOK) ||
+			this.flag.equals(Move.Flag.PROMOTE_QUEEN))
 			return true;
 		return false;
 	}
 
+
+	/**
+	 * Determines if this move is an en passant move. Equivalent to 
+	 * {@code getMove().equals(Move.Flag.EN_PASSANT)}.
+	 *
+	 * @return true if this move is an en passant move.
+	 */
 	public boolean isEnPassant() {
-		return this.flag == Flag.EN_PASSANT;
+		return this.flag.equals(Move.Flag.EN_PASSANT);
 	}
 
+
+	/**
+	 * Determines if this move resulted in a pawn moving two tiles forward. Equivalent to 
+	 * {@code getMove().equals(Move.Flag.PAWN_TWO_FORWARD)}.
+	 *
+	 * @return true if this move resulted in a pawn moving two tiles forward.
+	 */
 	public boolean isPawnTwoForward() {
-		return this.flag == Flag.PAWN_TWO_FORWARD;
+		return this.flag.equals(Move.Flag.PAWN_TWO_FORWARD);
 	}
 
+
+	/**
+	 * Determines if this move resulted in kingside castling. Equivalent to 
+	 * {@code getMove().equals(Move.Flag.CASTLE_KINGSIDE)}.
+	 *
+	 * @return true if this move resulted in kingside castling.
+	 */
 	public boolean isCastleKingside() {
-		return this.flag == Flag.CASTLE_KINGSIDE;
+		return this.flag.equals(Move.Flag.CASTLE_KINGSIDE);
 	}
 
+
+	/**
+	 * Determines if this move resulted in queenside castling. Equivalent to 
+	 * {@code getMove().equals(Move.Flag.CASTLE_QUEENSIDE)}.
+	 *
+	 * @return true if this move resulted in queenside castling.
+	 */
 	public boolean isCastleQueenside() {
-		return this.flag == Flag.CASTLE_QUEENSIDE;
+		return this.flag.equals(Move.Flag.CASTLE_QUEENSIDE);
 	}
-	// end: GET methods
 
 
-	// ====================================================================================================
-	// public boolean equals
-	//
-	// Checks for equality between this Move object and another object. Equality is determined by:
-	//  - Equal start tiles
-	//  - Equal end tiles
-	//  - Equal flags
-	//
-	// Additionally, the argument obj must be a Move type and cannot be null for it to be equal to this
-	//
-	// Arguments--
-	//
-	//  obj: the object to compare equality
-	//
-	// Returns--
-	//
-	//  Whether the argument obj is equal to this Move object
-	//
+	/**
+	 * Determines the flag that should be assigned to a move.
+	 *
+	 * @param piece          the piece being moved.
+	 * @param startTile      the tile the piece started on.
+	 * @param endTile        the tile the piece ended on.
+	 * @param enPassantTile  the en passant tile if one is available, {@code null} otherwise.
+	 *
+	 * @return a {@code Move.Flag} enumerator type.
+	 *
+	 * @throws NullPointerException      if any argument is other than {@code enPassantTile}.
+	 * @throws IllegalArgumentException  if any of the {@code Coordinate} arguments are invalid.
+	 */
+	public static Move.Flag inferFlag(Piece piece,
+									  Coordinate startTile, Coordinate endTile,
+									  Coordinate enPassantTile) {
+		if (piece == null || startTile == null || endTile == null)
+			throw new NullPointerException("null arguments found: piece=" + piece + ", startTile=" +
+										   startTile + ", endTile=" + endTile);
+		if (!startTile.isValidTile() || !endTile.isValidTile() || !enPassantTile.isValidTile())
+			throw new IllegalArgumentException("invalid tiles found: startTile: " +
+											   startTile.isValidTile() + ", endTile: " +
+											   endTile.isValidTile() + ", enPassantTile: " +
+											   enPassantTile.isValidTile());
+		
+		// Validity check for the data. If a flag cannot be determined because any of the
+		// arguments are invalid, then return NONE as the flag
+		if (piece == null || startTile == null || endTile == null ||
+			!startTile.isValidTile() || !endTile.isValidTile())
+			return Flag.NONE;
+
+		// Pawn flags: promotion, two forward, and ep capture
+		if (piece.getType() == Piece.Type.PAWN) {
+			// As with other places in the codebase, things like the pawn home row/promotion row,
+			// and pawn direction change based on who the player is, so that needs to be found,
+			// then the list of tiles need to be gatehred
+			int promotionRowY = piece.isWhite() ? 7 : 0;
+			List<Coordinate> promotionRowTiles = new ArrayList<>();
+			for (int x = 0; x < 8; x++)
+				promotionRowTiles.add(new Coordinate(x, promotionRowY));
+			int yOffset = piece.isWhite() ? 1 : -1; // Which direction pawns move
+
+			// Pawn two forward
+			if (startTile.shift(new Vector(0, 2 * yOffset)).equals(endTile))
+				return Flag.PAWN_TWO_FORWARD;
+
+			// En passant capture
+			else if (enPassantTile != null &&
+					 endTile.equals(enPassantTile))
+				return Flag.EN_PASSANT;
+
+			// Promotion
+			else if (promotionRowTiles.contains(endTile)) {
+				String[] promotionOptions = {"Queen", "Rook", "Bishop", "Knight"};
+				JComboBox<String> promotionComboBox = new JComboBox<String>(promotionOptions);
+				JOptionPane.showMessageDialog(null,
+											  promotionComboBox,
+											  "Promote to...",
+											  JOptionPane.PLAIN_MESSAGE);
+				String promotionPiece = (String) promotionComboBox.getSelectedItem();
+				switch (promotionPiece) {
+				case "Queen":
+					return Flag.PROMOTE_QUEEN;
+				case "Rook":
+					return Flag.PROMOTE_ROOK;
+				case "Bishop":
+					return Flag.PROMOTE_BISHOP;
+				case "Knight":
+					return Flag.PROMOTE_KNIGHT;
+				}
+			}
+		}
+		// King flags: castling king-/queen-side
+		else if (piece.getType().equals(Piece.Type.KING)) {
+			if (startTile.shift(new Vector(2, 0)).equals(endTile))
+				return Flag.CASTLE_KINGSIDE;
+
+			else if (startTile.shift(new Vector(-2, 0)).equals(endTile))
+				return Flag.CASTLE_QUEENSIDE;
+		}
+
+		return Flag.NONE;
+	}
+
+
+	/**
+	 * Checks for equality between this {@code Move} object and another object. 
+	 * Equality is determined by:
+	 * <ul>
+	 * <li> Equal start tiles
+	 * <li> Equal end tiles
+	 * <li> Equal flags
+	 * </ul>
+	 * <p>
+	 * Equality of the components of the {@code Move} object are determined by the {@code equals} 
+	 * methods of the components.
+	 *
+	 * @param obj  the object to compare equality.
+	 *
+	 * @return true if the objects are equal.
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		Move mObj;
@@ -257,30 +302,32 @@ public class Move implements Serializable {
 
 		if (mObj.getStartTile().equals(this.startTile) &&
 			mObj.getEndTile().equals(this.endTile) &&
-			mObj.getFlag() == this.flag)
+			mObj.getFlag().equals(this.flag))
 			return true;
 
 		return false;
 	}
-	// end: public boolean equals
 
 
-	// ====================================================================================================
-	// public String toString
-	//
-	// Returns a string representation of this Move object
-	//
-	// Returns--
-	//
-	//  This move object as a string with the following format:
-	//
-	//   <start tile> -> <end tile> (flag: <flag>)
+	/**
+	 * Returns a string representation of this {@code Move} object. The string is composed of:
+	 * <ul>
+	 * <li> The start tile coordinate {@code toString}.
+	 * <li> An arrow "->" between the moves.
+	 * <li> The end tile coordinate {@code toString}.
+	 * <li> The flag of the move.
+	 * </ul>
+	 * <p>
+	 * An example of a move from A1 to B1 would be:
+	 * <p>
+	 * {@code (0, 0) a1 -> (1, 0) b1 (NONE)}
+	 *
+	 * @return a string representation of this {@code Move} object.
+	 */
 	@Override
 	public String toString() {
 		return StringUtility.coordinateToString(this.startTile) + " -> " +
-			StringUtility.coordinateToString(this.endTile) + " (f" + this.flag + ")";
+			StringUtility.coordinateToString(this.endTile) + " (" + this.flag + ")";
 	}
-	// end: public String toString
 
 }
-// end: public class Move

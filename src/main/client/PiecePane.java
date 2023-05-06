@@ -1,11 +1,3 @@
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-// PiecePane.java
-// Networking-Chess
-//
-// Create by Jonathan Uhler
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-
-
 package client;
 
 
@@ -16,190 +8,176 @@ import engine.piece.Piece;
 import engine.move.Move;
 import engine.move.MoveGenerator;
 import java.io.IOException;
+import java.awt.Graphics;
+import java.awt.Color;
 import java.awt.Point;
 import java.awt.Dimension;
-import java.awt.Component;
-import java.awt.event.MouseEvent;
 import java.awt.event.MouseAdapter;
 import javax.swing.JLayeredPane;
 import javax.swing.JLabel;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
+import java.util.List;
 import java.util.ArrayList;
 
 
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-// public class PiecePane extends JLayeredPane
-//
-// A JLayeredPane that holds JLabels for the pieces, making it easier to clear and redraw a position
-//
+/**
+ * A pane that holds chess pieces as {@code JLabel} objects. This component handles mouse control 
+ * of the game and drawing of the chess pieces and board. A secondary graphical class is expected 
+ * to act as a screen which interfaces with a chess server.
+ *
+ * @author Jonathan Uhler
+ */
 public class PiecePane extends JLayeredPane {
 
-	private GUI gui;
+	/** List of tiles that should be highlighted, used to display legal moves. */
+	private List<Coordinate> highlightedTiles;
+	/** The color of the current player, used to change the perspective of the board. */
+	private Piece.Color playerColor;
+	/** The latest position {@code drawPosition} was called with. */
+	private BoardInfo latestPosition;
 	
 
-	// ----------------------------------------------------------------------------------------------------
-	// public PiecePane
-	//
-	// Arguments--
-	//
-	//  gui: a GUI object to reference for board information to draw
-	//
-	public PiecePane(GUI gui) {
-		this.gui = gui;
-		
-		this.setPreferredSize(new Dimension(GUI.TILE_SIZE * 8, GUI.TILE_SIZE * 8));
+	/**
+	 * Constructs a {@code PiecePane} object.
+	 *
+	 * @param playerColor  the color of the player viewing this {@code PiecePane}.
+	 *
+	 * @throws NullPointerException  if {@code playerColor == null}.
+	 */
+	public PiecePane(Piece.Color playerColor) {
+		if (playerColor == null)
+			throw new NullPointerException("playerColor was null");
+
+		this.highlightedTiles = new ArrayList<>();
+		this.playerColor = playerColor;
+		this.latestPosition = null;
+		this.setPreferredSize(new Dimension(Screen.TILE_SIZE * 8, Screen.TILE_SIZE * 8));
 	}
-	// end: public PiecePane
 
 
-	// ====================================================================================================
-	// public void drawPosition
-	//
-	// Draws a position from the provided GUI object and its information given during construction
-	//
-	public void drawPosition() {
+	/**
+	 * Returns the player color of this {@code PiecePane}. This determines which
+	 * perspective the pane displays.
+	 *
+	 * @return the player color of this {@code PiecePane}.
+	 */
+	public Piece.Color getPlayerColor() {
+		return this.playerColor;
+	}
+
+
+	/**
+	 * Returns the latest {@code BoardInfo} object seen by this {@code PiecePane}.
+	 *
+	 * @return the latest {@code BoardInfo} object seen by this {@code PiecePane}.
+	 */
+	public BoardInfo getLatestPosition() {
+		return this.latestPosition;
+	}
+
+
+	/**
+	 * Sets the list of hightlighted tiles that are displayed by this {@code PiecePane}. Any tile
+	 * included in the argument list that is not a valid tile 
+	 * ({@code highlightedTiles.get(i).isValidTile() == false}) is ignored, but no error is thrown.
+	 *
+	 * @param highlightedTiles  the list of tiles to highlight.
+	 *
+	 * @throws NullPointerException  if {@code highlightedTiles == null}.
+	 */
+	public void setHighlightedTiles(List<Coordinate> highlightedTiles) {
+		if (highlightedTiles == null)
+			throw new NullPointerException("highlightedTiles was null");
+		this.highlightedTiles = highlightedTiles;
+		this.repaint();
+	}
+
+
+	/**
+	 * Paints the chess board below the pieces on this {@code PiecePane}.
+	 *
+	 * @param g  the {@code Graphics} object to paint on.
+	 */
+	@Override
+	public void paintComponent(Graphics g) {
+		// Draw the chess board tiles
+		boolean isWhite = this.playerColor.equals(Piece.Color.WHITE);
+		for (Coordinate c : Coordinate.getAllValidCoordinates()) {
+			if ((c.getX() + c.getY()) % 2 == 0) {
+				// Dark tiles
+				if (this.highlightedTiles.contains(c))
+					g.setColor(new Color(161, 86, 86));
+				else
+					g.setColor(new Color(175, 137, 104));
+			}
+			else {
+				// Light tiles
+				if (this.highlightedTiles.contains(c))
+					g.setColor(new Color(238, 156, 156));
+				else
+					g.setColor(new Color(236, 217, 185));
+			}
+
+			int displayOffsetX = isWhite ? c.getX() : (7 - c.getX());
+			int displayOffsetY = isWhite ? (7 - c.getY()) : c.getY();
+			g.fillRect(displayOffsetX * Screen.TILE_SIZE,
+					   displayOffsetY * Screen.TILE_SIZE,
+					   Screen.TILE_SIZE, Screen.TILE_SIZE);
+		}
+	}
+
+
+	/**
+	 * Draws the pieces of a given position. This method is responsible for updating 
+	 * {@code latestPosition}. A call to {@code PiecePane::getLatestPosition} after a call to 
+	 * {@code PiecePane::drawPosition} will return the argument passed into this method.
+	 *
+	 * @param position  the position to draw.
+	 *
+	 * @throws NullPointerException  if {@code position == null}.
+	 */
+	public void drawPosition(BoardInfo position) {
+		if (position == null)
+			throw new NullPointerException("position was null");
+		this.latestPosition = position;
+		
 		// Reset pane
 		this.removeAll();
 
 		// Add new pieces
-		if (this.gui.getBoardInfo() != null) {
-			for (Coordinate c : Coordinate.getAllValidCoordinates()) {
-				Piece piece = this.gui.getBoardInfo().getPiece(c);
-				if (piece != null) {
-					// displayOffsetY used to reflect the board across the x-axis depending on which perspective
-					// is being viewed
-					int displayOffsetX = (this.gui.getColor() != Piece.Color.BLACK) ? (c.getX()) : (7 - c.getX());
-					int displayOffsetY = (this.gui.getColor() != Piece.Color.BLACK) ? (7 - c.getY()) : (c.getY());
-					int x = (displayOffsetX * GUI.TILE_SIZE);
-					int y = (displayOffsetY * GUI.TILE_SIZE);
-
-					// Get the proper image and draw the piece
-					String pieceImageFile = "assets/" + piece.getType() + "" + piece.getColor() + ".png";
-					// Read the image file from the JAR location, allowing the jar to be placed anywhere
-					ImageIcon pieceIcon = new ImageIcon(Thread.currentThread()
-														.getContextClassLoader()
-														.getResource(pieceImageFile));
-					JLabel pieceLabel = new JLabel(pieceIcon);
-					pieceLabel.setBounds(x, y, GUI.TILE_SIZE, GUI.TILE_SIZE);
-
-					// Only allow mouse movement if this player is playing in the game
-					if (this.gui.getColor() != Piece.Color.NONE) {
-						MouseAdapter mouseAdapter = this.getMouseAdapter();
-						pieceLabel.addMouseListener(mouseAdapter);
-						pieceLabel.addMouseMotionListener(mouseAdapter);
-					}
-
-					this.add(pieceLabel);
-				}
+		boolean isWhite = this.playerColor.equals(Piece.Color.WHITE);
+		for (Coordinate c : Coordinate.getAllValidCoordinates()) {
+			// dispOffset used to reflect the board across the x-axis depending on the perspective
+			int dispOffsetX = isWhite ? c.getX() : (7 - c.getX());
+			int dispOffsetY = isWhite ? (7 - c.getY()) : c.getY();
+			int x = (dispOffsetX * Screen.TILE_SIZE);
+			int y = (dispOffsetY * Screen.TILE_SIZE);
+			
+			// Manage pieces
+			Piece piece = position.getPiece(c);
+			if (piece == null)
+				continue;
+			
+			// Get the proper image and draw the piece
+			String pieceImageFile = "assets/images/" + piece.getType() + piece.getColor() + ".png";
+			// Read the image file from the JAR location, allowing the jar to be placed anywhere
+			ImageIcon pieceIcon = new ImageIcon(Thread.currentThread()
+												.getContextClassLoader()
+												.getResource(pieceImageFile));
+			JLabel pieceLabel = new JLabel(pieceIcon);
+			pieceLabel.setBounds(x, y, Screen.TILE_SIZE, Screen.TILE_SIZE);
+			
+			// Only allow mouse movement if this player is playing in the game
+			if (!this.playerColor.equals(Piece.Color.NONE)) {
+				MouseAdapter mouseAdapter = new PieceAdapter(this);
+				pieceLabel.addMouseListener(mouseAdapter);
+				pieceLabel.addMouseMotionListener(mouseAdapter);
 			}
+
+			// Add the piece
+			this.add(pieceLabel);
 		}
 	}
-	// end: public void drawPosition
-
-
-	// ====================================================================================================
-	// private Coordinate pointToCoordinate
-	//
-	// Converts a java Point object representing a position in pixels to a Coordinate object representing
-	// a tile on the chess board
-	//
-	// Arguments--
-	//
-	//  p: the point to convert
-	//
-	private Coordinate pointToCoordinate(Point p) {
-		int x = p.x;
-		int y = p.y;
-		
-		int xTile = x / GUI.TILE_SIZE;
-		int yTile = y / GUI.TILE_SIZE;
-		// Swap the coordinate across the x-axis if playing as black, since the perspective would
-		// be switched
-		yTile = (this.gui.getColor() != Piece.Color.BLACK) ? (7 - yTile) : yTile;
-		xTile = (this.gui.getColor() != Piece.Color.BLACK) ? (xTile) : (7 - xTile);
-		return new Coordinate(xTile, yTile);
-	}
-	// end: private Coordinate pointToCoordinate
-	
-
-	// ====================================================================================================
-	// private MouseAdapter getMouseAdapter
-	//
-	// Returns a MouseAdapter object created with overriden mouse methods to interact with the pieces
-	//
-	// Returns--
-	//
-	//  A MouseAdapter object as described above
-	//
-	private MouseAdapter getMouseAdapter() {
-		// Source: https://stackoverflow.com/questions/27915214/how-can-i-drag-images-with-the-mouse-cursor-in-java-gui
-		MouseAdapter mouseAdapter = new MouseAdapter() {
-				private Point startLocation;
-				private Point dragOffset;
-
-				
-				@Override
-				public void mousePressed(MouseEvent e) {
-					Component pieceClicked = e.getComponent();
-					PiecePane.this.moveToFront(pieceClicked);
-					this.startLocation = pieceClicked.getLocation();
-					this.dragOffset = e.getPoint();
-
-					boolean whiteToMove = PiecePane.this.gui.getBoardInfo().whiteToMove;
-					boolean isWhite = PiecePane.this.gui.getColor() == Piece.Color.WHITE;
-					Coordinate startTile = PiecePane.this.pointToCoordinate(this.startLocation);
-
-					// If it is this player's turn to move, collect and display all the legal ending tiles
-					// for the piece they have selected
-					if ((whiteToMove && isWhite) || (!whiteToMove && !isWhite)) {
-						ArrayList<Coordinate> highlightedTiles = new ArrayList<>();
-						ArrayList<Move> legalMoves = MoveGenerator
-							.generateLegalMoves(PiecePane.this.gui.getBoardInfo());
-						
-						for (Move m : legalMoves) {
-							if (m.getStartTile().equals(startTile))
-								highlightedTiles.add(m.getEndTile());
-						}
-						PiecePane.this.gui.setHighlightedTiles(highlightedTiles);
-					}
-				}
-
-				
-				@Override
-				public void mouseReleased(MouseEvent e) {
-					Component pieceClicked = e.getComponent();
-					Point endLocation = pieceClicked.getLocation();
-					// Add 1/2 of a tile to the ending location where the piece was released to position the
-					// "release" point over the center of the image of the piece, rather than in the top-left
-					// corner
-					endLocation.x += GUI.TILE_SIZE / 2;
-					endLocation.y += GUI.TILE_SIZE / 2;
-					
-					Coordinate startTile = PiecePane.this.pointToCoordinate(this.startLocation);
-					Coordinate endTile = PiecePane.this.pointToCoordinate(endLocation);
-
-					PiecePane.this.gui.setHighlightedTiles(new ArrayList<>());
-					PiecePane.this.gui.send(startTile, endTile);
-				}
-
-				
-				@Override
-				public void mouseDragged(MouseEvent e) {
-					int x = e.getX() - this.dragOffset.x;
-					int y = e.getY() - this.dragOffset.y;
-					Component pieceClicked = e.getComponent();
-					
-					Point location = pieceClicked.getLocation();
-					location.x += x;
-					location.y += y;
-					
-					pieceClicked.setLocation(location);
-				}
-			};
-		return mouseAdapter;
-	}
-	// end: private MouseAdapter getMouseAdapter
 
 }
-// end: public class PiecePane

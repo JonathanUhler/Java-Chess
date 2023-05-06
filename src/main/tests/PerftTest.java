@@ -1,39 +1,36 @@
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-// PerftTest.java
-// Networking-Chess
-//
-// Created by Jonathan Uhler
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-
-
 package tests;
 
 
-import util.Log;
+import jnet.Log;
 import engine.move.Move;
 import engine.move.MoveGenerator;
 import engine.board.Board;
 import engine.board.BoardInfo;
 import engine.fen.FenUtility;
+import java.util.List;
 import java.util.ArrayList;
 
 
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-// public class PerftTest
-//
-// PERF(ormance) T(esting) framework
-//
+/**
+ * PERF(ormance) T(esting) framework for this chess engine.
+ *
+ * @author Jonathan Uhler
+ */
 public class PerftTest {
 
-	// MAX_DEPTH should normally be set to 3, which runs in ~1.5 minutes. 4 takes >10 minutes to run, although it
-	// good to do after major changes to check accuracy. The goal of having so many tests is that any strange
-	// situations will arise at least once with MAX_DEPTH = 3, so having a high depth is not really as important
-	// if there are enough tests to cover a wide range of positions
+	/** 
+	 * The maximum depth positions should be tested with. MAX_DEPTH should normally be set to 3, 
+	 * which runs in ~1.5 minutes. 4 takes >10 minutes to run, although is good to do after major 
+	 * changes to check accuracy. The goal of having so many tests is that any strange situations 
+	 * will arise at least once with MAX_DEPTH = 3, so having a high depth is not really as 
+	 * important if there are enough tests to cover a wide range of positions.
+	 */
 	private static final int MAX_DEPTH = 3;
 	
-	// Local list of every test, easier than reading a file
-	public static final ArrayList<String> TESTS = new ArrayList<>() {{
-			add("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1;20;400;8902;197281;4865609;119060324");
+	/** Local list of every test, easier than reading a file. */
+	public static final List<String> TESTS = new ArrayList<>() {{
+			add("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1;" +
+				"20;400;8902;197281;4865609;119060324");
 			add("4k3/8/8/8/8/8/8/4K2R w K - 0 1;15;66;1197;7059;133987;764643");
 			add("4k3/8/8/8/8/8/8/R3K3 w Q - 0 1;16;71;1287;7626;145232;846648");
 			add("4k2r/8/8/8/8/8/8/4K3 w k - 0 1;5;75;459;8290;47635;899442");
@@ -161,69 +158,62 @@ public class PerftTest {
 	}};
 
 
-	// ====================================================================================================
-	// private static int perft
-	//
-	// Runs a single test, based on a starting position
-	// General algorithm based on C code: https://www.chessprogramming.org/Perft#Perft_function
-	//
-	// Arguments--
-	//
-	//  board:  the board to play on
-	//
-	//  depth:  the current depth of the test
-	//
-	//  divide: an option that prints the found nodes after each move mode, instead of just after all
-	//          moves have been made, useful for debug
-	//
-	// Returns--
-	//
-	//  The number of nodes found after making all the available moves at a given depth
-	//
+	/**
+	 * Runs a single test from a starting position.
+	 * <p>
+	 * General algorithm based on C code: https://www.chessprogramming.org/Perft#Perft_function.
+	 *
+	 * @param board   the {@code Board} object to play moves on.
+	 * @param depth   the current depth of the test (this method is recursive).
+	 * @param divide  an option that prints the found nodes after each move made (as opposed to
+	 *                only printing after all moves have been made for the entire test). Very 
+	 *                verbose, useful for debug.
+	 *
+	 * @return the number of nodes found after making all the available moves through 
+	 *         {@code PerftTest.MAX_DEPTH}.
+	 */
 	private static int perft(Board board, int depth, boolean divide) {
 		// Break case
 		if (depth == 0)
 			return 1;
 
 		int nodes = 0;
-		ArrayList<Move> moves = MoveGenerator.generateLegalMoves(board.getInfo());
-		// Loop through every possible move at this depth, make the move, then recurse, then unmake the move
-		// to preserve the board structure
+		List<Move> moves = MoveGenerator.generateLegalMoves(board.getInfo());
+		// Loop through every possible move at this depth, make the move, then recurse, then
+		// unmake the move to preserve the board structure
 		for (Move move : moves) {
 			board.makeMove(move);
 			int prevNodes = nodes;
 			nodes += PerftTest.perft(board, depth - 1, divide);
 			if (divide && depth == PerftTest.MAX_DEPTH)
-				Log.stdout(Log.DEBUG, "PerftTest", "\tMove: " + move + "\tNodes: " + (nodes - prevNodes));
+				Log.stdout(Log.DEBUG, "PerftTest", "\tMove: " + move +
+						   "\tNodes: " + (nodes - prevNodes));
 			board.unmakeMove();
 		}
 
 		return nodes;
 	}
-	// end: private static int perft
 
 
-	// ====================================================================================================
-	// public static void run
-	//
-	// Runs given tests
-	//
-	// Arguments--
-	//
-	//  start:  the number of the first test to run
-	//
-	//  end:    the number of the last test to run
-	//
-	//  divide: whether to print the nodes found at each move
-	//
+	/**
+	 * Runs performance tests.
+	 *
+	 * @param start   the first test number to run, inclusive.
+	 * @param end     the last test number to run, exclusive.
+	 * @param divide  an option that prints the found nodes after each move made (as opposed to
+	 *                only printing after all moves have been made for the entire test). Very 
+	 *                verbose, useful for debug.
+	 */
 	public static void run(int start, int end, boolean divide) {
 		// Validate min and max test number
 		if (start < 0) {
-			Log.stdlog(Log.WARN, "PerftTest", "Specified start test # is too small, defaulting to first test");
+			Log.stdlog(Log.WARN, "PerftTest",
+					   "Specified start test # is too small, defaulting to first test");
 			start = 0;
 		}
 		if (end >= PerftTest.TESTS.size()) {
-			Log.stdlog(Log.WARN, "PerftTest", "Specified end test # is too large, defaulting to last test");
+			Log.stdlog(Log.WARN, "PerftTest",
+					   "Specified end test # is too large, defaulting to last test");
 			end = PerftTest.TESTS.size() - 1;
 		}
 
@@ -235,12 +225,16 @@ public class PerftTest {
 		for (int i = start; i <= end; i++) {
 			String test = PerftTest.TESTS.get(i);
 
-			// Split the test string by the semicolon delimiter. Check to see if the test can be graded.
-			// If the maximum depth is not within the # nodes/depth listed in the string, then that test
-			// cannot be graded since the expected value is not known.
+			// Split the test string by the semicolon delimiter. Check to see if the test can be
+			// graded. If the maximum depth is not within the # nodes/depth listed in the string,
+			// then that test cannot be graded since the expected value is not known.
 			String[] testSplit = test.split(";");
-			if (testSplit.length != 7 || PerftTest.MAX_DEPTH < 1 || PerftTest.MAX_DEPTH > testSplit.length - 1) {
-				Log.stdlog(Log.WARN, "PerftTest", "Test skipped, improper length or MAX_DEPTH is out of range");
+			if (testSplit.length != 7 ||
+				PerftTest.MAX_DEPTH < 1 ||
+				PerftTest.MAX_DEPTH > testSplit.length - 1)
+			{
+				Log.stdlog(Log.WARN, "PerftTest",
+						   "Test skipped, improper length or MAX_DEPTH is out of range");
 				continue;
 			}
 
@@ -262,7 +256,8 @@ public class PerftTest {
 				numExpectedNodes = Integer.parseInt(numExpectedNodesString);
 			}
 			catch (NumberFormatException e) {
-				Log.stdlog(Log.WARN, "PerftTest", "test eval skipped, could not parse expected nodes as int");
+				Log.stdlog(Log.WARN, "PerftTest",
+						   "test eval skipped, could not parse expected nodes as int");
 				continue;
 			}
 
@@ -273,7 +268,8 @@ public class PerftTest {
 					   "\tDepth: " + PerftTest.MAX_DEPTH +
 					   "\tResult: " + numTotalNodes +
 					   "\tTime: " + totalTime + "ms" +
-					   "\t--  " + ((passed) ? "Passed" : "FAILED (expected " + numExpectedNodes + ")"));
+					   "\t--  " +
+					   ((passed) ? "Passed" : "FAILED (expected " + numExpectedNodes + ")"));
 			if (passed)
 				numPassed++;
 			else
@@ -285,7 +281,5 @@ public class PerftTest {
 				   "\tFailed: " + numFailed +
 				   "\t--  " + (numPassed * 1.0 / (numPassed + numFailed) * 1.0) * 100.0 + "%");
 	}
-	// end: public static void run
 
 }
-// end: public class PerftTest

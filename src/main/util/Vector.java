@@ -1,86 +1,74 @@
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-// Vector.java
-// Networking-Chess
-//
-// Created by Jonathan Uhler
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-
-
 package util;
 
 
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-// public class Vector
-//
-// A two dimensional vector used to shift Coordinate objects
-//
+/**
+ * Represents a two-dimensional translational vector. This class is used to shift {@code Coordinate}
+ * objects and represent the positions to which a piece can move as relative coordinates (that is, 
+ * from an unknown starting tile).
+ *
+ * @author Jonathan Uhler
+ */
 public class Vector {
 
+	/** The change in x position represented by this vector. */
 	private int deltaX;
+	/** The change in y position represented by this vector. */
 	private int deltaY;
 	
 
-	// ----------------------------------------------------------------------------------------------------
-	// public Vector
-	//
-	// Arguments--
-	//
-	//  deltaX: the change in x
-	//
-	//  deltaY: the change in y
-	//
+	/**
+	 * Constructs a new {@code Vector} object.
+	 *
+	 * @param deltaX  the change in x position.
+	 * @param deltaY  the change in y position.
+	 */
 	public Vector(int deltaX, int deltaY) {
 		this.deltaX = deltaX;
 		this.deltaY = deltaY;
 	}
-	// end: public Vector
 
 
-	// ====================================================================================================
-	// GET methods
+	/**
+	 * Returns the change in x position.
+	 *
+	 * @return the change in x position.
+	 */
 	public int getXChange() {
 		return this.deltaX;
 	}
+	
 
+	/**
+	 * Returns the change in y position.
+	 *
+	 * @return the change in y position.
+	 */
 	public int getYChange() {
 		return this.deltaY;
 	}
-	// end: GET methods
 
 
-	// ====================================================================================================
-	// public Vector scale
-	//
-	// Scales this Vector object by a given factor, returning a new Vector object in the process and
-	// leaving this object without mutations
-	//
-	// Arguments--
-	//
-	//  scaleFactor: the multiplier to use for scaling this Vector
-	//
-	// Returns--
-	//
-	//  A new Vector object scaled by scaleFactor
-	//
+	/**
+	 * Scales this {@code Vector} object by a given scale factor. This method returns a new object,
+	 * leaving {@code this} unmodified. This method is identical to 
+	 * {@code new Vector(getXChange() * scaleFactor, getYChange() * scaleFactor)}.
+	 *
+	 * @param scaleFactor  the multiplier to use for scaling this vector.
+	 *
+	 * @return a new {@code Vector} object scaled by {@code scaleFactor}.
+	 */
 	public Vector scale(int scaleFactor) {
 		return new Vector(this.deltaX * scaleFactor, this.deltaY * scaleFactor);
 	}
-	// end: public Vector scale
 	
 
-	// ====================================================================================================
-	// public boolean equals
-	//
-	// Checks equality with another object, mainly another Vector
-	//
-	// Arguments--
-	//
-	//  obj: an unknown object to check equality with
-	//
-	// Returns--
-	//
-	//  Whether obj is equal to this object
-	//
+	/**
+	 * Checks for equality between this {@code Vector} object and another object.
+	 *
+	 * @param obj  the object to check for equality with.
+	 *
+	 * @return true if the two object are equal.
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		// Try casting obj to a Vector object. If the cast fails, they cannot be equal
@@ -99,23 +87,16 @@ public class Vector {
 		// Check for the parameters of the Vector object for equality
 		return (vObj.getXChange() == this.deltaX && vObj.getYChange() == this.deltaY);
 	}
-	// end: public boolean equals
 
-	
-	// ====================================================================================================
-	// public String toString
-	//
-	// Returns a string representation of this Vector object
-	//
-	// Returns--
-	//
-	//  String of this object
-	//
+
+	/**
+	 * Returns a string representation of this {@code Vector} object
+	 *
+	 * @return a string representation of this {@code Vector} object
+	 */
 	@Override
 	public String toString() {
 		return "<" + this.deltaX + ", " + this.deltaY + ">";
 	}
-	// end: public String toString
 
 }
-// end: public class Vector

@@ -1,86 +1,86 @@
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-// Board.java
-// Networking-Chess
-//
-// Created by Jonathan Uhler
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-
-
 package engine.board;
 
 
-import util.Log;
 import util.Coordinate;
 import util.Vector;
 import engine.move.Move;
 import engine.move.MoveGenerator;
 import engine.piece.Piece;
-import java.util.ArrayList;
+import java.util.LinkedList;
 
 
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-// public class Board
-//
-// A class to manipulate a BoardInfo object
-// 
+
+/**
+ * Provides infrastructure to manipulate a {@code BoardInfo} object. The {@code (make|unmake)Move} 
+ * methods of this class perform automatic move validation. The primary representation of a given 
+ * chess board is through the {@code BoardInfo} class. This class only allows for higher-level 
+ * management of the informational class. This hierarchy exists to allow for the {@code BoardInfo} 
+ * object to be easily transported, serialized, and deserialized without having to carry around 
+ * the extra methods provided by the {@code Board} class.
+ *
+ * @author Jonathan Uhler
+ */
 public class Board {
 
-	public static final String START_FEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
+	/** The starting position of a chess board. */
+	public static final String START_FEN =
+		"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 	
 
-	// Used by the unmakeMove function. Keeps track of all moves. When moves are unmade, they are popped from the list
-	private ArrayList<BoardInfo> boardHistory;
+	/** A stack of all previous board states, used to undo moves. */
+	private LinkedList<BoardInfo> boardHistory;
+	/** The current state of the board. */
 	private BoardInfo boardInfo;
 
-	
-	// ----------------------------------------------------------------------------------------------------
-	// public Board
-	//
-	// Arguments--
-	//
-	//  boardInfo: a BoardInfo object that will be manipulated by the methods in this Board object
-	//
+
+	/**
+	 * Constructs a new {@code Board} object from a {@code BoardInfo} object.
+	 *
+	 * @param boardInfo  a {@code BoardInfo} object for this class to manage.
+	 */
 	public Board(BoardInfo boardInfo) {
-		this.boardHistory = new ArrayList<>();
+		this.boardHistory = new LinkedList<>();
 		this.boardInfo = boardInfo;
 	}
-	// end: public Board
 
 
-	// ====================================================================================================
-	// GET methods
+	/**
+	 * Returns this object's {@code BoardInfo} object. The object returned is a deep-copy of the 
+	 * actual informational object stored in this class. No reference of the returned object is 
+	 * kept by this class, allowing for safe end-user manipulation of the returned object.
+	 *
+	 * @return this object's {@code BoardInfo} object.
+	 */
 	public BoardInfo getInfo() {
-		// Returns a copy of the interal BoardInfo object
 		return (BoardInfo) this.boardInfo.clone();
 	}
-	// end: GET methods
 
 
-	// ====================================================================================================
-	// public void makeMove
-	//
-	// Takes a Move object and updates the internal BoardInfo object based on that move
-	//
-	// Arguments--
-	//
-	//  move: the move to make, must not be null. The move is assumed to be legal at this point and will
-	//        be made (with some exceptions, such as a null piece being moved or a null move)
-	//        unconditionally. Move legatily checks should be done by whatever server or local GUI is
-	//        hosting the game
-	//
+	/**
+	 * Updates the {@code BoardInfo} object managed by this class with a given {@code Move}. The 
+	 * legality of the argument {@code move} is validated before any operation is completed. This 
+	 * method will throw exceptions upon failure to perform the move. The {@code Move} class makes 
+	 * some attempts to salvage illegal moves upon construction.
+	 *
+	 * @param move  the move to make.
+	 *
+	 * @throws NullPointerException      if {@code move == null}.
+	 * @throws IllegalArgumentException  if the start tile is not valid, the end tile is not valid, 
+	 *                                   or the piece on the start tile is null.
+	 *
+	 * @see engine.move.Move
+	 */
 	public void makeMove(Move move) {
-		if (move == null) {
-			Log.stdlog(Log.ERROR, "Board", "makeMove called with null move");
-			return;
-		}
+		if (move == null)
+			throw new NullPointerException("move argument was null");
 		
 		// Save the current state (before the move) to the history for undoing moves
-		this.boardHistory.add(this.getInfo());
+		this.boardHistory.push(this.getInfo());
 		
 		// Set up important information
 		Coordinate startTile = move.getStartTile();
 		Coordinate endTile = move.getEndTile();
-		int flag = move.getFlag();
+		Move.Flag flag = move.getFlag();
 
 		Piece movePiece = boardInfo.getPiece(startTile);
 		Piece capturedPiece = boardInfo.getPiece(endTile);
@@ -90,8 +90,10 @@ public class Board {
 		Coordinate castlekRook = new Coordinate(7, 7);
 		Coordinate castleqRook = new Coordinate(0, 7);
 
-		int pawnDir = (this.boardInfo.whiteToMove) ? 1 : -1; // Pawn movement direction changes based on perspective
-		Vector enPassantVector = new Vector(0, -1 * pawnDir); // Need to shift 1 "down" to highlight real pawn for EP
+		// Pawn movement direction changes based on perspective
+		int pawnDir = (this.boardInfo.whiteToMove) ? 1 : -1;
+		// Need to shift 1 "down" to highlight real pawn for EP
+		Vector enPassantVector = new Vector(0, -1 * pawnDir);
 		Coordinate enPassantTile = this.boardInfo.enPassantTile;
 		Coordinate enPassantPieceTile = null;
 		Piece enPassantPiece = null;
@@ -101,15 +103,11 @@ public class Board {
 		}
 
 		// Do basic validity checks
-		if (!startTile.isValidTile() ||
-			!endTile.isValidTile() ||
-			movePiece == null) {
-			Log.stdlog(Log.ERROR, "Board", "makeMove validity checks failed, ignoring move");
-			Log.stdlog(Log.ERROR, "Board", "\tstartTile is valid: " + startTile.isValidTile());
-			Log.stdlog(Log.ERROR, "Board", "\tendTile is valid: " + endTile.isValidTile());
-			Log.stdlog(Log.ERROR, "Board", "\ttmovePiece is null: " + (movePiece == null));
-			return;
-		}
+		if (!startTile.isValidTile() || !endTile.isValidTile() || movePiece == null)
+			throw new IllegalArgumentException("illegal move attempted: " +
+											   "startTile is valid: " + startTile.isValidTile() +
+											   ", endTile is valid: " + endTile.isValidTile() +
+											   ", movePiece: " + movePiece);
 
 		// Update halfmoves
 		this.boardInfo.halfmoves++;
@@ -127,7 +125,7 @@ public class Board {
 		// Movement
 		this.boardInfo.setPiece(endTile, movePiece);
 		this.boardInfo.setPiece(startTile, null);
-		if (movePiece.getType() == Piece.Type.PAWN)
+		if (movePiece.getType().equals(Piece.Type.PAWN))
 			this.boardInfo.halfmoves = 0;
 
 		// Castling
@@ -147,7 +145,7 @@ public class Board {
 		}
 
 		// King moved, updating castling rights
-		if (movePiece.getType() == Piece.Type.KING) {
+		if (movePiece.getType().equals(Piece.Type.KING)) {
 			if (this.boardInfo.whiteToMove) {
 				this.boardInfo.castleK = false;
 				this.boardInfo.castleQ = false;
@@ -158,14 +156,14 @@ public class Board {
 			}
 		}
 		// Rook moved, update castling rights
-		else if (movePiece.getType() == Piece.Type.ROOK) {
+		else if (movePiece.getType().equals(Piece.Type.ROOK)) {
 			if (startTile.equals(castleKRook)) this.boardInfo.castleK = false;
 			else if (startTile.equals(castleQRook)) this.boardInfo.castleQ = false;
 			else if (startTile.equals(castlekRook)) this.boardInfo.castlek = false;
 			else if (startTile.equals(castleqRook)) this.boardInfo.castleq = false;
 		}
 		// Rook captured, update castling rights
-		else if (capturedPiece != null && capturedPiece.getType() == Piece.Type.ROOK) {
+		else if (capturedPiece != null && capturedPiece.getType().equals(Piece.Type.ROOK)) {
 			if (endTile.equals(castleKRook)) this.boardInfo.castleK = false;
 			else if (endTile.equals(castleQRook)) this.boardInfo.castleQ = false;
 			else if (endTile.equals(castlekRook)) this.boardInfo.castlek = false;
@@ -174,20 +172,23 @@ public class Board {
 
 		// Promotion
 		if (move.isPromotion()) {
-			int type = Piece.Type.NONE;
-			int color = (this.boardInfo.whiteToMove) ? Piece.Color.WHITE : Piece.Color.BLACK;
+			Piece.Type type = Piece.Type.NONE;
+			Piece.Color color =
+				(this.boardInfo.whiteToMove) ?
+				Piece.Color.WHITE :
+				Piece.Color.BLACK;
 
 			switch (flag) {
-			case Move.Flag.PROMOTE_KNIGHT:
+			case PROMOTE_KNIGHT:
 				type = Piece.Type.KNIGHT;
 				break;
-			case Move.Flag.PROMOTE_BISHOP:
+			case PROMOTE_BISHOP:
 				type = Piece.Type.BISHOP;
 				break;
-			case Move.Flag.PROMOTE_ROOK:
+			case PROMOTE_ROOK:
 				type = Piece.Type.ROOK;
 				break;
-			case Move.Flag.PROMOTE_QUEEN:
+			case PROMOTE_QUEEN:
 				type = Piece.Type.QUEEN;
 				break;
 			}
@@ -203,29 +204,19 @@ public class Board {
 
 		this.boardInfo.updateAfterMove();
 	}
-	// end: public void makeMove
 
 
-	// ====================================================================================================
-	// public void unmakeMove
-	//
-	// Unmakes the next available move in the boardHistory stack
-	//
+	/**
+	 * Undoes the next available move in the {@code boardHistory} stack.
+	 */
 	public void unmakeMove() {
-		// If there are moves to be unmade, then get the latest board state saved, remove it from the
-		// boardHistory stack to save memory and allow further undos, and then set the current
+		// If there are moves to be unmade, then get the latest board state saved, remove it from
+		// the boardHistory stack to save memory and allow further undos, and then set the current
 		// board state to the previous board state
 		
 		if (this.boardHistory.size() == 0)
 			return;
-
-		int previousStateIndex = this.boardHistory.size() - 1;
-		BoardInfo previousState = this.boardHistory.get(previousStateIndex);
-
-		this.boardHistory.remove(previousState);
-		this.boardInfo = previousState;
+		this.boardInfo = this.boardHistory.pop();
 	}
-	// end: public void unmakeMove
 
 }
-// end: public class Board

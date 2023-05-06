@@ -1,108 +1,138 @@
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-// Piece.java
-// Networking-Chess
-//
-// Created by Jonathan Uhler
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-
-
 package engine.piece;
 
 
 import java.io.Serializable;
 
 
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-// public class Piece implements Serializable
-//
-// A class that represents a piece of a given color and type. Implements the Seriailizable interface
-// so it can easily be deep cloned by BoardInfo.clone()
-//
+/**
+ * Represents a piece of a given color and type. This class implements the {@code Serializable} 
+ * interface to allow for deep-copying by the {@code BoardInfo} class.
+ *
+ * @author Jonathan Uhler
+ */
 public class Piece implements Serializable {
 
-	// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-	// public static final class Type
-	//
-	// A list of constants for the type a Piece object can have
-	//
-	public static final class Type {
-		public static final int NONE = 0;
-		public static final int PAWN = 1;
-		public static final int KNIGHT = 2;
-		public static final int BISHOP = 3;
-		public static final int ROOK = 4;
-		public static final int QUEEN = 5;
-		public static final int KING = 6;
+	/**
+	 * Types that a {@code Piece} object can have.
+	 */
+	public static enum Type {
+		/** No piece. */
+		NONE,
+		/** Pawn piece. */
+		PAWN,
+		/** Knight piece. */
+		KNIGHT,
+		/** Bishop piece. */
+		BISHOP,
+		/** Rook piece. */
+		ROOK,
+		/** Queen piece. */
+		QUEEN,
+		/** King piece. */
+		KING
 	}
-	// end: pubic static final class Type
 
 
-	// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-	// public static final class Color
-	//
-	// A list of constants for the color a Piece object can have
-	//
-	public static final class Color {
-		public static final int NONE = 0;
-		public static final int WHITE = 1;
-		public static final int BLACK = 2;
+	/**
+	 * Colors that a {@code Piece} object can have.
+	 */
+	public static enum Color {
+		/** No color. */
+		NONE,
+		/** White piece. */
+		WHITE,
+		/** Black piece. */
+		BLACK
 	}
-	// end: public static final class Color
 	
 
-	private int type;
-	private int color;
+	/** The piece type. */
+	private Piece.Type type;
+	/** The piece color. */
+	private Piece.Color color;
 
 
-	// ----------------------------------------------------------------------------------------------------
-	// public Piece
-	//
-	// Arguments--
-	//
-	//  type:  the type of the piece, from Piece.Type
-	//
-	//  color: the color of the piece, from Piece.Color
-	public Piece(int type, int color) {
+	/**
+	 * Constructs a {@code Piece} object.
+	 *
+	 * @param type   the type of the piece.
+	 * @param color  the color of the piece.
+	 */
+	public Piece(Piece.Type type, Piece.Color color) {
 		this.type = type;
 		this.color = color;
 	}
-	// end: public Piece
 
 
-	// ====================================================================================================
-	// GET methods
-	public int getType() {
+	/**
+	 * Returns the type of the piece.
+	 *
+	 * @return the type of the piece.
+	 */
+	public Piece.Type getType() {
 		return this.type;
 	}
 
-	public int getColor() {
+
+	/**
+	 * Returns the color of the piece.
+	 *
+	 * @return the color of the piece.
+	 */
+	public Piece.Color getColor() {
 		return this.color;
 	}
 
+
+	/**
+	 * Determines whether this piece is white. Identical to 
+	 * {@code getColor().equals(Piece.Color.WHITE)}.
+	 *
+	 * @return true if this piece is white.
+	 */
+	public boolean isWhite() {
+		return this.color.equals(Piece.Color.WHITE);
+	}
+
+
+	/**
+	 * Determines whether this piece is black. Identical to 
+	 * {@code getColor().equals(Piece.Color.BLACK)}.
+	 *
+	 * @return true if this piece is black.
+	 */
+	public boolean isBlack() {
+		return this.color.equals(Piece.Color.BLACK);
+	}
+
+
+	/**
+	 * Determines whether this piece is of the current player (friendly).
+	 *
+	 * @param whiteToMove  whether it is the white player's turn to move.
+	 *
+	 * @return the type of the piece.
+	 */
 	public boolean friendly(boolean whiteToMove) {
-		if ((this.color == Color.WHITE && whiteToMove) ||
-			(this.color == Color.BLACK && !whiteToMove))
+		if ((this.color.equals(Color.WHITE) && whiteToMove) ||
+			(this.color.equals(Color.BLACK) && !whiteToMove))
 			return true;
 		return false;
 	}
-	// end: GET methods
 
 
-	// ====================================================================================================
-	// public boolean equals
-	//
-	// Checks equality between this Piece object and another object. Equality is determined by:
-	//  - Equal type
-	//  - Equal color
-	//
-	// Arguments--
-	//
-	//  obj: another object to compare equality with
-	//
-	// Returns--
-	//
-	//  Whether the argument obj is equal to this Piece object
-	//
+	/**
+	 * Checks for equality between this {@code Piece} object and another object. Equality is
+	 * determinted by:
+	 * <ul>
+	 * <li> Equal type
+	 * <li> Equal color
+	 * </ul>
+	 *
+	 * @param obj  another object to compare equality with.
+	 *
+	 * @return true if the two objects are equal.
+	 */
 	@Override
 	public boolean equals(Object obj) {
 		Piece pObj;
@@ -116,55 +146,51 @@ public class Piece implements Serializable {
 		if (pObj == null)
 			return false;
 
-		if (pObj.getType() == this.type && pObj.getColor() == this.color)
+		if (pObj.getType().equals(this.type) && pObj.getColor().equals(this.color))
 			return true;
 
 		return false;
 	}
-	// end: public boolean equals
 
 
-	// ====================================================================================================
-	// public String toString
-	//
-	// Returns this Piece object as a string representation
-	//
-	// Returns--
-	//
-	//  The algebraic notation for this Piece object based on type and color. If the type is unknown, then
-	//  the string "?" is returned
-	//
+	/**
+	 * Returns a string representation of this {@code Piece} object.
+	 * <p>
+	 * The string returned follows the chess algebraic notation of the piece type and color. If the
+	 * type is NONE, the string "?" is returned. If the color is NONE and the piece is known, the
+	 * letter returned is always capital (as if the color was WHITE).
+	 *
+	 * @return a string representation of this {@code Piece} object
+	 */
 	@Override
 	public String toString() {
 		String pieceChar = "?";
 
 		switch (this.type) {
-		case Type.PAWN:
+		case PAWN:
 			pieceChar = "P";
 			break;
-		case Type.KNIGHT:
+		case KNIGHT:
 			pieceChar = "N";
 			break;
-		case Type.BISHOP:
+		case BISHOP:
 			pieceChar = "B";
 			break;
-		case Type.ROOK:
+		case ROOK:
 			pieceChar = "R";
 			break;
-		case Type.QUEEN:
+		case QUEEN:
 			pieceChar = "Q";
 			break;
-		case Type.KING:
+		case KING:
 			pieceChar = "K";
 			break;
 		}
 
-		if (this.color == Color.BLACK)
+		if (this.color.equals(Color.BLACK))
 			pieceChar = pieceChar.toLowerCase();
 
 		return pieceChar;
 	}
-	// end: public String toString
 	
 }
-// end: public class Piece

@@ -1,53 +1,42 @@
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-// ServerCLI.java
-// Networking-Chess
-//
-// Created by Jonathan Uhler
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-
-
 package server;
 
 
-import util.Log;
+import jnet.Log;
 import tests.PerftTest;
 import engine.board.Board;
 import engine.board.BoardInfo;
 import engine.fen.FenUtility;
-import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.List;
+import java.util.ArrayList;
 
 
-// +=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=+=
-// public class ServerCLI
-//
-// A simple CLI interface for server-side manipulation of the board state and info
-//
+/**
+ * A simple CLI interface for server-side manipulation of the board state and information.
+ *
+ * @author Jonathan Uhler
+ */
 public class ServerCLI {
 
-	private Server server; // Server hosting the CLI, used to call get/set methods
+	/** The server hosting this CLI. */
+	private Server server;
 	
 
-	// ----------------------------------------------------------------------------------------------------
-	// public ServerCLI
-	//
-	// Arguments--
-	//
-	//  server: the server hosting the CLI, used to call get/set methods to access board information
-	//
+	/**
+	 * Constructs a new {@code ServerCLI} object.
+	 *
+	 * @param server  the server hosting this CLI.
+	 */
 	public ServerCLI(Server server) {
 		this.server = server;
 	}
-	// end: public ServerCLI
 	
 
-	// ====================================================================================================
-	// public void run
-	//
-	// Runs the CLI interface, must be called manually and is not invoked by the constructor so that
-	// there is time for the server hosting the CLI to save the CLI as an object that can be compared
-	// to the "sender" argument in get/set methods
-	//
+	/**
+	 * Runs the command line interface on the current thread. This method is blocking and thus
+	 * should be the last line executed in the {@code Server}'s constructor, or placed in a
+	 * separate thread.
+	 */
 	public void run() {
 		Scanner cliIn = new Scanner(System.in);
 		Log.stdout(Log.INFO, "ServerCLI", "CLI established, type \"help\"");
@@ -56,26 +45,28 @@ public class ServerCLI {
 		while (cliIn.hasNext())
 			this.process(cliIn.nextLine());
 	}
-	// end: public void run
 
 
-	// ====================================================================================================
-	// private ArrayList<String> getopt
-	//
-	// A simple routine to split an input string into options. Splits the argument input by spaces such that
-	// the first element of the array is the command and subsequent elements are arguments to that command.
-	// This method takes quoted string into account (allowing for arguments that contain spaces themselves)
-	//
-	// Arguments--
-	//
-	//  input: the input string to split
-	//
-	// Returns--
-	//
-	//  An ArrayList of strings, as specified above
-	//
-	private ArrayList<String> getopt(String input) {
-		ArrayList<String> parsed = new ArrayList<>();
+	/**
+	 * Splits an input string into command line options. Splits the argument input by spaces
+	 * such that the first element of the array is the command and subsequent elements are
+	 * arguments to that command.
+	 * <p>
+	 * This method takes quoted strings into account (allowing for multi-word arguments that
+	 * contain spaces). No command validation is done by this method, it is strictly a
+	 * parsing routine.
+	 *
+	 * @param input  the input string to parse.
+	 *
+	 * @return a {@code List} containing the components of the command.
+	 *
+	 * @throws NullPointerException  if {@code input == null}
+	 */
+	private List<String> getopt(String input) {
+		if (input == null)
+			throw new NullPointerException("input was null");
+		
+		List<String> parsed = new ArrayList<>();
 
 		String arg = "";
 		boolean quoted = false;
@@ -94,34 +85,33 @@ public class ServerCLI {
 			else
 				arg += c;
 		}
-		// Since there is no space at the end of the input string, add the final argument being built
+		
+		// Since there is no space at the end of the input string, add the final argument
+		// being built outside of the loop
 		parsed.add(arg);
 
 		return parsed;
 	}
-	// end: private ArrayList<String> getopt
 
 
-	// ====================================================================================================
-	// private void process
-	//
-	// Processes an input string as a command, and calls the appropriate routine
-	//
-	// Arguments--
-	//
-	//  input: the input string for a command
-	//
+	/**
+	 * Processes an input string as a command and calls the appropriate routine to handle the
+	 * command.
+	 *
+	 * @param input  the input string to process.
+	 */
 	private void process(String input) {
 		// Get the options for input formatted
-		ArrayList<String> args = this.getopt(input);
+		List<String> args = this.getopt(input);
 		if (args.size() == 0) {
 			Log.stdout(Log.ERROR, "ServerCLI", "Invalid entry");
 			return;
 		}
 
-		String cmd = args.remove(0); // Remove the first element (command name) and assign the value to this variable
+		 // Remove the first element (command name) and assign the value to "cmd"
+		String cmd = args.remove(0);
 
-		// Call routine
+		// Call routine based on the command
 		switch (cmd) {
 		case "help" -> this.help();
 		case "set" -> this.set(args);
@@ -132,11 +122,11 @@ public class ServerCLI {
 		default -> Log.stdout(Log.ERROR, "ServerCLI", "Invalid command: " + cmd);
 		}
 	}
-	// and: private void process
 
 
-	// ====================================================================================================
-	// COMMAND methods
+	/**
+	 * Prints the help message.
+	 */
 	private void help() {
 		// Print all the help information
 		Log.stdout(Log.INFO, "ServerCLI", "Usage: <command> [args]");
@@ -147,8 +137,10 @@ public class ServerCLI {
 		Log.stdout(Log.INFO, "ServerCLI", "\treset");
 		Log.stdout(Log.INFO, "ServerCLI", "\t\tsets the boards to the starting position");
 		Log.stdout(Log.INFO, "ServerCLI", "\tperft [-s <start>] [-e <end>] [-d]");
-		Log.stdout(Log.INFO, "ServerCLI", "\t\truns perft test suite, optionally with a start/end test");
-		Log.stdout(Log.INFO, "ServerCLI", "\t\tand the ability to print node count after each move");
+		Log.stdout(Log.INFO, "ServerCLI",
+				   "\t\truns perft test suite, optionally with a start/end test");
+		Log.stdout(Log.INFO, "ServerCLI",
+				   "\t\tand the ability to print node count after each move");
 		Log.stdout(Log.INFO, "ServerCLI", "\taddr");
 		Log.stdout(Log.INFO, "ServerCLI", "\t\tprints the server address and port");
 		Log.stdout(Log.INFO, "ServerCLI", "\thelp");
@@ -156,25 +148,41 @@ public class ServerCLI {
 	}
 
 
-	private void set(ArrayList<String> args) {
+	/**
+	 * Sets the chess board position from a FEN string. If the command fails for any
+	 * reason, the call is terminated and ignored.
+	 *
+	 * @param args  command line arguments.
+	 */
+	private void set(List<String> args) {
 		if (args.size() == 0) {
 			Log.stdout(Log.ERROR, "ServerCLI", "Missing argument for set <fen>");
 			return;
 		}
 
 		String arg = args.get(0);
-		BoardInfo setInfo = FenUtility.informationFromFen(arg);
-		if (setInfo == null) {
-			Log.stdout(Log.ERROR, "ServerCLI", "Invalid argument for set: " + arg);
+		BoardInfo setInfo;
+		try {
+			setInfo = FenUtility.informationFromFen(arg);
+		}
+		catch (RuntimeException e) {
+			Log.stdout(Log.ERROR, "ServerCLI", "Invalid argument for set: " + arg + " (" + e + ")");
 			return;
 		}
 		Log.stdout(Log.INFO, "ServerCLI", "Updating board...");
-		this.server.setBoardInfo(setInfo, this);
+		this.server.setBoardInfo(setInfo);
 	}
 
 
+	/**
+	 * Get the chess board position as a FEN string. The result is printed to the standard output 
+	 * using the logging utility of {@code jnet}. If the command fails for any reason, the call is 
+	 * terminated and ignored.
+	 *
+	 * @see jnet.Log
+	 */
 	private void get() {
-		BoardInfo boardInfo = this.server.getBoardInfo(this);
+		BoardInfo boardInfo = this.server.getBoardInfo();
 		if (boardInfo != null)
 			Log.stdout(Log.INFO, "ServerCLI", boardInfo.toString());
 		else
@@ -182,14 +190,24 @@ public class ServerCLI {
 	}
 
 
+	/**
+	 * Resets the chess board position to the starting FEN string. If the command fails for any
+	 * reason, the call is terminated and ignored.
+	 */
 	private void reset() {
-		ArrayList<String> args = new ArrayList<>();
+		List<String> args = new ArrayList<>();
 		args.add(Board.START_FEN);
 		this.set(args);
 	}
 
 
-	private void perft(ArrayList<String> args) {
+	/**
+	 * Runs performance tests. If the command fails for any reason, the call is terminated and 
+	 * ignored.
+	 *
+	 * @param args  command line arguments.
+	 */
+	private void perft(List<String> args) {
 		int start = 0;
 		int end = PerftTest.TESTS.size() - 1;
 		boolean divide = args.contains("-d");
@@ -204,19 +222,26 @@ public class ServerCLI {
 				end = Integer.parseInt(args.get(endIndex + 1));
 		}
 		catch (NumberFormatException e) {
-			Log.stdout(Log.ERROR, "ServerCLI", "Invalid argument for perft -s or -e, must be an integer");
+			Log.stdout(Log.ERROR, "ServerCLI",
+					   "Invalid argument for perft -s or -e, must be an integer");
 			return;
 		}
 		
-		Log.stdout(Log.INFO, "ServerCLI", "Running perft test suite, this may take several minutes...");
+		Log.stdout(Log.INFO, "ServerCLI",
+				   "Running perft test suite, this may take several minutes...");
 		PerftTest.run(start, end, divide);
 	}
 
 
+	/**
+	 * Prints the IP address and port the server is hosted on. If the command fails for any
+	 * reason, the call is terminated and ignored.
+	 *
+	 * @param args  command line arguments.
+	 */
 	private void addr() {
 		Log.stdout(Log.INFO, "ServerCLI", "Server can be reached at: " +
 				   this.server.getIP() + ":" + this.server.getPort());
 	}
-	// end: COMMAND methods
 	
 }

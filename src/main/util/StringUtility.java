@@ -37,6 +37,9 @@ public class StringUtility {
 	//  A string under the rules described above
 	//
 	public static String coordinateToString(Coordinate c) {
+		if (c == null)
+			throw new NullPointerException("coordinate was null");
+		
 		// The empty string "" is used in some places here to force char and int to cast to String. It might
 		// not be necessary in all places, but ensures proper casting
 		char column = (c.isValidTile()) ? (char)('a' + c.getX()) : ('?');
@@ -61,9 +64,12 @@ public class StringUtility {
 	//  A coordinate object, or null if the string could not be parsed
 	//
 	public static Coordinate stringToCoordinate(String raw) {
+		if (raw == null)
+			throw new NullPointerException("raw string was null");
+		
 		// The String must be exactly two characters, a row and a column
 		if (raw.length() != 2)
-			return null;
+			throw new IllegalArgumentException("invalid raw string length: expected 2, found" + raw.length());
 
 		char columnChar = raw.charAt(0);
 		char rowChar = raw.charAt(1);
@@ -76,9 +82,9 @@ public class StringUtility {
 		int row = Character.getNumericValue(rowChar) - 1;
 
 		Coordinate coordinate = new Coordinate(column, row);
-		if (coordinate.isValidTile())
-			return coordinate;
-		return null;
+		if (!coordinate.isValidTile())
+			throw new IllegalArgumentException("invalid raw string: " + raw);
+		return coordinate;
 	}
 	// end: public static Coordinate stringToCoordinate
 	
@@ -107,9 +113,7 @@ public class StringUtility {
 			return map;
 		}
 		catch (Exception e) {
-			Log.stdlog(Log.ERROR, "StringUtility", "stringToMap failed");
-			Log.stdlog(Log.ERROR, "StringUtility", "\t" + e);
-			return null;
+		    throw new IllegalArgumentException("cannot parse raw string as map: " + e);
 		}
 	}
 	// end: public static Map<String, String> stringToMap
@@ -138,9 +142,7 @@ public class StringUtility {
 			return raw;
 		}
 		catch (Exception e) {
-			Log.stdlog(Log.ERROR, "StringUtility", "stringToMap failed");
-			Log.stdlog(Log.ERROR, "StringUtility", "\t" + e);
-			return null;
+		    throw new IllegalArgumentException("cannot parse map as string: " + e);
 		}
 	}
 	// end: public static String mapToString
