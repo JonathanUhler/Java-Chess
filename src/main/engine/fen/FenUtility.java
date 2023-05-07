@@ -1,8 +1,7 @@
 package engine.fen;
 
 
-import util.Coordinate;
-import util.StringUtility;
+import engine.util.Coordinate;
 import engine.board.BoardInfo;
 import engine.piece.Piece;
 
@@ -239,7 +238,7 @@ public class FenUtility {
 
 		fenString += " ";
 		if (enPassantTile != null)
-			fenString += StringUtility.coordinateToString(enPassantTile);
+			fenString += enPassantTile.toString();
 		else
 			fenString += "-";
 

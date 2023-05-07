@@ -7,6 +7,7 @@ import jnet.Log;
 import engine.board.Board;
 import engine.board.BoardInfo;
 import engine.fen.FenUtility;
+import engine.piece.Piece;
 import java.io.IOException;
 import javax.swing.JOptionPane;
 
@@ -41,19 +42,21 @@ public class Server extends JServer {
 
 	@Override
 	public void clientConnected(JClientSocket clientSocket) {
-
+		// MARK: test code
+		clientSocket.send(Communication.serialize(Communication.cmdColor(Piece.Color.WHITE)));
+		clientSocket.send(Communication.serialize(Communication.cmdState(this.board.getInfo())));
 	}
 
 
 	@Override
 	public void clientCommunicated(byte[] recv, JClientSocket clientSocket) {
-
+		
 	}
 
 
 	@Override
 	public void clientDisconnected(JClientSocket clientSocket) {
-
+		
 	}
 	
 

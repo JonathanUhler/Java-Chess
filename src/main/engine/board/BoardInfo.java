@@ -1,7 +1,7 @@
 package engine.board;
 
 
-import util.Coordinate;
+import engine.util.Coordinate;
 import engine.fen.FenUtility;
 import engine.piece.Piece;
 import engine.move.Move;
@@ -166,7 +166,7 @@ public class BoardInfo implements Serializable {
 	 *
 	 * @throws IllegalArgumentException  if {@code c == null} or {@code !(c.isValidTile())}.
 	 *
-	 * @see util.Coordinate
+	 * @see engine.util.Coordinate
 	 */
 	public Piece getPiece(Coordinate c) {
 		if (c == null || !c.isValidTile())

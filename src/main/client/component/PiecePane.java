@@ -1,8 +1,9 @@
-package client;
+package client.component;
 
 
-import util.StringUtility;
-import util.Coordinate;
+import client.Screen;
+import server.Communication;
+import engine.util.Coordinate;
 import engine.board.BoardInfo;
 import engine.piece.Piece;
 import engine.move.Move;
@@ -13,11 +14,14 @@ import java.awt.Color;
 import java.awt.Point;
 import java.awt.Dimension;
 import java.awt.event.MouseAdapter;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
 import javax.swing.JLayeredPane;
 import javax.swing.JLabel;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import java.util.List;
+import java.util.Map;
 import java.util.ArrayList;
 
 
@@ -25,10 +29,44 @@ import java.util.ArrayList;
  * A pane that holds chess pieces as {@code JLabel} objects. This component handles mouse control 
  * of the game and drawing of the chess pieces and board. A secondary graphical class is expected 
  * to act as a screen which interfaces with a chess server.
+ * <p>
+ * Action listeners can be added to this class, which will be notified with an {@code ActionEvent}
+ * object upon user interaction with the {@code PieceAdapter} managed by this class. In this
+ * case, an "action" is always generated when the {@code PieceAdapter.mouseReleased} method
+ * is invoked (e.g. when the end-user lets go of the piece being dragged).
+ * <p>
+ * The events sent to action listeners have the following behavior:
+ * <ul>
+ * <li> A non-{@code null} {@code ActionEvent} is sent to the {@code actionPerformed} method
+ *      of all registered listeners
+ * <li> The {@code source} component of the event is always {@code this} piece pane
+ * <li> The {@code id} of the event is always {@code ACTION_PERFORMED}
+ * <li> The {@code command} string of the event is a serialized {@code Map} generated using
+ *      the {@code Communication.cmdMove} method (this payload contains the move's start tile,
+ *      end tile, and flag)
+ * </ul>
+ * The move data from the action event can be retrieved by the following:
+ * <pre>
+ * {@code
+ * String commandStr = e.getActionCommand();
+ * Map<String, String> command = Communication.deserialize(commandStr);
+ * Coordinate startTile = Coordinate.fromString(command.get(Communication.KEY_START));
+ * Coordinate endTile = Coordinate.fromString(command.get(Communication.KEY_END));
+ * Move.Flag flag = Move.Flag.valueOf(command.get(Communication.KEY_FLAG));
+ * Move move = new Move(startTile, endTile, flag);
+ * }
+ * </pre>
+ *
+ * @see server.Communication
+ * @see java.awt.event.ActionEvent
  *
  * @author Jonathan Uhler
  */
 public class PiecePane extends JLayeredPane {
+
+	/** List of all components listening for adapter events fromt this pane. */
+	private List<ActionListener> actionListeners;
+	
 
 	/** List of tiles that should be highlighted, used to display legal moves. */
 	private List<Coordinate> highlightedTiles;
@@ -48,6 +86,8 @@ public class PiecePane extends JLayeredPane {
 	public PiecePane(Piece.Color playerColor) {
 		if (playerColor == null)
 			throw new NullPointerException("playerColor was null");
+
+		this.actionListeners = new ArrayList<>();
 
 		this.highlightedTiles = new ArrayList<>();
 		this.playerColor = playerColor;
@@ -178,6 +218,58 @@ public class PiecePane extends JLayeredPane {
 			// Add the piece
 			this.add(pieceLabel);
 		}
+	}
+
+	/**
+	 * Adds the specified action listener to receive action events from this pane.
+	 *
+	 * @param l  the action listener to be added.
+	 */
+	public void addActionListener(ActionListener l) {
+		this.actionListeners.add(l);
+	}
+
+
+	/**
+	 * Removes the specified action listener so that it no longer receives action events from 
+	 * this pane.
+	 *
+	 * @param l  the action listener to be removed.
+	 */
+	public void removeActionListener(ActionListener l) {
+		this.actionListeners.remove(l);
+	}
+
+
+	/**
+	 * Invoked when an event occurs in this pane's {@code PieceAdapter}. The arguments
+	 * given represent the start and end tile of a piece that was moved by the adapter. These
+	 * tiles may or may not represent a legal move. Any argument that is {@code null}
+	 * or not a valid tile results in the call to this method being ignored.
+	 *
+	 * @param startTile  the origin of the piece moved.
+	 * @param endTile    the destination of the piece moved.
+	 */
+	public void adpaterEvent(Coordinate startTile, Coordinate endTile) {
+		if (startTile == null || endTile == null)
+			return;
+		if (!startTile.isValidTile() || !endTile.isValidTile())
+			return;
+
+		// Get all components of the move
+		Piece piece = this.latestPosition.getPiece(startTile);
+		Coordinate enPassantTile = this.latestPosition.enPassantTile;
+		Move.Flag flag = Move.inferFlag(piece, startTile, endTile, enPassantTile);
+
+		// Generate a stringified payload to send with the action event
+		Move move = new Move(startTile, endTile, flag);
+		Map<String, String> command = Communication.cmdMove(move);
+		String commandStr = Communication.serialize(command);
+
+	    // Notify all listeners of this pane that an adapter action was performed
+		ActionEvent actionEvent = new ActionEvent(this, ActionEvent.ACTION_PERFORMED, commandStr);
+		for (ActionListener l : this.actionListeners)
+			l.actionPerformed(actionEvent);
 	}
 
 }

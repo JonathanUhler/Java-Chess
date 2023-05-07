@@ -1,5 +1,5 @@
 cd src/main
-javadoc engine/**/*.java util/*.java tests/*.java server/*.java client/*.java \
+javadoc engine/**/*.java tests/*.java server/*.java client/*.java client/**/*.java \
 		-d ../../documentation/javadoc \
 		-cp ../lib/*.jar
 cd ..

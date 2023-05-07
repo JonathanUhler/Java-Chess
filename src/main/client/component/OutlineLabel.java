@@ -1,4 +1,4 @@
-package client;
+package client.component;
 
 
 import javax.swing.JLabel;

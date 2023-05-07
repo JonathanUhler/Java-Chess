@@ -1,6 +1,9 @@
-package client;
+package client.view;
 
 
+import client.Client;
+import client.Screen;
+import client.component.OutlineLabel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
@@ -105,7 +108,7 @@ public class MainView extends View {
 													new JLabel("Port:"),
 													portSpinner};
 
-		int confirm = Chess.displayDialog(prompt, components);
+		int confirm = Client.displayDialog(prompt, components);
 		if (confirm != JOptionPane.OK_OPTION)
 			return null;
 

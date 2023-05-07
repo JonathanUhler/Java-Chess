@@ -1,9 +1,8 @@
 package engine.move;
 
 
-import util.Coordinate;
-import util.Vector;
-import util.StringUtility;
+import engine.util.Coordinate;
+import engine.util.Vector;
 import engine.piece.Piece;
 import java.io.Serializable;
 import javax.swing.JComboBox;
@@ -205,11 +204,12 @@ public class Move implements Serializable {
 		if (piece == null || startTile == null || endTile == null)
 			throw new NullPointerException("null arguments found: piece=" + piece + ", startTile=" +
 										   startTile + ", endTile=" + endTile);
-		if (!startTile.isValidTile() || !endTile.isValidTile() || !enPassantTile.isValidTile())
+		if (!startTile.isValidTile() || !endTile.isValidTile())
 			throw new IllegalArgumentException("invalid tiles found: startTile: " +
 											   startTile.isValidTile() + ", endTile: " +
-											   endTile.isValidTile() + ", enPassantTile: " +
-											   enPassantTile.isValidTile());
+											   endTile.isValidTile());
+		if (enPassantTile != null && !enPassantTile.isValidTile())
+			throw new IllegalArgumentException("invalid EP tile: " + enPassantTile);
 		
 		// Validity check for the data. If a flag cannot be determined because any of the
 		// arguments are invalid, then return NONE as the flag
@@ -320,14 +320,13 @@ public class Move implements Serializable {
 	 * <p>
 	 * An example of a move from A1 to B1 would be:
 	 * <p>
-	 * {@code (0, 0) a1 -> (1, 0) b1 (NONE)}
+	 * {@code a1b1 (NONE)}
 	 *
 	 * @return a string representation of this {@code Move} object.
 	 */
 	@Override
 	public String toString() {
-		return StringUtility.coordinateToString(this.startTile) + " -> " +
-			StringUtility.coordinateToString(this.endTile) + " (" + this.flag + ")";
+		return this.startTile + "" + this.endTile + " (" + this.flag + ")";
 	}
 
 }

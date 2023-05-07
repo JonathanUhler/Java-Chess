@@ -1,6 +1,8 @@
-package client;
+package client.view;
 
 
+import client.Screen;
+import client.component.OutlineLabel;
 import javax.swing.JButton;
 import javax.swing.JTextPane;
 import javax.swing.JScrollPane;
@@ -97,7 +99,7 @@ public class InstView extends View {
 		this.backButton = new JButton("Back");
 
 		this.instTextPane.setPreferredSize(new Dimension(Screen.TILE_SIZE * 7,
-														 Screen.TILE_SIZE * 6));
+														 Screen.TILE_SIZE * 5));
 		this.instTextPane.setEditable(false);
 		this.instTextPane.setContentType("text/html");
 
@@ -126,7 +128,9 @@ public class InstView extends View {
 		this.add(titleLabel, gbc);
 
 		gbc.gridy++;
-		this.add(new JScrollPane(this.instTextPane), gbc);
+		JScrollPane instScrollPane = new JScrollPane(this.instTextPane);
+		instScrollPane.setPreferredSize(this.instTextPane.getPreferredSize());
+		this.add(instScrollPane, gbc);
 
 		gbc.gridy++;
 		this.add(this.backButton, gbc);

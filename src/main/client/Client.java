@@ -15,7 +15,7 @@ import java.awt.Dimension;
  *
  * @author Jonathan Uhler
  */
-public class Chess {
+public class Client {
 
 
 	/**
@@ -35,6 +35,8 @@ public class Chess {
 	 *
 	 * @param title       the title of the message.
 	 * @param components  a list of components to display.
+	 *
+	 * @return a {@code JOptionPane.*_OPTION}.
 	 */
 	public static int displayDialog(String title, JComponent[] components) {
 		JPanel panel = new JPanel();

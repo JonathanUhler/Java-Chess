@@ -1,4 +1,4 @@
-package util;
+package engine.util;
 
 
 import java.io.Serializable;
@@ -138,13 +138,47 @@ public class Coordinate implements Serializable {
 
 
 	/**
+	 * Returns a {@code Coordinate} object from a string. This method and the 
+	 * {@code Coordinate.toString} method are mathematical inverses. Note that this method does
+	 * not validate the coordinate beyond ensuring a coordinate object can be generated without
+	 * fatal exceptions. In other words, {@code Coordinate.fromString(str).isValidTile()} may
+	 * or may not be {@code true}.
+	 *
+	 * @param str  the string to convert to a {@code Coordinate}.
+	 *
+	 * @return a {@code Coordinate} object.
+	 *
+	 * @throws NullPointerException      if {@code str == null}.
+	 * @throws IllegalArgumentException  if {@code str.length() != 2}.
+	 *
+	 * @see toString
+	 */
+	public static Coordinate fromString(String str) {
+		if (str == null)
+			throw new NullPointerException("str was null");
+		if (str.length() != 2)
+			throw new IllegalArgumentException("invalid str length for: " + str);
+
+		char colChar = str.charAt(0);
+		char rowChar = str.charAt(1);
+
+		int col = colChar - 'a';
+		int row = rowChar - '1';
+
+		return new Coordinate(col, row);
+	}
+
+
+	/**
 	 * Returns a string representation of this {@code Coordinate} object.
 	 *
 	 * @return a string representation of this {@code Coordinate} object.
 	 */
 	@Override
 	public String toString() {
-		return "(" + this.x + "," + this.y + ") " + StringUtility.coordinateToString(this);
+		char col = this.isValidTile() ? (char) ('a' + this.x) : '?';
+		String row = this.isValidTile() ? Integer.toString(this.y + 1) : "?";
+		return col + "" + row;
 	}
 
 }

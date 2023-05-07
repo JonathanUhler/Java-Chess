@@ -1,8 +1,10 @@
 client
+client.component
+client.view
 engine.board
 engine.fen
 engine.move
 engine.piece
+engine.util
 server
 tests
-util

@@ -1,6 +1,7 @@
-package client;
+package client.view;
 
 
+import client.Screen;
 import javax.swing.JPanel;
 import java.awt.GridBagLayout;
 
@@ -15,8 +16,6 @@ import java.awt.GridBagLayout;
  * The various default views, most notably the {@code GameView} can be extended by programmers
  * to achieve greater functionality. Additionally, the move generation and movement system
  * can be modified similarly.
- *
- * @see client.GameView
  *
  * @author Jonathan Uhler
  */

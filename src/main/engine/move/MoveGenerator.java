@@ -1,8 +1,8 @@
 package engine.move;
 
 
-import util.Vector;
-import util.Coordinate;
+import engine.util.Vector;
+import engine.util.Coordinate;
 import engine.piece.Piece;
 import engine.board.BoardInfo;
 import engine.board.Board;

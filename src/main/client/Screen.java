@@ -1,6 +1,10 @@
 package client;
 
 
+import client.view.MainView;
+import client.view.InstView;
+import client.view.GameView;
+import client.view.ChessView;
 import javax.swing.JPanel;
 import java.awt.Dimension;
 
@@ -27,7 +31,7 @@ public class Screen extends JPanel {
 	public Screen() {
 		this.mainView = new MainView(this);
 		this.instView = new InstView(this);
-		this.gameView = new GameView(this);
+		this.gameView = new ChessView(this);
 
 		this.mainView.setPreferredSize(new Dimension(Screen.TILE_SIZE * 8, Screen.TILE_SIZE * 8));
 		this.instView.setPreferredSize(new Dimension(Screen.TILE_SIZE * 8, Screen.TILE_SIZE * 8));

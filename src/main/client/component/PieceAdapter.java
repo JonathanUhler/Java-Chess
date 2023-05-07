@@ -1,7 +1,8 @@
-package client;
+package client.component;
 
 
-import util.Coordinate;
+import client.Screen;
+import engine.util.Coordinate;
 import engine.move.Move;
 import engine.move.MoveGenerator;
 import engine.piece.Piece;
@@ -141,7 +142,7 @@ public class PieceAdapter extends MouseAdapter {
 		Coordinate endTile = this.pointToCoordinate(endLocation);
 
 		this.piecePane.setHighlightedTiles(new ArrayList<>());
-		//MARK: this.piecePane.send(startTile, endTile);
+	    this.piecePane.adpaterEvent(startTile, endTile);
 	}
 	
 }
