@@ -6,7 +6,7 @@ import jnet.Log;
 import client.Client;
 import client.Screen;
 import client.component.PiecePane;
-import server.Server;
+import server.ChessServer;
 import server.Communication;
 import engine.board.BoardInfo;
 import engine.fen.FenUtility;
@@ -17,8 +17,18 @@ import java.awt.GridBagConstraints;
 import java.util.Map;
 
 
+/**
+ * A {@code GameView} to manage a classic game of chess.
+ *
+ * @author Jonathan Uhler
+ */
 public class ChessView extends GameView {
 
+	/**
+	 * Constructs a new {@code ChessView} object.
+	 *
+	 * @param owner  a {@code Screen} object that manages this view.
+	 */
 	public ChessView(Screen owner) {
 		super(owner);
 	}
@@ -30,7 +40,7 @@ public class ChessView extends GameView {
 				@Override
 				public void run() {
 					try {
-						ChessView.super.setServer(new Server(ip, port));
+						ChessView.super.setServer(new ChessServer(ip, port));
 					}
 					catch (IOException e) {
 						Client.displayMessage("Connection Error", "Unable to start server on " +
@@ -77,6 +87,7 @@ public class ChessView extends GameView {
 				Log.stdlog(Log.ERROR, "ChessView", "cannot parse color in command: " + command);
 				return;
 			}
+			System.out.println(playerColor);
 
 			// Create the piece pane
             PiecePane piecePane = new PiecePane(playerColor);

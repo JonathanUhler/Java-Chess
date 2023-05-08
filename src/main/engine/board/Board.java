@@ -4,7 +4,6 @@ package engine.board;
 import engine.util.Coordinate;
 import engine.util.Vector;
 import engine.move.Move;
-import engine.move.MoveGenerator;
 import engine.piece.Piece;
 import java.util.LinkedList;
 
@@ -58,9 +57,22 @@ public class Board {
 
 	/**
 	 * Updates the {@code BoardInfo} object managed by this class with a given {@code Move}. The 
-	 * legality of the argument {@code move} is validated before any operation is completed. This 
-	 * method will throw exceptions upon failure to perform the move. The {@code Move} class makes 
-	 * some attempts to salvage illegal moves upon construction.
+	 * argument {@code move} is validated under some basic conditions before any operation is 
+	 * completed, but the legality of the move (e.g. whether it is part of 
+	 * {@code MoveGenerator.generateLegalMoves}) is <b>NOT</b> validated. It is the responsibility 
+	 * of the caller to make sure the move is legal. An unspecified behavior will occur if an 
+	 * illegal, but valid, move is passed. This method will throw exceptions upon failure to 
+	 * perform the move.
+	 * <p>
+	 * A "valid" move is defined as follows:
+	 * <ul>
+	 * <li> {@code move != null}
+	 * <li> {@code startTile.isValidTile() == true}
+	 * <li> {@code endTile.isValidTile() == true}
+	 * <li> The piece on {@code startTile} is non-{@code null}
+	 * <li> A "valid" move is <b>NOT</b> necessarily a legal move (where legal means generated
+	 *      by {@code MoveGenerator.generateLegalMoves})
+	 * </ul>
 	 *
 	 * @param move  the move to make.
 	 *
@@ -82,6 +94,7 @@ public class Board {
 		Coordinate endTile = move.getEndTile();
 		Move.Flag flag = move.getFlag();
 
+		// Gather other information about the move and board state to play the move
 		Piece movePiece = boardInfo.getPiece(startTile);
 		Piece capturedPiece = boardInfo.getPiece(endTile);
 
