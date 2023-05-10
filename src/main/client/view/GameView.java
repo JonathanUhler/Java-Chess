@@ -217,6 +217,12 @@ public abstract class GameView extends View {
 	}
 
 
+	@Override
+	public String toString() {
+		return "Unnamed Variant";
+	}
+
+
 	/**
 	 * Hosts a new server on the specified IP address and port. This routine should call the
 	 * {@code setServer} method as part of the server initialization. This method is invoked

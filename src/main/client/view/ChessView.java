@@ -207,4 +207,10 @@ public class ChessView extends GameView implements ActionListener {
 		}
 	}
 
+
+	@Override
+	public String toString() {
+		return "Classic Chess";
+	}
+
 }

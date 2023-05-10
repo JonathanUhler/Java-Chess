@@ -6,6 +6,7 @@ import client.Screen;
 import client.component.OutlineLabel;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JComboBox;
 import javax.swing.JTextField;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
@@ -22,6 +23,10 @@ import java.awt.Color;
  * Displays the main menu.
  */
 public class MainView extends View {
+
+	/** The game views supported by this chess game. */
+	private GameView[] gameViews;
+	
 
 	/** Hosts a new game. */
 	private JButton hostButton;
@@ -40,6 +45,8 @@ public class MainView extends View {
 	 */
 	public MainView(Screen owner) {
 		super(owner);
+
+		this.gameViews = new GameView[] {new ChessView(owner)};
 
 		this.hostButton = new JButton("Host Game");
 		this.joinButton = new JButton("Join Game");
@@ -99,11 +106,14 @@ public class MainView extends View {
 	 * @return an user-defined IP address and port.
 	 */
 	private Object[] getConnectionInfo(String prompt) {
+		JComboBox<GameView> variantComboBox = new JComboBox<>(this.gameViews);
 		JTextField ipTextField = new JTextField(8);
 		JSpinner portSpinner = new JSpinner(new SpinnerNumberModel(1024, 1024, 49151, 1));
 		JSpinner.NumberEditor portSpinnerEditor = new JSpinner.NumberEditor(portSpinner, "#");
 		portSpinner.setEditor(portSpinnerEditor);
-		JComponent[] components = new JComponent[] {new JLabel("IP Address:"),
+		JComponent[] components = new JComponent[] {new JLabel("Chess Variant:"),
+													variantComboBox,
+													new JLabel("IP Address:"),
 													ipTextField,
 													new JLabel("Port:"),
 													portSpinner};
@@ -112,10 +122,11 @@ public class MainView extends View {
 		if (confirm != JOptionPane.OK_OPTION)
 			return null;
 
+		GameView gameView = (GameView) variantComboBox.getSelectedItem();
 		String ip = ipTextField.getText();
 		int port = (Integer) portSpinner.getValue();
 
-		return new Object[] {ip, port};
+		return new Object[] {gameView, ip, port};
 	}
 
 
@@ -126,11 +137,12 @@ public class MainView extends View {
 	    Object[] connectionInfo = this.getConnectionInfo("Host Game");
 		if (connectionInfo == null)
 			return;
-		
-		String ip = (String) connectionInfo[0];
-		int port = (Integer) connectionInfo[1];
 
-		super.owner().displayGameView(ip, port, true);
+		GameView gameView = (GameView) connectionInfo[0];
+		String ip = (String) connectionInfo[1];
+		int port = (Integer) connectionInfo[2];
+
+		super.owner().displayGameView(gameView, ip, port, true);
 	}
 
 
@@ -141,11 +153,12 @@ public class MainView extends View {
 		Object[] connectionInfo = this.getConnectionInfo("Join Game");
 		if (connectionInfo == null)
 			return;
-		
-		String ip = (String) connectionInfo[0];
-		int port = (Integer) connectionInfo[1];
 
-		super.owner().displayGameView(ip, port);
+		GameView gameView = (GameView) connectionInfo[0];
+		String ip = (String) connectionInfo[1];
+		int port = (Integer) connectionInfo[2];
+
+		super.owner().displayGameView(gameView, ip, port);
 	}
 
 

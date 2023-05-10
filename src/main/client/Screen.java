@@ -4,7 +4,6 @@ package client;
 import client.view.MainView;
 import client.view.InstView;
 import client.view.GameView;
-import client.view.ChessView;
 import javax.swing.JPanel;
 import java.awt.Dimension;
 
@@ -21,8 +20,6 @@ public class Screen extends JPanel {
     private MainView mainView;
 	/** The instructions view. */
     private InstView instView;
-	/** The game view. */
-	private GameView gameView;
 
 
 	/**
@@ -31,7 +28,6 @@ public class Screen extends JPanel {
 	public Screen() {
 		this.mainView = new MainView(this);
 		this.instView = new InstView(this);
-		this.gameView = new ChessView(this);
 
 		this.displayMainView();
 	}
@@ -68,25 +64,27 @@ public class Screen extends JPanel {
 	/**
 	 * Displays the game view after joining an existing game.
 	 *
-	 * @param ip    the IP address to join the game on.
-	 * @param port  the port to join the game on.
+	 * @param gameView  the game view to display.
+	 * @param ip        the IP address to join the game on.
+	 * @param port      the port to join the game on.
 	 */
-	public void displayGameView(String ip, int port) {
-	    this.displayGameView(ip, port, false);
+	public void displayGameView(GameView gameView, String ip, int port) {
+	    this.displayGameView(gameView, ip, port, false);
 	}
 
 
 	/**
 	 * Displays the game view after hosting and/or joining a new game.
 	 *
-	 * @param ip       the IP address to host/join the game on.
-	 * @param port     the port to host/join the game on.
-	 * @param hosting  whether a new game should be hosted, or an existing game joined.
+	 * @param gameView  the game view to display.
+	 * @param ip        the IP address to host/join the game on.
+	 * @param port      the port to host/join the game on.
+	 * @param hosting   whether a new game should be hosted, or an existing game joined.
 	 */
-	public void displayGameView(String ip, int port, boolean hosting) {
+	public void displayGameView(GameView gameView, String ip, int port, boolean hosting) {
 		this.clearGraphicsContext();
-		this.gameView.connect(ip, port, hosting);
-		this.add(this.gameView);
+		gameView.connect(ip, port, hosting);
+		this.add(gameView);
 	}
 
 }
