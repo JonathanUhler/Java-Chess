@@ -22,6 +22,8 @@ public class Communication {
 	public static final String CMD_MOVE = "move";
 	/** Value indicating a board state command. */
 	public static final String CMD_STATE = "state";
+	/** Value indicating a new game command. */
+	public static final String CMD_RESTART = "restart";
 	/** Key indicating the type of command sent. */
 	public static final String KEY_CMD = "cmd";
 	/** Key indicating the color of the player in the scope of the command. */
@@ -181,6 +183,31 @@ public class Communication {
 		map.put(Communication.KEY_CMD, Communication.CMD_STATE);
 	    map.put(Communication.KEY_FEN, FenUtility.fenFromInformation(info));
 		map.put(Communication.KEY_STATE, info.inferState().name());
+		return map;
+	}
+
+
+	/**
+	 * Requests that the server starts a new game, keeping the same player list.
+	 * <p>
+	 * This command is comprised of the following components:
+	 * <table style="border: 1px solid black">
+	 *  <caption>{@code restart} Command Payload</caption>
+	 *  <tr style="border: 1px solid black">
+	 *   <th style="border: 1px solid black"> Key
+	 *   <th style="border: 1px solid black"> Commentary
+	 *  </tr>
+	 *  <tr style="border: 1px solid black">
+	 *   <td style="border: 1px solid black"> {@code cmd}
+	 *   <td style="border: 1px solid black"> Identifies this command, always {@code restart}.
+	 *  </tr>
+	 * </table>
+  	 *
+	 * @return the payload for a board state command.
+	 */
+	public static Map<String, String> cmdRestart() {
+		Map<String, String> map = new HashMap<>();
+		map.put(Communication.KEY_CMD, Communication.CMD_RESTART);
 		return map;
 	}
 	

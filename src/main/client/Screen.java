@@ -33,10 +33,6 @@ public class Screen extends JPanel {
 		this.instView = new InstView(this);
 		this.gameView = new ChessView(this);
 
-		this.mainView.setPreferredSize(new Dimension(Screen.TILE_SIZE * 8, Screen.TILE_SIZE * 8));
-		this.instView.setPreferredSize(new Dimension(Screen.TILE_SIZE * 8, Screen.TILE_SIZE * 8));
-		this.gameView.setPreferredSize(new Dimension(Screen.TILE_SIZE * 8, Screen.TILE_SIZE * 8));
-
 		this.displayMainView();
 	}
 

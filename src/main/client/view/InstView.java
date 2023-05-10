@@ -144,4 +144,10 @@ public class InstView extends View {
 		super.owner().displayMainView();
 	}
 
+
+	@Override
+	public Dimension getPreferredSize() {
+		return new Dimension(Screen.TILE_SIZE * 8, Screen.TILE_SIZE * 8);
+	}
+
 }

@@ -1,6 +1,7 @@
 package client.view;
 
 
+import client.Client;
 import client.Screen;
 import javax.swing.JPanel;
 import java.awt.GridBagLayout;
@@ -64,6 +65,7 @@ public abstract class View extends JPanel {
 		this.revalidate();
 		this.repaint();
 		this.display();
+		Client.pack();
 	}
 
 

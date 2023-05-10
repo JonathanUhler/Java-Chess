@@ -13,7 +13,9 @@ import engine.fen.FenUtility;
 import engine.piece.Piece;
 import java.io.IOException;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.GridBagConstraints;
+import javax.swing.JButton;
 import java.util.Map;
 
 
@@ -22,7 +24,16 @@ import java.util.Map;
  *
  * @author Jonathan Uhler
  */
-public class ChessView extends GameView {
+public class ChessView extends GameView implements ActionListener {
+
+	/** Whether the current game is still active. */
+	private boolean playing;
+
+	/** Button to restart the game after finished. */
+	private JButton restartButton;
+	/** Button to quit the game after finished. */
+	private JButton quitButton;
+	
 
 	/**
 	 * Constructs a new {@code ChessView} object.
@@ -31,6 +42,16 @@ public class ChessView extends GameView {
 	 */
 	public ChessView(Screen owner) {
 		super(owner);
+		this.playing = true;
+
+		System.out.println();
+		this.restartButton = new JButton("New Game");
+		this.quitButton = new JButton("Quit");
+
+		this.restartButton.addActionListener(e -> this.restartAction());
+		this.quitButton.addActionListener(e -> this.quitAction());
+		
+		super.redraw();
 	}
 
 
@@ -87,27 +108,47 @@ public class ChessView extends GameView {
 				Log.stdlog(Log.ERROR, "ChessView", "cannot parse color in command: " + command);
 				return;
 			}
-			System.out.println(playerColor);
 
 			// Create the piece pane
             PiecePane piecePane = new PiecePane(playerColor);
-			piecePane.addActionListener(e -> this.piecePaneAction(e));
+			piecePane.addActionListener(this);
 			super.setPiecePane(piecePane);
 			break;
 		}
 		case Communication.CMD_STATE: {
+			this.playing = true;
+			
+			// Check the piece pane
 			PiecePane piecePane = super.getPiecePane();
 			if (piecePane == null) {
 				Log.stdlog(Log.WARN, "ChessView", "PiecePane is null, ignoring state command");
 				return;
 			}
 
+			// Get the fen string
 			String fenString = command.get(Communication.KEY_FEN);
 			if (fenString == null) {
 				Log.stdlog(Log.ERROR, "ChessView", "missing fen in state command: " + command);
 				return;
 			}
 
+			// Handle the state (display game status to the user if the game ended)
+			String stateStr = command.get(Communication.KEY_STATE);
+			BoardInfo.State state = null;
+			try {
+				state = BoardInfo.State.valueOf(stateStr);
+			}
+			catch (RuntimeException e) {
+				Log.stdlog(Log.ERROR, "ChessView", "invalid state in state command: " + state);
+				return;
+			}
+
+			if (state != BoardInfo.State.ONGOING) {
+				this.playing = false;
+				Client.displayMessage("Game Finished", "Game finished: " + state.name());
+			}
+
+			// Draw the position
 			BoardInfo info;
 			try {
 				info = FenUtility.informationFromFen(fenString);
@@ -116,8 +157,7 @@ public class ChessView extends GameView {
 				Log.stdlog(Log.ERROR, "ChessView", "invalid fen position in state command: " + e);
 				return;
 			}
-			
-			piecePane.drawPosition(info);
+			piecePane.drawPosition(info, this.playing);
 			break;
 		}
 		default:
@@ -127,9 +167,22 @@ public class ChessView extends GameView {
 	}
 
 
-	private void piecePaneAction(ActionEvent e) {
-	    String commandStr = e.getActionCommand();
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		String commandStr = e.getActionCommand();
 		super.getClientSocket().send(commandStr);
+	}
+
+
+	private void restartAction() {
+		Map<String, String> command = Communication.cmdRestart();
+		super.getClientSocket().send(Communication.serialize(command));
+	}
+
+
+	private void quitAction() {
+		super.closeServer();
+		super.owner().displayMainView();
 	}
 
 
@@ -138,10 +191,20 @@ public class ChessView extends GameView {
 		GridBagConstraints gbc = new GridBagConstraints();
 
 		PiecePane piecePane = super.getPiecePane();
+		gbc.gridwidth = 2;
 		gbc.gridx = 0;
 		gbc.gridy = 0;
 		if (piecePane != null)
 			this.add(piecePane, gbc);
+
+		if (!this.playing) {
+			gbc.gridwidth = 1;
+			gbc.gridy++;
+			this.add(this.restartButton, gbc);
+			
+			gbc.gridx++;
+			this.add(this.quitButton, gbc);
+		}
 	}
 
 }

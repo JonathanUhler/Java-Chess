@@ -18,6 +18,10 @@ import java.awt.Dimension;
 public class Client {
 
 
+	/** The main windows. */
+	private static JFrame frame;
+
+
 	/**
 	 * Displays a graphical message.
 	 *
@@ -53,6 +57,14 @@ public class Client {
 											 JOptionPane.OK_CANCEL_OPTION,
 											 JOptionPane.PLAIN_MESSAGE, null);
 	}
+
+
+	/** 
+	 * Repacks the main {@code JFrame}.
+	 */
+	public static void pack() {
+		Client.frame.pack();
+	}
 	
 
 	/**
@@ -61,14 +73,14 @@ public class Client {
 	 * @param args command line arguments.
 	 */
 	public static void main(String[] args) {		
-	    JFrame frame = new JFrame("Chess");
+	    Client.frame = new JFrame("Chess");
 		Screen screen = new Screen();
 
-		frame.add(screen);
+		Client.frame.add(screen);
 
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.pack();
-		frame.setVisible(true);
+		Client.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		Client.frame.pack();
+		Client.frame.setVisible(true);
 	}
 	
 }

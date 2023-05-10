@@ -9,9 +9,12 @@ import engine.piece.Piece;
 import engine.util.Coordinate;
 import engine.move.Move;
 import engine.move.MoveGenerator;
+import engine.fen.FenUtility;
+import engine.board.Board;
 import java.io.IOException;
 import java.util.Map;
 import java.util.List;
+import java.util.ArrayList;
 
 
 /**
@@ -20,6 +23,9 @@ import java.util.List;
  * @author Jonathan Uhler
  */
 public class ChessServer extends Server {
+
+	private List<JClientSocket> clients;
+	
 
 	/**
 	 * Constructs a new {@code ChessServer} object. This server implementation supports
@@ -37,16 +43,31 @@ public class ChessServer extends Server {
 	}
 
 
-	private int i = 0;
 	@Override
 	public void clientConnected(JClientSocket clientSocket) {
-		// MARK: test code
-		Piece.Color color = Piece.Color.WHITE;
-		if (i == 1)
-			color = Piece.Color.BLACK;
+		if (this.clients == null)
+			this.clients = new ArrayList<>();
+		
+		// Add the client to the list of connected clients, prioritizing putting them into
+		// a null index in the list (e.g. the white or black player and not a spectator)
+		int index = this.clients.indexOf(null);
+		if (index == -1)
+			this.clients.add(clientSocket);
+		else
+			this.clients.set(index, clientSocket);
+
+		// Get the color
+		int position = this.clients.indexOf(clientSocket);
+		Piece.Color color;
+		switch (position) {
+		case 0 -> color = Piece.Color.WHITE;
+		case 1 -> color = Piece.Color.BLACK;
+		default -> color = Piece.Color.NONE;
+		}
+
+		// Send information
 		clientSocket.send(Communication.serialize(Communication.cmdColor(color)));
 		clientSocket.send(Communication.serialize(Communication.cmdState(super.getBoardInfo())));
-		i++;
 	}
 
 
@@ -86,6 +107,16 @@ public class ChessServer extends Server {
 				return;
 			}
 
+			// Check the player color
+			int position = this.clients.indexOf(clientSocket);
+			boolean whiteToMove = super.getBoardInfo().whiteToMove;
+			if (!(whiteToMove && position == 0) && !(!whiteToMove && position == 1)) {
+				Log.stdlog(Log.WARN, "ChessServer", "invalid color for move: whiteToMove=" +
+						   whiteToMove + ", position=" + position);
+				super.sendBoard(clientSocket);
+				return;
+			}
+
 			// Create the move object
 			Move move = new Move(startTile, endTile, flag);
 			
@@ -111,6 +142,10 @@ public class ChessServer extends Server {
 			super.sendBoard();
 			break;
 		}
+		case Communication.CMD_RESTART: {
+		    BoardInfo boardInfo = FenUtility.informationFromFen(Board.START_FEN);
+			super.setBoardInfo(boardInfo);
+		}
 		default:
 			Log.stdlog(Log.ERROR, "ChessServer", "invalid opcode in command: " + command);
 			return;
@@ -120,7 +155,16 @@ public class ChessServer extends Server {
 
 	@Override
 	public void clientDisconnected(JClientSocket clientSocket) {
-		
+		int index = this.clients.indexOf(clientSocket);
+		if (index == -1)
+			return;
+
+		// If the disconnecting client is one of the players (index 0 or 1) and not a spectator,
+		// then set the index to null so the next player that connects can be added there.
+		if (index < 2)
+			this.clients.set(index, null);
+		else
+			this.clients.remove(index);
 	}
 
 }

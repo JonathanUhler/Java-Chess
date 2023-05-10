@@ -164,4 +164,10 @@ public class MainView extends View {
 		System.exit(0);
 	}
 
+
+	@Override
+	public Dimension getPreferredSize() {
+		return new Dimension(Screen.TILE_SIZE * 8, Screen.TILE_SIZE * 8);
+	}
+
 }

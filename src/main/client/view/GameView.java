@@ -48,9 +48,17 @@ public abstract class GameView extends View {
 
 		this.client = null;
 		this.server = null;
-		this.piecePane = null;
-		
-		super.redraw();
+		this.piecePane = null;		
+	}
+
+
+	/**
+	 * Returns this view's parent {@code Screen}.
+	 *
+	 * @return this view's parent {@code Screen}.
+	 */
+	public Screen owner() {
+		return super.owner();
 	}
 
 
@@ -187,6 +195,25 @@ public abstract class GameView extends View {
 			this.serverCommunicated(recv);
 			super.redraw();
 		}
+	}
+
+
+	/**
+	 * Closes the server hosted by this client, if one is open. If this client is not
+	 * currently hosting a server, the call is ignored. This method relies on the assumption
+	 * that the {@code setServer} method was called by the child class during the initialization
+	 * of the server.
+	 * <p>
+	 * This method will also close the {@code JClientSocket} connection, if open. This operation
+	 * is completed before the server is closed.
+	 *
+	 * @see setServer
+	 */
+	public void closeServer() {
+		if (this.client != null)
+			this.client.close();
+		if (this.server != null)
+			this.server.close();
 	}
 
 

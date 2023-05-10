@@ -110,6 +110,7 @@ public abstract class Server extends JServer {
 	protected void setBoardInfo(BoardInfo boardInfo) {
 		this.board = new Board(boardInfo);
 		Log.stdout(Log.INFO, "Server", "Board updated");
+		this.sendBoard();
 	}
 
 

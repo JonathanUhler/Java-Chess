@@ -178,6 +178,23 @@ public class PiecePane extends JLayeredPane {
 	 * @throws NullPointerException  if {@code position == null}.
 	 */
 	public void drawPosition(BoardInfo position) {
+		this.drawPosition(position, true);
+	}
+
+
+	/**
+	 * Draws the pieces of a given position. This method is responsible for updating 
+	 * {@code latestPosition}. A call to {@code PiecePane::getLatestPosition} after a call to 
+	 * {@code PiecePane::drawPosition} will return the argument passed into this method.
+	 *
+	 * @param position  the position to draw.
+	 * @param playing   an optional parameter that indicated whether the current game is still
+	 *                  ongoing. If set to {@code false}, {@code PieceAdapter}s will not
+	 *                  be added to the pieces, preventing movement.
+	 *
+	 * @throws NullPointerException  if {@code position == null}.
+	 */
+	public void drawPosition(BoardInfo position, boolean playing) {
 		if (position == null)
 			throw new NullPointerException("position was null");
 		this.latestPosition = position;
@@ -209,7 +226,7 @@ public class PiecePane extends JLayeredPane {
 			pieceLabel.setBounds(x, y, Screen.TILE_SIZE, Screen.TILE_SIZE);
 			
 			// Only allow mouse movement if this player is playing in the game
-			if (!this.playerColor.equals(Piece.Color.NONE)) {
+			if (!this.playerColor.equals(Piece.Color.NONE) && playing) {
 				MouseAdapter mouseAdapter = new PieceAdapter(this);
 				pieceLabel.addMouseListener(mouseAdapter);
 				pieceLabel.addMouseMotionListener(mouseAdapter);
@@ -270,6 +287,12 @@ public class PiecePane extends JLayeredPane {
 		ActionEvent actionEvent = new ActionEvent(this, ActionEvent.ACTION_PERFORMED, commandStr);
 		for (ActionListener l : this.actionListeners)
 			l.actionPerformed(actionEvent);
+	}
+
+
+	@Override
+	public Dimension getPreferredSize() {
+		return new Dimension(Screen.TILE_SIZE * 8, Screen.TILE_SIZE * 8);
 	}
 
 }
