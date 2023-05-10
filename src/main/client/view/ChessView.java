@@ -44,7 +44,6 @@ public class ChessView extends GameView implements ActionListener {
 		super(owner);
 		this.playing = true;
 
-		System.out.println();
 		this.restartButton = new JButton("New Game");
 		this.quitButton = new JButton("Quit");
 
