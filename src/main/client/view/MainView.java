@@ -1,6 +1,8 @@
 package client.view;
 
 
+import variants.crazyhouse.CrazyView;
+import variants.bughouse.BugView;
 import client.Client;
 import client.Screen;
 import client.component.OutlineLabel;
@@ -46,7 +48,9 @@ public class MainView extends View {
 	public MainView(Screen owner) {
 		super(owner);
 
-		this.gameViews = new GameView[] {new ChessView(owner)};
+		this.gameViews = new GameView[] {new ChessView(owner),
+										 new CrazyView(owner),
+										 new BugView(owner)};
 
 		this.hostButton = new JButton("Host Game");
 		this.joinButton = new JButton("Join Game");

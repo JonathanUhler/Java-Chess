@@ -141,7 +141,40 @@ public abstract class Server extends JServer {
 			return;
 		
 		Map<String, String> stateCmd = Communication.cmdState(this.board.getInfo());
+		super.send(Communication.serialize(stateCmd), clientSocket);
+	}
+
+
+	/**
+	 * Sends a board state command to all connected clients with the specified board.
+	 * This operation is ignored if the argument {@code board} is null.
+	 *
+	 * @param board  the board to send.
+	 */
+	public void sendBoard(Board board) {
+		if (board == null || board.getInfo() == null)
+			return;
+		
+		Map<String, String> stateCmd = Communication.cmdState(board.getInfo());
 		super.sendAll(Communication.serialize(stateCmd));
+	}
+
+
+	/**
+	 * Sends a board state command to the specified client with the specified board. This
+	 * operation is ignored if the argument {@code board} is null.
+	 *
+	 * @param board         the board to send.
+	 * @param clientSocket  the client to send the state to.
+	 */
+	public void sendBoard(Board board, JClientSocket clientSocket) {
+		if (clientSocket == null)
+			return;
+		if (board == null || board.getInfo() == null)
+			return;
+		
+		Map<String, String> stateCmd = Communication.cmdState(board.getInfo());
+		super.send(Communication.serialize(stateCmd), clientSocket);
 	}
 	
 
