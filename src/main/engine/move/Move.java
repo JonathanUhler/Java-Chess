@@ -76,16 +76,11 @@ public class Move implements Serializable {
 	 *
 	 * @throws NullPointerException      if {@code startTile} or {@code endTile} is null.
 	 * @throws NullPointerException      if {@code flag} is null.
-	 * @throws IllegalArgumentException  if {@code startTile} or {@code endTile} is invalid.
 	 */
 	public Move(Coordinate startTile, Coordinate endTile, Move.Flag flag) {
 		if (startTile == null || endTile == null)
 			throw new NullPointerException("tiles were null: found startTile=" +
 										   startTile + ", endTile=" + endTile);
-		if (!startTile.isValidTile() || !endTile.isValidTile())
-			throw new IllegalArgumentException("tiles were invalid: startTile valid: " +
-											   startTile.isValidTile() + ", endTile valid: " +
-											   endTile.isValidTile());
 		if (flag == null)
 			throw new NullPointerException("flag was null");
 		

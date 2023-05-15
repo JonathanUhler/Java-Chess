@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 
 /**
@@ -26,6 +27,61 @@ import java.util.ArrayList;
  */
 public class CrazyServer extends Server {
 
+	// Special command information
+	public static final String CMD_BANK = "bank";
+	public static final String CMD_PLACE = "place";
+	public static final String KEY_TYPE = "type";
+	public static final String KEY_MY_PAWNS = "mypawns";
+	public static final String KEY_MY_KNIGHTS = "myknights";
+	public static final String KEY_MY_BISHOPS = "mybishops";
+	public static final String KEY_MY_ROOKS = "myrooks";
+	public static final String KEY_MY_QUEENS = "myqueens";
+	public static final String KEY_OP_PAWNS = "oppawns";
+	public static final String KEY_OP_KNIGHTS = "opknights";
+	public static final String KEY_OP_BISHOPS = "opbishops";
+	public static final String KEY_OP_ROOKS = "oprooks";
+	public static final String KEY_OP_QUEENS = "opqueens";
+
+	public static Map<String, String> cmdBank(Map<Piece.Type, Integer> myBank,
+											  Map<Piece.Type, Integer> opBank)
+	{
+		if (myBank == null || opBank == null)
+			return null;
+		
+		Map<String, String> map = new HashMap<>();
+		map.put(Communication.KEY_CMD, CrazyServer.CMD_BANK);
+		map.put(CrazyServer.KEY_MY_PAWNS, Integer.toString(myBank.get(Piece.Type.PAWN)));
+		map.put(CrazyServer.KEY_MY_KNIGHTS, Integer.toString(myBank.get(Piece.Type.KNIGHT)));
+		map.put(CrazyServer.KEY_MY_BISHOPS, Integer.toString(myBank.get(Piece.Type.BISHOP)));
+		map.put(CrazyServer.KEY_MY_ROOKS, Integer.toString(myBank.get(Piece.Type.ROOK)));
+		map.put(CrazyServer.KEY_MY_QUEENS, Integer.toString(myBank.get(Piece.Type.QUEEN)));
+		map.put(CrazyServer.KEY_OP_PAWNS, Integer.toString(opBank.get(Piece.Type.PAWN)));
+		map.put(CrazyServer.KEY_OP_KNIGHTS, Integer.toString(opBank.get(Piece.Type.KNIGHT)));
+		map.put(CrazyServer.KEY_OP_BISHOPS, Integer.toString(opBank.get(Piece.Type.BISHOP)));
+		map.put(CrazyServer.KEY_OP_ROOKS, Integer.toString(opBank.get(Piece.Type.ROOK)));
+		map.put(CrazyServer.KEY_OP_QUEENS, Integer.toString(opBank.get(Piece.Type.QUEEN)));
+		return map;
+	}
+
+
+	public static Map<String, String> cmdPlace(Piece.Type pieceType, Coordinate placeTile) {
+		if (pieceType == null || placeTile == null)
+			return null;
+
+		Map<String, String> map = new HashMap<>();
+		map.put(Communication.KEY_CMD, CrazyServer.CMD_PLACE);
+		map.put(CrazyServer.KEY_TYPE, pieceType.name());
+		map.put(Communication.KEY_END, placeTile.toString());
+		return map;
+	}
+
+
+	private Map<Piece.Type, Integer> whiteBank;
+	private Map<Piece.Type, Integer> blackBank;
+	
+	
+
+	// Connected clients
 	private List<JClientSocket> clients;
 	
 
@@ -48,6 +104,22 @@ public class CrazyServer extends Server {
 	public void clientConnected(JClientSocket clientSocket) {
 		if (this.clients == null)
 			this.clients = new ArrayList<>();
+		if (this.whiteBank == null) {
+			this.whiteBank = new HashMap<>();
+			this.whiteBank.put(Piece.Type.PAWN, 0);
+			this.whiteBank.put(Piece.Type.KNIGHT, 0);
+			this.whiteBank.put(Piece.Type.BISHOP, 0);
+			this.whiteBank.put(Piece.Type.ROOK, 0);
+			this.whiteBank.put(Piece.Type.QUEEN, 0);
+		}
+		if (this.blackBank == null) {
+			this.blackBank = new HashMap<>();
+			this.blackBank.put(Piece.Type.PAWN, 0);
+			this.blackBank.put(Piece.Type.KNIGHT, 0);
+			this.blackBank.put(Piece.Type.BISHOP, 0);
+			this.blackBank.put(Piece.Type.ROOK, 0);
+			this.blackBank.put(Piece.Type.QUEEN, 0);
+		}
 		
 		// Add the client to the list of connected clients, prioritizing putting them into
 		// a null index in the list (e.g. the white or black player and not a spectator)
@@ -97,6 +169,7 @@ public class CrazyServer extends Server {
 			catch (RuntimeException e) {
 				Log.stdlog(Log.ERROR,
 						   "CrazyServer", "unable to parse command: " + e + ", " + command);
+				this.sendBankInfo();
 				super.sendBoard(clientSocket);
 				return;
 			}
@@ -104,6 +177,7 @@ public class CrazyServer extends Server {
 			if (!startTile.isValidTile() || !endTile.isValidTile()) {
 				Log.stdlog(Log.WARN, "CrazyServer", "invalid move tiles: startTile=" +
 						   startTile + ", endTile=" + endTile);
+				this.sendBankInfo();
 				super.sendBoard(clientSocket);
 				return;
 			}
@@ -114,6 +188,7 @@ public class CrazyServer extends Server {
 			if (!(whiteToMove && position == 0) && !(!whiteToMove && position == 1)) {
 				Log.stdlog(Log.WARN, "CrazyServer", "invalid color for move: whiteToMove=" +
 						   whiteToMove + ", position=" + position);
+				this.sendBankInfo();
 				super.sendBoard(clientSocket);
 				return;
 			}
@@ -125,17 +200,34 @@ public class CrazyServer extends Server {
 			List<Move> legalMoves = MoveGenerator.generateLegalMoves(super.getBoardInfo());
 			if (!legalMoves.contains(move)) {
 				Log.stdlog(Log.WARN, "CrazyServer", "illegal move attempted: " + move);
+				this.sendBankInfo();
 				super.sendBoard(clientSocket);
 				return;
 			}
 
-			// Attempt to make the move
+			// Attempt to make the move and handle piece captures
 			try {
+				Piece capturedPiece = super.getBoardInfo().getPiece(endTile);
+				if (flag.equals(Move.Flag.EN_PASSANT)) // Somewhat hacky edge case for ep capture
+					capturedPiece = new Piece(Piece.Type.PAWN, Piece.Color.NONE);
+				
 				super.getBoard().makeMove(move);
+
+				if (capturedPiece != null) {
+					Piece.Type type = capturedPiece.getType();
+					if (whiteToMove)
+						this.whiteBank.put(type, this.whiteBank.get(type) + 1);
+					else
+						this.blackBank.put(type, this.blackBank.get(type) + 1);
+
+					// Send updated info
+				    this.sendBankInfo();
+				}
 			}
 			catch (RuntimeException e) {
 				Log.stdlog(Log.WARN, "CrazyServer", "invalid move attempted: " + e + ", " + move);
 				super.sendBoard(clientSocket);
+				this.sendBankInfo();
 				return;
 			}
 
@@ -145,12 +237,96 @@ public class CrazyServer extends Server {
 		}
 		case Communication.CMD_RESTART: {
 		    BoardInfo boardInfo = FenUtility.informationFromFen(Board.START_FEN);
+			this.whiteBank = new HashMap<>();
+			this.whiteBank.put(Piece.Type.PAWN, 0);
+			this.whiteBank.put(Piece.Type.KNIGHT, 0);
+			this.whiteBank.put(Piece.Type.BISHOP, 0);
+			this.whiteBank.put(Piece.Type.ROOK, 0);
+			this.whiteBank.put(Piece.Type.QUEEN, 0);
+			this.blackBank = new HashMap<>();
+			this.blackBank.put(Piece.Type.PAWN, 0);
+			this.blackBank.put(Piece.Type.KNIGHT, 0);
+			this.blackBank.put(Piece.Type.BISHOP, 0);
+			this.blackBank.put(Piece.Type.ROOK, 0);
+			this.blackBank.put(Piece.Type.QUEEN, 0);
 			super.setBoardInfo(boardInfo);
+			this.sendBankInfo();
+			break;
+		}
+		case CrazyServer.CMD_PLACE: {
+			// Check the player color
+			int position = this.clients.indexOf(clientSocket);
+			boolean whiteToMove = super.getBoardInfo().whiteToMove;
+			if (!(whiteToMove && position == 0) && !(!whiteToMove && position == 1)) {
+				Log.stdlog(Log.WARN, "CrazyServer", "invalid color for move: whiteToMove=" +
+						   whiteToMove + ", position=" + position);
+				super.sendBoard(clientSocket);
+				return;
+			}
+			
+			// Get the placed piece type and end tile
+			Piece.Type pieceType;
+			Coordinate endTile;
+			try {
+				pieceType = Piece.Type.valueOf(command.get(CrazyServer.KEY_TYPE));
+				endTile = Coordinate.fromString(command.get(Communication.KEY_END));
+			}
+			catch (RuntimeException e) {
+				Log.stdlog(Log.ERROR,
+						   "CrazyServer", "unable to parse placed type: " + e + ", " + command);
+				super.sendBoard(clientSocket);
+				return;
+			}
+
+			// Attempt to place the piece
+			Map<Piece.Type, Integer> bank = whiteToMove ? this.whiteBank : this.blackBank;
+			boolean hasPiece = bank.get(pieceType) >= 1;
+			if (hasPiece) {
+			    List<Move> legalMoves = CrazyMoveGenerator.generateLegalMoves(super.getBoardInfo(),
+																			  bank);
+
+				int pieceRow = -1;
+				switch (pieceType) {
+				case PAWN -> pieceRow = 3;
+				case KNIGHT -> pieceRow = 4;
+				case BISHOP -> pieceRow = 5;
+				case ROOK -> pieceRow = 6;
+				case QUEEN -> pieceRow = 7;
+				}
+				
+				Coordinate startTile = new Coordinate(-1, pieceRow);
+				Move placement = new Move(startTile, endTile, Move.Flag.NONE);
+				Piece.Color pieceColor = whiteToMove ? Piece.Color.WHITE : Piece.Color.BLACK;
+				if (legalMoves.contains(placement)) {
+					super.getBoardInfoPointer().setPiece(endTile, new Piece(pieceType, pieceColor));
+					super.getBoardInfoPointer().updateAfterMove();
+					super.sendBoard();
+					
+					// Remove the piece if placed
+					bank.put(pieceType, bank.get(pieceType) - 1);
+				}
+			}
+
+			// Send updated bank information
+		    this.sendBankInfo();
+			break;
 		}
 		default:
 			Log.stdlog(Log.ERROR, "CrazyServer", "invalid opcode in command: " + command);
 			return;
 		}
+	}
+
+
+	private void sendBankInfo() {
+		Map<String, String> whiteBankCmd = CrazyServer.cmdBank(this.whiteBank,
+															   this.blackBank);
+		Map<String, String> blackBankCmd = CrazyServer.cmdBank(this.blackBank,
+															   this.whiteBank);
+		JClientSocket whiteClientSocket = this.clients.get(0);
+		JClientSocket blackClientSocket = this.clients.get(1);
+		super.send(Communication.serialize(whiteBankCmd), whiteClientSocket);
+		super.send(Communication.serialize(blackBankCmd), blackClientSocket);
 	}
 
 

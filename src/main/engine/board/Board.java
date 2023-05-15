@@ -44,6 +44,22 @@ public class Board {
 
 
 	/**
+	 * Returns the <b>memory pointer</b> to this board's {@code BoardInfo} object. This operation
+	 * returns the exact reference to the info object. This method is volatile! Undefined
+	 * behavior will occur if the returned object is modified by the caller. For most use-cases
+	 * it is better to call the {@code getInfo} method and create a new {@code Board} wrapper
+	 * using the cloned info object.
+	 *
+	 * @return the <b>memory pointer</b> to this board's {@code BoardInfo} object.
+	 *
+	 * @see getInfo
+	 */
+	public BoardInfo getInfoPointer() {
+		return this.boardInfo;
+	}
+
+
+	/**
 	 * Returns this object's {@code BoardInfo} object. The object returned is a deep-copy of the 
 	 * actual informational object stored in this class. No reference of the returned object is 
 	 * kept by this class, allowing for safe end-user manipulation of the returned object.
@@ -67,8 +83,11 @@ public class Board {
 	 * A "valid" move is defined as follows:
 	 * <ul>
 	 * <li> {@code move != null}
-	 * <li> {@code startTile.isValidTile() == true}
-	 * <li> {@code endTile.isValidTile() == true}
+	 * <li> {@code endTile.isValidTile() == true}. <b>NOTE</b> that the validity of the start
+	 *      tile is not validated. This allows this method to conform to the customizable
+	 *      focus of this chess engine; that is, it can be safely assumed all end tiles
+	 *      must always be valid, but start tiles may not always be used (e.g. -1, -1 as
+	 *      a non-null placeholder).
 	 * <li> The piece on {@code startTile} is non-{@code null}
 	 * <li> A "valid" move is <b>NOT</b> necessarily a legal move (where legal means generated
 	 *      by {@code MoveGenerator.generateLegalMoves})
@@ -77,8 +96,8 @@ public class Board {
 	 * @param move  the move to make.
 	 *
 	 * @throws NullPointerException      if {@code move == null}.
-	 * @throws IllegalArgumentException  if the start tile is not valid, the end tile is not valid, 
-	 *                                   or the piece on the start tile is null.
+	 * @throws IllegalArgumentException  if the end tile is not valid or the piece on the start 
+	 *                                   tile is null.
 	 *
 	 * @see engine.move.Move
 	 */
@@ -116,10 +135,9 @@ public class Board {
 		}
 
 		// Do basic validity checks
-		if (!startTile.isValidTile() || !endTile.isValidTile() || movePiece == null)
+		if (!endTile.isValidTile() || movePiece == null)
 			throw new IllegalArgumentException("illegal move attempted: " +
-											   "startTile is valid: " + startTile.isValidTile() +
-											   ", endTile is valid: " + endTile.isValidTile() +
+											   "endTile is valid: " + endTile.isValidTile() +
 											   ", movePiece: " + movePiece);
 
 		// Update halfmoves

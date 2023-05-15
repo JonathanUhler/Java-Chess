@@ -91,6 +91,18 @@ public abstract class Server extends JServer {
 
 
 	/**
+	 * Returns the <b>memory pointer</b> to the board information managed by this server.
+	 *
+	 * @return the <b>memory pointer</b> to the board information managed by this server.
+	 *
+	 * @see engine.board.Board
+	 */
+	protected BoardInfo getBoardInfoPointer() {
+		return this.board.getInfoPointer();
+	}
+
+
+	/**
 	 * Returns the board information managed by this server. This information may only be
 	 * accessed by the {@code ServerCLI} or child classes of this server.
 	 *

@@ -164,6 +164,7 @@ public class PiecePane extends JLayeredPane {
 			g.fillRect(displayOffsetX * Screen.TILE_SIZE,
 					   displayOffsetY * Screen.TILE_SIZE,
 					   Screen.TILE_SIZE, Screen.TILE_SIZE);
+
 		}
 	}
 

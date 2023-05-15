@@ -190,6 +190,7 @@ public class BoardInfo implements Serializable {
 	public void setPiece(Coordinate c, Piece p) {
 		if (c == null || !c.isValidTile())
 			throw new IllegalArgumentException("c is null or invalid: " + c);
+		
 		this.tiles[c.getY()][c.getX()] = p;
 	}
 

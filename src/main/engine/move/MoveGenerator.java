@@ -337,7 +337,8 @@ public class MoveGenerator {
 			if (pieceOnEndTile == null)
 				movesGenerated.add(new Move(startTile, endTile));
 			else {
-				if (pieceOnEndTile.friendly(boardInfo.whiteToMove)) continue;
+				if (pieceOnEndTile.friendly(boardInfo.whiteToMove))
+					continue;
 				movesGenerated.add(new Move(startTile, endTile));
 			}
 		}

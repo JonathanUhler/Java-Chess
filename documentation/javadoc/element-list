@@ -8,3 +8,5 @@ engine.piece
 engine.util
 server
 tests
+variants.bughouse
+variants.crazyhouse

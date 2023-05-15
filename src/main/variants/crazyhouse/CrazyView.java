@@ -34,6 +34,9 @@ public class CrazyView extends GameView implements ActionListener {
 	private JButton restartButton;
 	/** Button to quit the game after finished. */
 	private JButton quitButton;
+
+	/** The primary pane managed by this view. */
+	private CrazyPane crazyPane;
 	
 
 	/**
@@ -113,6 +116,9 @@ public class CrazyView extends GameView implements ActionListener {
             PiecePane piecePane = new PiecePane(playerColor);
 			piecePane.addActionListener(this);
 			super.setPiecePane(piecePane);
+
+			this.crazyPane = new CrazyPane(playerColor, piecePane);
+			this.crazyPane.addActionListener(this);
 			break;
 		}
 		case Communication.CMD_STATE: {
@@ -160,6 +166,50 @@ public class CrazyView extends GameView implements ActionListener {
 			piecePane.drawPosition(info, this.playing);
 			break;
 		}
+		case CrazyServer.CMD_BANK: {
+			int myPawns;
+			int myKnights;
+			int myBishops;
+			int myRooks;
+			int myQueens;
+			int opPawns;
+			int opKnights;
+			int opBishops;
+			int opRooks;
+			int opQueens;
+
+			String myPawnsStr = command.get(CrazyServer.KEY_MY_PAWNS);
+			String myKnightsStr = command.get(CrazyServer.KEY_MY_KNIGHTS);
+			String myBishopsStr = command.get(CrazyServer.KEY_MY_BISHOPS);
+			String myRooksStr = command.get(CrazyServer.KEY_MY_ROOKS);
+			String myQueensStr = command.get(CrazyServer.KEY_MY_QUEENS);
+			String opPawnsStr = command.get(CrazyServer.KEY_OP_PAWNS);
+			String opKnightsStr = command.get(CrazyServer.KEY_OP_KNIGHTS);
+			String opBishopsStr = command.get(CrazyServer.KEY_OP_BISHOPS);
+			String opRooksStr = command.get(CrazyServer.KEY_OP_ROOKS);
+			String opQueensStr = command.get(CrazyServer.KEY_OP_QUEENS);
+			
+			try {
+				myPawns = Integer.parseInt(myPawnsStr);
+				myKnights = Integer.parseInt(myKnightsStr);
+				myBishops = Integer.parseInt(myBishopsStr);
+				myRooks = Integer.parseInt(myRooksStr);
+				myQueens = Integer.parseInt(myQueensStr);
+				opPawns = Integer.parseInt(opPawnsStr);
+				opKnights = Integer.parseInt(opKnightsStr);
+				opBishops = Integer.parseInt(opBishopsStr);
+				opRooks = Integer.parseInt(opRooksStr);
+				opQueens = Integer.parseInt(opQueensStr);
+			}
+			catch (RuntimeException e) {
+				Log.stdlog(Log.ERROR, "CrazyView", "cannot parse pc counts: " + e + ", " + command);
+				return;
+			}
+			
+			this.crazyPane.drawBank(myPawns, myKnights, myBishops, myRooks, myQueens,
+									opPawns, opKnights, opBishops, opRooks, opQueens);
+			break;
+		}
 		default:
 			Log.stdlog(Log.ERROR, "CrazyView", "invalid client opcode in command: " + command);
 			return;
@@ -190,12 +240,11 @@ public class CrazyView extends GameView implements ActionListener {
 	public void display() {
 		GridBagConstraints gbc = new GridBagConstraints();
 
-		PiecePane piecePane = super.getPiecePane();
 		gbc.gridwidth = 2;
 		gbc.gridx = 0;
 		gbc.gridy = 0;
-		if (piecePane != null)
-			this.add(piecePane, gbc);
+		if (this.crazyPane != null)
+			this.add(this.crazyPane, gbc);
 
 		if (!this.playing) {
 			gbc.gridwidth = 1;
