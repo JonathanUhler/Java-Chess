@@ -42,6 +42,12 @@ public class InstView extends View {
 "  <p> If you wish to join an existing game, select \"Join Game\". Enter the IP address" +
 "      and port the game is being hosted on (ask the host if you are unsure of this information)." +
 "      You will be connected to the game if able. If an error occurs, a message will be shown." +
+"  <p> When creating or joining a game, a combo box is available to select the chess variant to" +
+"      play. \"Classical Chess\" starts a normal, 2-player game of chess. Crazyhouse and bughouse" +
+"      begins the specified game (see below for rules)." +
+"  <p> <b>NOTE:</b> when joining a game, make sure to select the same variant that the host" +
+"      selected. If the wrong variant is selected, the game is still playable, but the graphical" +
+"      pane used will be wrong, which may result in some missing or unneeded graphical features." +
 "  <h1>Playing Chess</h1>" +
 "  <h2>Basic Rules</h2>" +
 "  <p> For basic information on how to play chess, please see: <a href=https://www.chess.com/article/view/how-to-play-chess>https://www.chess.com/article/view/how-to-play-chess</a>" +
@@ -78,6 +84,13 @@ public class InstView extends View {
 "   <li>Pawns cannot be placed on the back-most rank and be immediately promoted." +
 "   <li>Pieces can only be placed on empty tiles." +
 "  </ul>" +
+"  <h1>Playing Bughouse</h1>" + 
+"  <p> Bughouse follows the same piece placing rules as crazyhouse. The primary difference is" +
+"      that the game requires four players, who play two independent games at the same time." + 
+"  <p> In bughouse, you and your teammate play opposite colors on opposite boards. When you" + 
+"      capture a piece from your opponent, it is given to your teammate instead of you. This" + 
+"      is true for all four players." + 
+"  <p> The game is won by one of the two teams if either member wins their individual game." +
 " </body>" +
 "</html>";
 
