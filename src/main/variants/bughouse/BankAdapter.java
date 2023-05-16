@@ -5,11 +5,13 @@ import client.Screen;
 import engine.util.Coordinate;
 import engine.move.Move;
 import engine.piece.Piece;
+import engine.board.BoardInfo;
 import java.awt.Point;
 import java.awt.Component;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseAdapter;
 import java.util.List;
+import java.util.Map;
 import java.util.ArrayList;
 
 
@@ -51,12 +53,20 @@ public class BankAdapter extends MouseAdapter {
 		this.bugPane.moveToFront(pieceClicked);
 		this.dragOffset = e.getPoint();
 
-		/*
 		int row = (int) ((this.startLocation.y + Screen.TILE_SIZE / 2.0) / Screen.TILE_SIZE);
 		Coordinate startTile = new Coordinate(-1, row);
 		List<Coordinate> highlightedTiles = new ArrayList<>();
-		List<Move> legalMoves = BugMoveGenerator.generateLegalMoves();
-		*/
+
+		BoardInfo position = this.bugPane.getPiecePane().getLatestPosition();
+		Map<Piece.Type, Integer> myPieces = this.bugPane.getMyPieces();
+		List<Move> legalMoves = BugMoveGenerator.generateLegalMoves(position, myPieces);
+
+		for (Move m : legalMoves) {
+			if (m.getStartTile().equals(startTile))
+				highlightedTiles.add(m.getEndTile());
+		}
+
+		this.bugPane.getPiecePane().setHighlightedTiles(highlightedTiles);
 	}
 
 
@@ -87,9 +97,7 @@ public class BankAdapter extends MouseAdapter {
 		int row = (int) ((this.startLocation.y + Screen.TILE_SIZE / 2.0) / Screen.TILE_SIZE);
 		Coordinate endTile = this.pointToCoordinate(endLocation);
 
-		/*
 		this.bugPane.getPiecePane().setHighlightedTiles(new ArrayList<>());
-		*/
 	    this.bugPane.adapterEvent(row, endTile);
 	}
 	

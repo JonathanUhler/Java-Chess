@@ -18,6 +18,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.ArrayList;
 
 
@@ -28,8 +29,10 @@ public class BugPane extends JLayeredPane {
 
 	/** The color of the current player, used to change the perspective of the board. */
 	private Piece.Color playerColor;
-	/** The piece pane managed by this crazyhouse pane. */
+	/** The piece pane managed by this bughouse pane. */
 	private PiecePane piecePane;
+
+	private Map<Piece.Type, Integer> myPieces;
 
 
 	public BugPane(Piece.Color playerColor, PiecePane piecePane) {
@@ -42,6 +45,8 @@ public class BugPane extends JLayeredPane {
 
 		this.playerColor = playerColor;
 		this.piecePane = piecePane;
+
+		this.myPieces = new HashMap<>();
 
 		this.setPreferredSize(new Dimension(Screen.TILE_SIZE * 10, Screen.TILE_SIZE * 8));
 
@@ -63,6 +68,11 @@ public class BugPane extends JLayeredPane {
 
 	public PiecePane getPiecePane() {
 		return this.piecePane;
+	}
+
+
+	public Map<Piece.Type, Integer> getMyPieces() {
+		return this.myPieces;
 	}
 
 
@@ -88,6 +98,14 @@ public class BugPane extends JLayeredPane {
 		// Reset pane
 		this.removeAll();
 		this.drawPiecePane();
+
+		// Update current piece list
+		this.myPieces = new HashMap<>();
+		this.myPieces.put(Piece.Type.PAWN, myPawns);
+		this.myPieces.put(Piece.Type.KNIGHT, myKnights);
+		this.myPieces.put(Piece.Type.BISHOP, myBishops);
+		this.myPieces.put(Piece.Type.ROOK, myRooks);
+		this.myPieces.put(Piece.Type.QUEEN, myQueens);
 
 		// Draw player's pieces in the bank
 		this.drawPieceInBank(new Piece(Piece.Type.PAWN, this.playerColor), myPawns, 3);
