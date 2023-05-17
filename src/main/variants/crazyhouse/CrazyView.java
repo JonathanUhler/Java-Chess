@@ -6,6 +6,7 @@ import jnet.Log;
 import client.view.GameView;
 import client.Client;
 import client.Screen;
+import client.sound.SoundManager;
 import client.component.PiecePane;
 import server.Communication;
 import engine.board.BoardInfo;
@@ -151,6 +152,7 @@ public class CrazyView extends GameView implements ActionListener {
 
 			if (state != BoardInfo.State.ONGOING) {
 				this.playing = false;
+				SoundManager.playSound("game");
 				Client.displayMessage("Game Finished", "Game finished: " + state.name());
 			}
 
@@ -219,6 +221,10 @@ public class CrazyView extends GameView implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
+		// Play piece moved sound
+		SoundManager.playSound("move");
+
+		// Send move command
 		String commandStr = e.getActionCommand();
 		super.getClientSocket().send(commandStr);
 	}
