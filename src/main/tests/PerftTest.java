@@ -220,6 +220,7 @@ public class PerftTest {
 		// Track number of tests passed and failed for total percentage passed
 		int numPassed = 0;
 		int numFailed = 0;
+		long testingTime = 0;
 
 		// Loop through the specified test range
 		for (int i = start; i <= end; i++) {
@@ -274,11 +275,13 @@ public class PerftTest {
 				numPassed++;
 			else
 				numFailed++;
+			testingTime += totalTime;
 		}
 
 		// Print total percentage passed/failed after all requested tests have been completed
 		Log.stdout(Log.DEBUG, "PerftTest", "Passed: " + numPassed +
 				   "\tFailed: " + numFailed +
+				   "\tTotal Time: " + testingTime + "ms" +
 				   "\t--  " + (numPassed * 1.0 / (numPassed + numFailed) * 1.0) * 100.0 + "%");
 	}
 
