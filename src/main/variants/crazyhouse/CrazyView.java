@@ -205,7 +205,7 @@ public class CrazyView extends GameView implements ActionListener {
 				Log.stdlog(Log.ERROR, "CrazyView", "cannot parse pc counts: " + e + ", " + command);
 				return;
 			}
-			
+
 			this.crazyPane.drawBank(myPawns, myKnights, myBishops, myRooks, myQueens,
 									opPawns, opKnights, opBishops, opRooks, opQueens);
 			break;

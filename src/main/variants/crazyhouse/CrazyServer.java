@@ -261,6 +261,7 @@ public class CrazyServer extends Server {
 				Log.stdlog(Log.WARN, "CrazyServer", "invalid color for move: whiteToMove=" +
 						   whiteToMove + ", position=" + position);
 				super.sendBoard(clientSocket);
+				this.sendBankInfo();
 				return;
 			}
 			
@@ -275,6 +276,7 @@ public class CrazyServer extends Server {
 				Log.stdlog(Log.ERROR,
 						   "CrazyServer", "unable to parse placed type: " + e + ", " + command);
 				super.sendBoard(clientSocket);
+				this.sendBankInfo();
 				return;
 			}
 

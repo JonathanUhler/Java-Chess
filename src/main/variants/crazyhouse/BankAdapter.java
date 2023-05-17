@@ -58,15 +58,20 @@ public class BankAdapter extends MouseAdapter {
 		List<Coordinate> highlightedTiles = new ArrayList<>();
 
 		BoardInfo position = this.crazyPane.getPiecePane().getLatestPosition();
-		Map<Piece.Type, Integer> myPieces = this.crazyPane.getMyPieces();
-		List<Move> legalMoves = CrazyMoveGenerator.generateLegalMoves(position, myPieces);
+		boolean whiteToMove = position.whiteToMove;
+		boolean isWhite = this.crazyPane.getPiecePane().getPlayerColor().equals(Piece.Color.WHITE);
 
-		for (Move m : legalMoves) {
-			if (m.getStartTile().equals(startTile))
-				highlightedTiles.add(m.getEndTile());
+		if ((whiteToMove && isWhite) || (!whiteToMove && !isWhite)) {
+			Map<Piece.Type, Integer> myPieces = this.crazyPane.getMyPieces();
+			List<Move> legalMoves = CrazyMoveGenerator.generateLegalMoves(position, myPieces);
+			
+			for (Move m : legalMoves) {
+				if (m.getStartTile().equals(startTile))
+					highlightedTiles.add(m.getEndTile());
+			}
+			
+			this.crazyPane.getPiecePane().setHighlightedTiles(highlightedTiles);
 		}
-
-		this.crazyPane.getPiecePane().setHighlightedTiles(highlightedTiles);
 	}
 
 
